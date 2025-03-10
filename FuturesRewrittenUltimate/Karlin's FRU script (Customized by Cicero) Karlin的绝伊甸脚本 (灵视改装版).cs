@@ -90,10 +90,17 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public bool _____Global_Settings_____ { get; set; } = true;
         [UserSetting("启用文本提示")]
         public bool Enable_Text_Prompts { get; set; } = true;
-        [UserSetting("启用TTS提示")]
-        public bool Enable_TTS_Prompts { get; set; } = true;
         [UserSetting("提示的语言")]
         public Languages_Of_Prompts Language_Of_Prompts { get; set; }
+
+        [UserSetting("-----TTS设置----- (No actual meaning for this setting/此设置无实际意义)")]
+        public bool _____TTS_Settings_____ { get; set; } = true;
+        [UserSetting("TTS-Introduction (Please choose between TTS and DRTTS Prompts, do not enable both, if you don't know what is DR, do not turn it on)")]
+        public bool TTS_introduction { get; set; } = true;
+        [UserSetting("启用原生TTS提示(请与DR TTS提示二选一, 不要一起打开)")]
+        public bool Enable_TTS_Prompts { get; set; } = true;
+        [UserSetting("启用DR TTS提示(请与原生TTS提示二选一, 不要一起打开, 并确保你有Daily Routines插件(Make sure you have `Daily Routines` Plugin))")]
+        public bool Enable_DRTTS_Prompts { get; set; } = false;
 
         [UserSetting("-----P1设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase1_Settings_____ { get; set; } = true;
@@ -620,13 +627,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     accessory.Method.TextInfo(prompt,1500);
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
-                    
-                    accessory.Method.TTS(prompt);
-                
-                }
-                
+
+                accessory.TTS($"{prompt}", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
             }
 
         }
@@ -736,13 +739,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     accessory.Method.TextInfo(prompt,1500);
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
-                    
-                    accessory.Method.TTS(prompt);
-                
-                }
-                
+
+                accessory.TTS($"{prompt}", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
             }
 
         }
@@ -858,13 +857,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     accessory.Method.TextInfo(prompt,1500);
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
-                    
-                    accessory.Method.TTS(prompt);
-                
-                }
-                
+
+                accessory.TTS($"{prompt}", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
             }
 
         }
@@ -4103,18 +4098,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("场中集合分摊");
-                    
+                    accessory.TTS("场中集合分摊", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Stack in the center");
-                    
+                    accessory.TTS("Stack in the center", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -4207,18 +4202,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("让Boss面向正北");
-                    
+                    accessory.TTS("让Boss面向正北", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Make the Boss orient to the north");
-                    
+                    accessory.TTS("Make the Boss orient to the north", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -4447,13 +4442,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     accessory.Method.TextInfo(prompt,4000);
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
-                
-                    accessory.Method.TTS(prompt);
-                
-                }
-                
+
+                accessory.TTS($"{prompt}", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
             }
             
             if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
@@ -4582,13 +4573,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     accessory.Method.TextInfo(prompt,3500);
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
-                
-                    accessory.Method.TTS(prompt);
-                
-                }
-                
+
+                accessory.TTS($"{prompt}", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
             }
             
         }
@@ -4855,18 +4842,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("分摊");
-                    
+                    accessory.TTS("分摊", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Stack");
-                    
+                    accessory.TTS("Stack", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -4893,7 +4880,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             
             bool targetPositionConfirmed=false;
-            string promptText="";
+            string prompt = "";
             var currentProperty=accessory.Data.GetDefaultDrawProperties();
             
             currentProperty.Name="Phase3_Guidance_Of_Dark_Water_III_黑暗狂水指路";
@@ -4930,13 +4917,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
 
-                            promptText=(goLeft)?("左侧分摊"):("右侧分摊");
+                            prompt=(goLeft)?("左侧分摊"):("右侧分摊");
 
                         }
                     
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
 
-                            promptText=(goLeft)?("Stack on the left"):("Stack on the right");
+                            prompt=(goLeft)?("Stack on the left"):("Stack on the right");
 
                         }
 
@@ -4996,13 +4983,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                             
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
 
-                            promptText=(stayInTheGroup)?("本组分摊"):("对组分摊");
+                            prompt=(stayInTheGroup)?("本组分摊"):("对组分摊");
 
                         }
                     
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
 
-                            promptText=(stayInTheGroup)?("Stack in the current group"):("Stack in the opposite group");
+                            prompt=(stayInTheGroup)?("Stack in the current group"):("Stack in the opposite group");
 
                         }
 
@@ -5061,13 +5048,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                                 
-                            promptText=(goLeft)?("左侧分摊"):("右侧分摊");
+                            prompt=(goLeft)?("左侧分摊"):("右侧分摊");
                                 
                         }
                             
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                                 
-                            promptText=(goLeft)?("Stack on the left"):("Stack on the right");
+                            prompt=(goLeft)?("Stack on the left"):("Stack on the right");
                                 
                         }
 
@@ -5111,13 +5098,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
 
-                            promptText=(goLeft)?("左侧分摊"):("右侧分摊");
+                            prompt= (goLeft)?("左侧分摊"):("右侧分摊");
 
                         }
                     
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
 
-                            promptText=(goLeft)?("Stack on the left"):("Stack on the right");
+                            prompt=(goLeft)?("Stack on the left"):("Stack on the right");
 
                         }
 
@@ -5135,13 +5122,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
 
-                            promptText="场中当前侧分摊";
+                            prompt="场中当前侧分摊";
 
                         }
                     
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
 
-                            promptText="Stack on this side of the center";
+                            prompt="Stack on this side of the center";
 
                         }
 
@@ -5200,13 +5187,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                                 
-                            promptText=(goLeft)?("左侧分摊"):("右侧分摊");
+                            prompt=(goLeft)?("左侧分摊"):("右侧分摊");
                                 
                         }
                             
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                                 
-                            promptText=(goLeft)?("Stack on the left"):("Stack on the right");
+                            prompt=(goLeft)?("Stack on the left"):("Stack on the right");
                                 
                         }
 
@@ -5231,20 +5218,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(!promptText.Equals("")) {
+            if(!prompt.Equals("")) {
                     
                 if(Enable_Text_Prompts) {
 
-                    accessory.Method.TextInfo(promptText,2500);
+                    accessory.Method.TextInfo(prompt, 2500);
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
 
-                    accessory.Method.TTS(promptText);
-                
-                }
-                    
+                accessory.TTS($"{prompt}", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
             }
             
         }
@@ -5442,18 +5425,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("分散");
-                    
+                    accessory.TTS("分散", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Spread");
-                    
+                    accessory.TTS("Spread", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -6354,19 +6337,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     }
                 
                 }
-            
-                if(Enable_TTS_Prompts) {
+                
+                if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                     if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                        accessory.Method.TTS("最远死刑");
-                    
+                        accessory.TTS("最远死刑", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                     }
 
                     if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                        accessory.Method.TTS("Stay away and bait");
-                    
+                        accessory.TTS("Stay away and bait", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                     }
                 
                 }
@@ -6392,19 +6375,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         }
                 
                     }
-            
-                    if(Enable_TTS_Prompts) {
+                    
+                    if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                            accessory.Method.TTS("远离MT");
-                    
+                            accessory.TTS("远离MT", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                         }
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                            accessory.Method.TTS("Stay away from MT");
-                    
+                            accessory.TTS("Stay away from MT", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                         }
                 
                     }
@@ -6428,19 +6411,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         }
                 
                     }
-            
-                    if(Enable_TTS_Prompts) {
+                    
+                    if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                            accessory.Method.TTS("远离ST");
-                    
+                            accessory.TTS("远离ST", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                         }
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                            accessory.Method.TTS("Stay away from OT");
-                    
+                            accessory.TTS("Stay away from OT", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                         }
                 
                     }
@@ -6675,18 +6658,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS(((inTheNorth)?("Boss即将出现在正北"):("Boss即将出现在正南")));
-                    
+                    accessory.TTS($"{((inTheNorth) ? ("Boss即将出现在正北") : ("Boss即将出现在正南"))}",
+                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS(((inTheNorth)?("The Boss will appear in the north"):("The Boss will appear in the south")));
-                    
+                    accessory.TTS($"{((inTheNorth) ? ("The Boss will appear in the north") : ("The Boss will appear in the south"))}", 
+                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -6822,18 +6807,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("集合并远离未来的碎片");
-                    
+                    accessory.TTS("集合并远离未来的碎片", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Get together and stay away from Fragment of Fate");
-                    
+                    accessory.TTS("Get together and stay away from Fragment of Fate", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -6862,18 +6847,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("跑！");
-                    
+                    accessory.TTS("跑！", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Run!");
-                    
+                    accessory.TTS("Run!", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -8224,15 +8209,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         
                     }
 
-                    if(Enable_TTS_Prompts) {
-                        
-                        accessory.Method.TTS(phase4_getResidueDescription(relativePositionOfMyResidue));
-                        
-                    }
+                    accessory.TTS($"{phase4_getResidueDescription(relativePositionOfMyResidue)}", 
+                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
 
-                    
-                    
-                    if(Enable_Developer_Mode) {
+
+
+                    if (Enable_Developer_Mode) {
 
                         accessory.Method.SendChat($"""
                                                    /e 
@@ -8893,18 +8875,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS(((goLeft)?("左侧分摊"):("右侧分摊")));
-                    
+                    accessory.TTS($"{((goLeft) ? ("左侧分摊") : ("右侧分摊"))}", 
+                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS(((goLeft)?("Stack on the left"):("Stack on the right")));
-                    
+                    accessory.TTS($"{((goLeft) ? ("Stack on the left") : ("Stack on the right"))}", 
+                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -9292,19 +9276,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                             }
                 
                         }
-            
-                        if(Enable_TTS_Prompts) {
+                        
+                        if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                             if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                                accessory.Method.TTS("等待挑衅后退避");
-                    
+                                accessory.TTS("等待挑衅后退避", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                             }
 
                             if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                                accessory.Method.TTS("Wait for provocation then shirk");
-                    
+                                accessory.TTS("Wait for provocation then shirk", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                             }
                 
                         }
@@ -9365,19 +9349,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                             }
                 
                         }
-            
-                        if(Enable_TTS_Prompts) {
+                        
+                        if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                             if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                                accessory.Method.TTS("立即挑衅！");
-                    
+                                accessory.TTS("立即挑衅！", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                             }
 
                             if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                                accessory.Method.TTS("Now provoke!");
-                    
+                                accessory.TTS("Now provoke!", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                             }
                 
                         }
@@ -10126,18 +10110,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Enable_TTS_Prompts) {
+            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
-                    accessory.Method.TTS("挡枪然后换组");
-                    
+                    accessory.TTS("挡枪然后换组", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
 
                 if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
                     
-                    accessory.Method.TTS("Take hits and swap the group");
-                    
+                    accessory.TTS("Take hits and swap the group", Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
                 }
                 
             }
@@ -10264,6 +10248,21 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             var rot = (MathF.PI - MathF.Atan2(v2.X, v2.Y) + radian);
             var lenth = v2.Length();
             return new(centre.X + MathF.Sin(rot) * lenth, centre.Y, centre.Z - MathF.Cos(rot) * lenth);
+        }
+    }
+}
+
+public static class Extensions
+{
+    public static void TTS(this ScriptAccessory accessory, string text, bool isTTS, bool isDRTTS)
+    {
+        if (isDRTTS)
+        {
+            accessory.Method.SendChat($"/pdr tts {text}");
+        }
+        else if (isTTS)
+        {
+            accessory.Method.TTS(text);
         }
     }
 }
