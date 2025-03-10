@@ -6657,25 +6657,23 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 }
                 
             }
-            
-            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
 
-                if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
-                    
-                    accessory.TTS($"{((inTheNorth) ? ("Boss即将出现在正北") : ("Boss即将出现在正南"))}",
-                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+            if (Language_Of_Prompts == Languages_Of_Prompts.Simplified_Chinese_简体中文)
+            {
 
-                }
+                accessory.TTS($"{((inTheNorth) ? ("Boss即将出现在正北") : ("Boss即将出现在正南"))}",
+                                Enable_TTS_Prompts, Enable_DRTTS_Prompts);
 
-                if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
-                    
-                    accessory.TTS($"{((inTheNorth) ? ("The Boss will appear in the north") : ("The Boss will appear in the south"))}", 
-                                    Enable_TTS_Prompts, Enable_DRTTS_Prompts);
-
-                }
-                
             }
-            
+
+            if (Language_Of_Prompts == Languages_Of_Prompts.English_英文)
+            {
+
+                accessory.TTS($"{((inTheNorth) ? ("The Boss will appear in the north") : ("The Boss will appear in the south"))}",
+                                Enable_TTS_Prompts, Enable_DRTTS_Prompts);
+
+            }
+
         }
 
         private int MyLampIndex(int myPartyIndex)
@@ -8875,8 +8873,6 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if (Enable_TTS_Prompts || Enable_DRTTS_Prompts) {
-
                 if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
                     
                     accessory.TTS($"{((goLeft) ? ("左侧分摊") : ("右侧分摊"))}", 
@@ -8890,8 +8886,6 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                                     Enable_TTS_Prompts, Enable_DRTTS_Prompts);
 
                 }
-                
-            }
 
         }
         
@@ -10256,6 +10250,7 @@ public static class Extensions
 {
     public static void TTS(this ScriptAccessory accessory, string text, bool isTTS, bool isDRTTS)
     {
+        if (isTTS && isDRTTS) accessory.Method.TTS(text);
         if (isDRTTS)
         {
             accessory.Method.SendChat($"/pdr tts {text}");
