@@ -3,7 +3,7 @@ using KodakkuAssist.Module.GameEvent;
 using KodakkuAssist.Script;
 using KodakkuAssist.Module.GameEvent.Struct;
 using KodakkuAssist.Module.Draw;
-using System.Windows.Forms;
+// using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons;
@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.DirectoryServices;
+// using System.DirectoryServices;
 using System.Xml.Linq;
 using CicerosKodakkuAssist.FuturesRewrittenUltimate;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -24,9 +24,11 @@ using Newtonsoft.Json.Linq;
 namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 {
     
-    [ScriptType(name:"Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
+    // [ScriptType(name:"Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
+    [ScriptType(name:"HelloWorldFru",
         territorys:[1238],
-        guid:"148718fd-575d-493a-8ac7-1cc7092aff85",
+        // guid:"148718fd-575d-493a-8ac7-1cc7092aff85",
+        guid:"asdflocl",
         version:"0.0.0.73",
         note:notesOfTheScript,
         author:"Karlin")]
@@ -250,6 +252,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public bool Enable_Vanilla_TTS { get; set; } = true;
         [UserSetting("启用Daily Routines TTS (It requires the plugin Daily Routines to be enabled already!/需要已经启用插件Daily Routines!)")]
         public bool Enable_Daily_Routines_TTS { get; set; } = false;
+        
+        [UserSetting("-----策略设置----- (No actual meaning for this setting/此设置无实际意义)")]
+        public bool _____Strategy_Settings_____ { get; set; } = true;
+        [UserSetting("绝伊甸解法策略预设选项")]
+        public Fru_StrategyPackEnum Fru_StrategyPack { get; set; }
 
         [UserSetting("-----P1设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase1_Settings_____ { get; set; } = true;
@@ -259,7 +266,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public ScriptColor Phase1_Colour_Of_Burnt_Strike_Characteristics { get; set; } = new() { V4=new(1f,1f,0f,1f) };
         [UserSetting("P1 光轮召唤分组")]
         public Phase1_Groups_Of_Turn_Of_The_Heavens Phase1_Group_Of_Turn_Of_The_Heavens { get; set; }
-        [UserSetting("P1 信仰崩塌(四连抓)攻略")]
+        [UserSetting("* P1 信仰崩塌(四连抓)攻略")]
         public Phase1_Strats_Of_Fall_Of_Faith Phase1_Strat_Of_Fall_Of_Faith { get; set; }
         [UserSetting("P1 信仰崩塌(四连抓)标记玩家 (Make sure only one in the party enables this!/小队内只能有一人启用此选项!)")]
         public bool Phase1_Mark_Players_During_Fall_Of_Faith { get; set; } = false;
@@ -280,19 +287,15 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public ScriptColor Phase2_Colour_Of_Potential_Dangerous_Zones { get; set; } = new() { V4=new(1f,0f,0f,1f) };
         [UserSetting("P2光之失控(光暴) 初始八方站位")]
         public Phase2_Initial_Protean_Positions_Of_Light_Rampant Phase2_Initial_Protean_Position_Of_Light_Rampant { get; set; }
-        [UserSetting("P2光之失控(光暴) 攻略")]
+        [UserSetting("* P2光之失控(光暴) 攻略")]
         public Phase2_Strats_Of_Light_Rampant Phase2_Strat_Of_Light_Rampant { get; set; }
 
         [UserSetting("-----P3设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase3_Settings_____ { get; set; } = true;
         [UserSetting("P3一运 攻略")]
         public Phase3_Strats_Of_The_First_Half Phase3_Strat_Of_The_First_Half { get; set; }
-        [UserSetting("P3二运 攻略")]
+        [UserSetting("* P3二运 攻略")]
         public Phase3_Strats_Of_The_Second_Half Phase3_Strat_Of_The_Second_Half { get; set; }
-        [UserSetting("P3二运 双分组法的分支")]
-        public Phase3_Branches_Of_The_Double_Group_Strat Phase3_Branch_Of_The_Double_Group_Strat { get; set; } = Phase3_Branches_Of_The_Double_Group_Strat.Based_On_Safe_Positions_安全区为基准;
-        [UserSetting("P3二运 车头低换法的分支")]
-        public Phase3_Branches_Of_The_Locomotive_Strat Phase3_Branch_Of_The_Locomotive_Strat { get; set; }
         [UserSetting("P3二运 场地划分方式")]
         public Phase3_Divisions_Of_The_Zone Phase3_Division_Of_The_Zone { get; set; } = Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南;
         [UserSetting("P3二运 粗略指路与倒数第二次启示(地火)的颜色")]
@@ -464,6 +467,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         Vector3 phase5_positionToStandbyOnTheRight_asAConstant=new Vector3(100.76f,0,108.72f);
         // The left and right here refer to the left and right while facing the center of the zone (100,0,100).
         
+        private static ulong fruStragetyId = 0;
+        
         public enum Languages_Of_Prompts {
         
             Simplified_Chinese_简体中文,
@@ -562,24 +567,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         public enum Phase3_Strats_Of_The_Second_Half {
             
-            Double_Group_双分组法,
-            High_Priority_As_Locomotives_车头低换法,
+            Double_Group_Based_On_Safe_双分组安全区基准,
+            Double_Group_Based_On_Apocalypse2nd_双分组二火基准,
+            MT_And_D1_As_Locomotives_车头低换MTD1车头,
+            Others_As_Locomotives_车头低换人群车头,
             Other_Strats_Are_Work_In_Progress_其他攻略正在施工中
-            
-        }
-
-        public enum Phase3_Branches_Of_The_Double_Group_Strat {
-            
-            Based_On_Safe_Positions_安全区为基准,
-            Based_On_The_Second_Apocalypse_第二次启示为基准
-            
-        }
-
-        public enum Phase3_Branches_Of_The_Locomotive_Strat {
-            
-            MT_And_M1_As_Locomotives_MT和D1为车头,
-            Others_As_Locomotives_人群为车头
-            
         }
 
         public enum Phase3_Divisions_Of_The_Zone {
@@ -620,6 +612,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             Tanks_Melees_Ranges_Healers_坦克近战远程奶妈,
             Tanks_Healers_Melees_Ranges_坦克奶妈近战远程
             
+        }
+
+        public enum Fru_StrategyPackEnum: ulong
+        {
+            不使用预设策略 = 0,
+            HTD双排_六芒星_就近近战右_车头MTD1 = 1 *StrategyIdx.htd双排 + 10 * StrategyIdx.六芒星 + 100 *StrategyIdx.就近近战右 + 1000 *StrategyIdx.车头MTD1,
+            HTD双排_新灰九_就近近战右_双分组安基 = 1 *StrategyIdx.htd双排 + 10 * StrategyIdx.新灰九 + 100 *StrategyIdx.就近近战右 + 1000 *StrategyIdx.双分组安基,
+            HTDH双排_六芒星_就近近战右_双分组安基 = 1 *StrategyIdx.htdh单排 + 10 * StrategyIdx.六芒星 + 100 *StrategyIdx.就近近战右 + 1000 *StrategyIdx.双分组安基,
         }
 
         public void Init(ScriptAccessory accessory)
@@ -696,8 +696,150 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             phase5_hasAcquiredTheFirstTower=false;
             phase5_indexOfTheFirstTower="";
             phase5_hasConfirmedTheInitialPosition=false;
+            
+            SetFruStrategy(accessory);
         }
 
+        private ulong CalcFruStrategy(ScriptAccessory accessory)
+        {
+            // 计算策略ID
+            ulong id = 0;
+            id += 1 * Phase1_Strat_Of_Fall_Of_Faith switch
+            {
+                Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_THD_Order_按THD顺序单排 => (ulong)StrategyIdx.tdh单排,
+                Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_HTD_Order_按HTD顺序单排 => (ulong)StrategyIdx.htd单排,
+                Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_H1TDH2_Order_按H1TDH2顺序单排 => (ulong)StrategyIdx.htdh单排,
+                Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_H12MOT_Left_M12R12_Right_双排左H12MST右D1234 => (ulong)StrategyIdx.htd双排,
+                Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_MOTH12_Left_M12R12_Right_双排左MSTH12右D1234 => (ulong)StrategyIdx.tdh单排,
+                _ => 0u,
+            };
+            
+            id += 10 * Phase2_Strat_Of_Light_Rampant switch
+            {
+                Phase2_Strats_Of_Light_Rampant.Star_Of_David_Japanese_PF_六芒星日服野队法 => (ulong)StrategyIdx.六芒星,
+                Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法 => (ulong)StrategyIdx.新灰九,
+                Phase2_Strats_Of_Light_Rampant.Lucrezia_L团法 => (ulong)StrategyIdx.L团法,
+                Phase2_Strats_Of_Light_Rampant.Deprecated_Old_Grey9_已废弃的旧灰九法 => (ulong)StrategyIdx.旧灰九,
+                _ => 0u,
+            };
+            
+            id += 100 * Phase2_Strat_Of_Mirror_Mirror switch
+            {
+                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Left_Red_近战组去左红色镜子 => (ulong)StrategyIdx.近战左红,
+                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Right_Red_近战组去右红色镜子 => (ulong)StrategyIdx.近战右红,
+                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Left_If_Same_近战组最近红色镜子距离相同则左 => (ulong)StrategyIdx.就近近战左,
+                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Right_If_Same_近战组最近红色镜子距离相同则右 => (ulong)StrategyIdx.就近近战右,
+                _ => 0u,
+            };
+
+            id += 1000 * Phase3_Strat_Of_The_Second_Half switch
+            {
+                Phase3_Strats_Of_The_Second_Half.Double_Group_Based_On_Safe_双分组安全区基准 => (ulong)StrategyIdx.双分组安基,
+                Phase3_Strats_Of_The_Second_Half.Double_Group_Based_On_Apocalypse2nd_双分组二火基准 => (ulong)StrategyIdx.双分组二火基,
+                Phase3_Strats_Of_The_Second_Half.MT_And_D1_As_Locomotives_车头低换MTD1车头 => (ulong)StrategyIdx.车头MTD1,
+                Phase3_Strats_Of_The_Second_Half.Others_As_Locomotives_车头低换人群车头 => (ulong)StrategyIdx.车头人群,
+                _ => 0u,
+            };
+
+            return id;
+        }
+
+        private void SetFruStrategy(ScriptAccessory accessory)
+        {
+            var str = "===== 初始化完成 =====\n";
+            if ((ulong)Fru_StrategyPack == 0)
+            {
+                str += "你未使用预设包内集成策略，请自行于用户设置中选择。\n";
+                fruStragetyId = CalcFruStrategy(accessory);
+            }
+            else
+            {
+                str += "你使用了预设包内集成策略，将忽略部分用户设置。\n";
+                fruStragetyId = (ulong)Fru_StrategyPack;
+            }
+            
+            str += "更改策略后，请随时输入【/e init】应用设置。\n";
+            var p1Fof = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P1四连);
+            str += $"- P1 罪壤堕 {p1Fof}：";
+            str += p1Fof switch
+            {
+                (int)StrategyIdx.tdh单排 => "T-H-D单排",
+                (int)StrategyIdx.htd单排 => "H-T-D单排",
+                (int)StrategyIdx.htdh单排 => "H-T-D-H单排",
+                (int)StrategyIdx.htd双排 => "H-T-D双排",
+                (int)StrategyIdx.thd双排 => "T-H-D双排",
+                _ => "禁用指路",
+            };
+            str += "\n";
+
+            var p2Lr = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2光爆);
+            str += $"- P2 光爆 {p2Lr}：";
+            str += p2Lr switch
+            {
+                (int)StrategyIdx.六芒星 => "正六芒星（田园郡）",
+                (int)StrategyIdx.新灰九 => "新灰9（密码表）",
+                (int)StrategyIdx.L团法 => "Lucrezia团",
+                (int)StrategyIdx.旧灰九 => "旧灰9",
+                _ => "禁用指路",
+            };
+            str += "\n";
+
+            
+            var p2Mirror = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2镜子);
+            str += $"- P2 镜子 {p2Mirror}：";
+            str += p2Mirror switch
+            {
+                (int)StrategyIdx.近战左红 => "近战左红",
+                (int)StrategyIdx.近战右红 => "近战右红",
+                (int)StrategyIdx.就近近战左 => "就近，近战左红",
+                (int)StrategyIdx.就近近战右 => "就近，近战右红",
+                _ => "禁用指路",
+            };
+            str += "\n";
+            
+            var p3Apo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            str += $"- P3 地火 {p3Apo}：";
+            str += p3Apo switch
+            {
+                (int)StrategyIdx.双分组安基 => "双分组安全区基准",
+                (int)StrategyIdx.双分组二火基 => "双分组二火基准",
+                (int)StrategyIdx.车头MTD1 => "车头低换MTD1车头",
+                (int)StrategyIdx.车头人群 => "车头低换人群车头",
+                _ => "禁用指路",
+            };
+            
+            // 必须播报
+            accessory.DebugMsg(str, true);
+        }
+        
+        public static int GetDecimalDigit(ulong val, int x)
+        {
+            var valStr = val.ToString();
+            var length = valStr.Length;
+            
+            if (x < 1 || x > length)
+            {
+                return -1;
+            }
+            
+            var digitChar = valStr[length - x];
+            return int.Parse(digitChar.ToString());
+        }
+        
+        [ScriptMethod(name: "默语事件", eventType: EventTypeEnum.Chat, eventCondition: ["Type:Echo"], userControl: false)]
+        public void EchoActive(Event @event, ScriptAccessory accessory)
+        {
+            var msg = @event["Message"];
+            switch (msg)
+            {
+                case "init":
+                    accessory.DebugMsg($"来自Kodakku Assist的消息，正在重置策略：\n", true);
+                    System.Threading.Thread.Sleep(500);
+                    SetFruStrategy(accessory);
+                    break;
+            }
+        }
+        
         #region P1
         
         [ScriptMethod(name:"----- Phase 1 ----- (No actual meaning for this toggle/此开关无实际意义)",
@@ -2156,10 +2298,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             
             var tetheredPlayers=phase1_tetheredPlayersDuringFallOfFaith.Select(o=>o%10).ToList();
             List<int> untetheredPlayers=[];
+
+            var stratFof = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P1四连);
             
-            if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_THD_Order_按THD顺序单排
-               ||
-               Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_MOTH12_Left_M12R12_Right_双排左MSTH12右D1234) {
+            if (stratFof is (int)StrategyIdx.tdh单排 or (int)StrategyIdx.thd双排) // TDH
+            {
                 
                 for(int i=0;i<accessory.Data.PartyList.Count;++i) {
 
@@ -2173,9 +2316,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
                     
-            if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_HTD_Order_按HTD顺序单排
-               ||
-               Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_H12MOT_Left_M12R12_Right_双排左H12MST右D1234) {
+            if (stratFof is (int)StrategyIdx.htd单排 or (int)StrategyIdx.htd双排) // HTD
+            {
                 // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                 List<int> temporaryPriority=new List<int>{2,3,0,1,4,5,6,7};
@@ -2191,8 +2333,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 }
                         
             }
-                    
-            if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_H1TDH2_Order_按H1TDH2顺序单排) {
+            
+            if (stratFof is (int)StrategyIdx.htdh单排)  // HTDH
+            {
                 // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                 List<int> temporaryPriority=new List<int>{2,0,1,4,5,6,7,3};
@@ -2446,9 +2589,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     var tehterObjIndex = phase1_tetheredPlayersDuringFallOfFaith.Select(o => o % 10).ToList();
                     var tehterIsFire = phase1_tetheredPlayersDuringFallOfFaith.Select(o => o < 20).ToList();
                     List<int> idleObjIndex = [];
-                    if (Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_THD_Order_按THD顺序单排
-                        ||
-                        Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_MOTH12_Left_M12R12_Right_双排左MSTH12右D1234)
+                    
+                    
+                    var stratFof = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P1四连);
+                    if (stratFof is (int)StrategyIdx.tdh单排 or (int)StrategyIdx.thd双排) // THD单排 或 THD双排
                     {
                         for (int i = 0; i < accessory.Data.PartyList.Count; i++)
                         {
@@ -2457,9 +2601,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         }
                     }
                     
-                    if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_HTD_Order_按HTD顺序单排
-                       ||
-                       Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_H12MOT_Left_M12R12_Right_双排左H12MST右D1234) {
+                    if (stratFof is (int)StrategyIdx.htd单排 or (int)StrategyIdx.htd双排) // HTD单排 或 HTD双排
+                    {
                         // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                         List<int> htdOrder=new List<int>{2,3,0,1,4,5,6,7};
@@ -2476,7 +2619,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         
                     }
                     
-                    if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_H1TDH2_Order_按H1TDH2顺序单排) {
+                    if (stratFof is (int)StrategyIdx.htdh单排)  // HTDH
+                    {
                         // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                         List<int> h1tdh2Order=new List<int>{2,0,1,4,5,6,7,3};
@@ -2505,7 +2649,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     Vector3 i4p2=new Vector3(100,0,100);
                     Vector3 dealpos1=default;
                     Vector3 dealpos2=default;
-
+                    
                     if(Phase1_Orientation_Benchmark_During_Fall_Of_Faith==Phase1_Orientation_Benchmarks_During_Fall_Of_Faith.High_Priority_Left_Facing_Due_North_面向正北左侧高优先级) {
                         
                         i1p1=tehterIsFire[0]?new(100,0,100-far-dis):new(100-dis,0,100-far);
@@ -4202,7 +4346,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             else
             {
-                int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                // 此处近战组分摊，远程组分摊
+                // int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                int[] group = [4, 5, 6, 7, 0, 1, 2, 3];
                 var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 for (int i = 0; i < 4; i++)
                 {
@@ -4640,14 +4786,15 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             
             var currentProperty=accessory.Data.GetDefaultDrawProperties();
+            
+            var stratMirror = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2镜子);
 
             if(((leftMirror+1)%8)==colourlessMirror
                ||
                ((leftMirror+1)%8)==phase2_getOppositeProteanPosition(colourlessMirror)) {
 
-                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Left_Red_近战组去左红色镜子
-                   ||
-                   Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Left_If_Same_近战组最近红色镜子距离相同则左) {
+                if (stratMirror is (int)StrategyIdx.近战左红 or (int)StrategyIdx.就近近战左) 
+                {
 
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4678,9 +4825,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     
                 }
                 
-                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Right_Red_近战组去右红色镜子
-                   ||
-                   Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Right_If_Same_近战组最近红色镜子距离相同则右) {
+                if (stratMirror is (int)StrategyIdx.近战右红 or (int)StrategyIdx.就近近战右) 
+                {
                     
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4715,7 +4861,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             else {
                 
-                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Left_Red_近战组去左红色镜子) {
+                if (stratMirror is (int)StrategyIdx.近战左红) 
+                {
 
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4746,7 +4893,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     
                 }
                 
-                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Right_Red_近战组去右红色镜子) {
+                if (stratMirror is (int)StrategyIdx.近战右红) {
                     
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4843,9 +4990,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(discreteDistanceToTheLeft>discreteDistanceToTheRight) {
                     
-                    if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Left_If_Same_近战组最近红色镜子距离相同则左
-                       ||
-                       Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Right_If_Same_近战组最近红色镜子距离相同则右) {
+                    if (stratMirror is (int)StrategyIdx.就近近战左 or (int)StrategyIdx.就近近战右)
+                    {
                         
                         Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -5198,9 +5344,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             Vector3 eastMeetingPoint=new Vector3(118.00f,0,100.00f);
             Vector3 southMeetingPoint=new Vector3(100.00f,0,118.00f);
             Vector3 westMeetingPoint=new Vector3(82.00f,0,100.00f);
-            
-            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Star_Of_David_Japanese_PF_六芒星日服野队法) {
-                
+
+
+            var stratLr = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2光爆);
+            if (stratLr is (int)StrategyIdx.六芒星)   // 六芒星
+            {
                 myTower=myTetherIndex switch {
                     1 => tower4,
                     4 => tower1,
@@ -5228,7 +5376,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法) {
+            if (stratLr is (int)StrategyIdx.新灰九)   // 新灰9
+            {
                 
                 int numberOfPlayersWithLuminousHammerBefore=0;
                 
@@ -5326,7 +5475,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Lucrezia_L团法) {
+            if (stratLr is (int)StrategyIdx.L团法)   // L团
+            {
                 
                 myTower=myTetherIndex switch {
                     1 => tower1,
@@ -5355,7 +5505,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Deprecated_Old_Grey9_已废弃的旧灰九法) {
+            if (stratLr is (int)StrategyIdx.旧灰九)   // 旧灰9
+            {
                 
                 int numberOfPlayersWithLuminousHammerBefore=0;
                 
@@ -6424,8 +6575,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             
             System.Threading.Thread.MemoryBarrier();
             
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
-                
+            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            
+            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
+            {
                 bool goLeft=phase3_doubleGroup_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
                 bool stayInTheGroup=phase3_doubleGroup_shouldStayInTheGroup(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
                 string prompt="";
@@ -6515,8 +6668,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
-
+            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
+            {
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 bool goLeft=phase3_locomotive_shouldGoLeft(myIndex);
                 string prompt="";
@@ -6564,8 +6717,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 }
 
-                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.MT_And_M1_As_Locomotives_MT和D1为车头) {
-
+                if (stratApo is (int)StrategyIdx.车头MTD1)
+                {
                     if(myIndex!=0&&myIndex!=4) {
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
@@ -6600,7 +6753,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
                 
-                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.Others_As_Locomotives_人群为车头) {
+                if (stratApo is (int)StrategyIdx.车头人群)
+                {
 
                     if(myIndex!=0&&myIndex!=4) {
 
@@ -6726,9 +6880,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             
             var currentProperty=accessory.Data.GetDefaultDrawProperties();
-
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
-                
+            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            
+            System.Threading.Thread.MemoryBarrier();
+            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
+            {
+               
                 if(phase3_numberOfDarkWaterIiiHasBeenProcessed==6) {
                     
                     int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
@@ -6841,7 +6998,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
+            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
+            {
                 
                 if(phase3_numberOfDarkWaterIiiHasBeenProcessed==6) {
                     
@@ -6966,7 +7124,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             currentProperty.Color=accessory.Data.DefaultSafeColor;
             currentProperty.DestoryAt=5000;
 
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
+            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
+            {
                 
                 bool goLeft=phase3_doubleGroup_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
                 bool stayInTheGroup=phase3_doubleGroup_shouldStayInTheGroup(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
@@ -7149,7 +7309,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
+            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
+            {
                 
                 bool goLeft=phase3_locomotive_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
 
@@ -7542,7 +7703,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             currentProperty.Delay=1250;
             currentProperty.DestoryAt=2500;
 
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
+            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
+            {
 
                 int myDoubleGroupIndex=phase3_doubleGroup_getDoubleGroupIndex(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
 
@@ -7733,9 +7896,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
+            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
+            {
 
-                if(Phase3_Branch_Of_The_Double_Group_Strat==Phase3_Branches_Of_The_Double_Group_Strat.Based_On_Safe_Positions_安全区为基准) {
+                if (stratApo is (int)StrategyIdx.双分组安基) {
 
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -7831,7 +7996,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
                 
-                if(Phase3_Branch_Of_The_Double_Group_Strat==Phase3_Branches_Of_The_Double_Group_Strat.Based_On_The_Second_Apocalypse_第二次启示为基准) {
+                if (stratApo is (int)StrategyIdx.双分组二火基)
+                {
 
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -7929,9 +8095,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
+            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
+            {
 
-                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.MT_And_M1_As_Locomotives_MT和D1为车头) {
+                if (stratApo is (int)StrategyIdx.车头MTD1) {
 
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -8027,7 +8194,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
 
-                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.Others_As_Locomotives_人群为车头) {
+                if (stratApo is (int)StrategyIdx.车头人群) {
                     
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -8292,7 +8459,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             currentProperty.Delay=500;
             currentProperty.DestoryAt=6500;
 
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
+            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
+            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基) {
 
                 if(0<=accessory.Data.PartyList.IndexOf(accessory.Data.Me)
                    &&
@@ -8316,7 +8484,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
+            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群) {
 
                 bool goLeft=phase3_locomotive_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
 
@@ -12345,5 +12513,46 @@ public static class Extensions
             }
         }
     }
+    
+    public static void DebugMsg(this ScriptAccessory accessory, string str, bool debugMode = false)
+    {
+        if (!debugMode)
+            return;
+        accessory.Method.SendChat($"/e [DEBUG] {str}");
+    }
+}
+
+public enum StrategyIdx : int
+{ 
+    // 位数记录
+    P1四连 = 1,
+    P2光爆 = 2,
+    P2镜子 = 3,
+    P3地火 = 4,
+    
+    // P1 四连
+    tdh单排 = 1,
+    htd单排 = 2,
+    htdh单排 = 3,
+    htd双排 = 4,
+    thd双排 = 5,
+    
+    // P2 镜子
+    近战左红 = 1,
+    近战右红 = 2,
+    就近近战左 = 3,
+    就近近战右 = 4,
+    
+    // P2 光爆
+    六芒星 = 1,
+    新灰九 = 2,
+    L团法 = 3,
+    旧灰九 = 4,
+    
+    // P3 地火
+    双分组安基 = 1,
+    双分组二火基 = 2,
+    车头MTD1 = 3,
+    车头人群 = 4,
 }
 
