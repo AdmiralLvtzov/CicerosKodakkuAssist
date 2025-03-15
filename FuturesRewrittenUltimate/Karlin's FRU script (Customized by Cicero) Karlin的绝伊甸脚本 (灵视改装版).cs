@@ -302,6 +302,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         [UserSetting("-----P4设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase4_Settings_____ { get; set; } = true;
+
+        [UserSetting("P4一运 水分摊换位方式")]
+        public Phase4_1_StackTypeEnum Phase4_1_StackType { get; set; } = Phase4_1_StackTypeEnum.双换;
         [UserSetting("P4二运 正常灯和延时灯的范围显示时间(second/秒)")]
         public float Phase4_Drawing_Duration_Of_Normal_And_Delayed_Lights { get; set; } = 3f;
         [UserSetting("P4二运 圣龙气息(龙头)碰撞箱的颜色")]
@@ -440,6 +443,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         volatile List<ulong> phase4_residueIdsFromEastToWest=[0,0,0,0];
         // The leftmost (0), the about left (1), the about right (2), the rightmost (3) while facing south.
         volatile bool phase4_guidanceOfResiduesHasBeenGenerated=false;
+        System.Threading.ManualResetEvent phase4_1_ManualReset = new System.Threading.ManualResetEvent(false);
+        int phase4_1_TetherCount = 0;
 
         volatile string phase5_bossId="";
         volatile bool phase5_hasAcquiredTheFirstTower=false;
@@ -595,6 +600,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             NONE
             
         }
+        public enum Phase4_1_StackTypeEnum
+        {
+            双换,
+            单换,
+        }
+        
 
         public enum Phase4_Relative_Positions_Of_Residues {
 
@@ -4200,7 +4211,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             else
             {
-                int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                //int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                int[] group = [4, 5, 6, 7, 0, 7, 2, 3];
                 var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 for (int i = 0; i < 4; i++)
                 {
@@ -9122,6 +9134,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             P4Tether = [-1, -1, -1, -1, -1, -1, -1, -1];
             P4Stack = [0, 0, 0, 0, 0, 0, 0, 0];
             P4TetherDone = false;
+            phase4_1_ManualReset.Reset();
+            phase4_1_TetherCount = 0;
         }
         [ScriptMethod(name: "P4_暗光龙诗_Buff记录", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2461"], userControl: false)]
         public void P4_暗光龙诗_Buff记录(Event @event, ScriptAccessory accessory)
@@ -9139,7 +9153,17 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var sIndex = accessory.Data.PartyList.IndexOf(((uint)sid));
             var tIndex = accessory.Data.PartyList.IndexOf(((uint)tid));
-            P4Tether[sIndex] = tIndex;
+            lock(this)
+            {
+                P4Tether[sIndex] = tIndex;
+                phase4_1_TetherCount++;
+                if (phase4_1_TetherCount == 4)
+                {
+                    phase4_1_ManualReset.Set();
+                }
+            }
+            
+
         }
         [ScriptMethod(name: "P4_暗光龙诗_引导扇形", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40187"])]
         public void P4_暗光龙诗_引导扇形(Event @event, ScriptAccessory accessory)
@@ -9261,40 +9285,97 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             var ii = idles.IndexOf(idleStack);
 
-            if (upGroup.Contains(tetherStack))
+            if (Phase4_1_StackType == Phase4_1_StackTypeEnum.双换)
             {
-                //线分摊在上
-                if (ii==0||ii==2)
+                if (upGroup.Contains(tetherStack))
                 {
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
+                    //线分摊在上
+                    if (ii == 0 || ii == 2)
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                        upGroup.Add(idles[3]);//lowD
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                    }
                 }
-                if (ii == 1 || ii == 3)
+                if (downGroup.Contains(tetherStack))
                 {
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
+                    //线分摊在下
+                    if (ii == 0 || ii == 2)
+                    {
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        upGroup.Add(idles[1]);
+                        upGroup.Add(idles[3]);
+                        downGroup.Add(idles[0]);
+                        downGroup.Add(idles[2]);
+                    }
                 }
             }
-            if (downGroup.Contains(tetherStack))
+            if (Phase4_1_StackType == Phase4_1_StackTypeEnum.单换)
             {
-                //线分摊在下
-                if (ii == 0 || ii == 2)
+                if (upGroup.Contains(tetherStack))
                 {
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
+                    //线分摊在上
+                    if (ii == 0)//闲t分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 1)//闲n分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2 || ii == 3)//闲D分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+
                 }
-                if (ii == 1 || ii == 3)
+                if (downGroup.Contains(tetherStack))
                 {
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
+                    //线分摊在下
+                    if (ii == 0 || ii == 1)//tn分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2)//highD分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 3)//lowD分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
                 }
             }
 
@@ -9338,151 +9419,173 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
         }
         #region 远近跳
-        //[ScriptMethod(name: "P4_暗光龙诗_远近跳", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40283"])]
-        //public void P4_暗光龙诗_远近跳(Event @event, ScriptAccessory accessory)
-        //{
-        //    if (parse != 4.2) return;
-        //    if (!ParseObjectId(@event["SourceId"], out var sid)) return;
+        [ScriptMethod(name: "P4_暗光龙诗_远跳", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40283"])]
+        public void P4_暗光龙诗_远跳(Event @event, ScriptAccessory accessory)
+        {
+            if (parse != 4.2) return;
+            if (!ParseObjectId(@event["SourceId"], out var sid)) return;
 
-        //    var dp = accessory.Data.GetDefaultDrawProperties();
-        //    dp.Name = "P4_暗光龙诗_远跳";
-        //    dp.Scale = new(8);
-        //    dp.Owner = sid;
-        //    dp.CentreResolvePattern = PositionResolvePatternEnum.PlayerFarestOrder;
-        //    dp.Color = accessory.Data.DefaultDangerColor;
-        //    dp.DestoryAt = 5000;
-        //    accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
+            var dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_远跳";
+            dp.Scale = new(8);
+            dp.Owner = sid;
+            dp.CentreResolvePattern = PositionResolvePatternEnum.PlayerFarestOrder;
+            dp.Color = accessory.Data.DefaultDangerColor;
+            dp.Delay = 2000;
+            dp.DestoryAt = 3000;
+            accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
 
-        //    dp = accessory.Data.GetDefaultDrawProperties();
-        //    dp.Name = "P4_暗光龙诗_近跳";
-        //    dp.Scale = new(8);
-        //    dp.Owner = sid;
-        //    dp.CentreResolvePattern = PositionResolvePatternEnum.PlayerNearestOrder;
-        //    dp.Color = accessory.Data.DefaultDangerColor;
-        //    dp.Delay = 5000;
-        //    dp.Delay = 3500;
-        //    accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
+           
 
-        //}
+        }
+        [ScriptMethod(name: "P4_暗光龙诗_近跳", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40284"])]
+        public void P4_暗光龙诗_近跳(Event @event, ScriptAccessory accessory)
+        {
+            if (parse != 4.2) return;
+            var pos = JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            var dp2 = accessory.Data.GetDefaultDrawProperties();
+            dp2.Name = "P4_暗光龙诗_近跳";
+            dp2.Scale = new(8);
+            dp2.Position = pos;
+            dp2.CentreResolvePattern = PositionResolvePatternEnum.PlayerNearestOrder;
+            dp2.Color = accessory.Data.DefaultDangerColor;
+            dp2.DestoryAt = 3500;
+            accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp2);
+
+        }
         #endregion
+        [ScriptMethod(name: "P4_暗光龙诗_光之束缚_保持距离提示", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2255"])]
+        public void P4_暗光龙诗_光之束缚_保持距离提示(Event @event, ScriptAccessory accessory)
+        {
+            if (parse != 4.2) return;
+            if (!ParseObjectId(@event["TargetId"], out var tid)) return;
+            if (tid != accessory.Data.Me) return;
+            if (Language_Of_Prompts == Languages_Of_Prompts.Simplified_Chinese_简体中文)
+            {
+                accessory.Method.TextInfo("保持距离", 14000);
+                accessory.TTS($"保持距离",
+                    Enable_Vanilla_TTS, Enable_Daily_Routines_TTS);
+            }
+
+            if (Language_Of_Prompts == Languages_Of_Prompts.English_英文)
+            {
+                accessory.Method.TextInfo("Keep your distance", 14000);
+                accessory.TTS($"Keep your distance",
+                    Enable_Vanilla_TTS, Enable_Daily_Routines_TTS);
+            }
+        }
         [ScriptMethod(name: "P4_暗光龙诗_塔处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"])]
         public void P4_暗光龙诗_塔处理位置(Event @event, ScriptAccessory accessory)
         {
             if (parse != 4.2) return;
-            
+
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             if (sid != accessory.Data.Me) return;
             //accessory.Log.Debug("线");
-            Task.Delay(250).ContinueWith(t =>
+            phase4_1_ManualReset.WaitOne();
+
+            var tIndex = P4Tether[0] == -1 ? 1 : 0;
+            var nIndex = P4Tether[2] == -1 ? 3 : 2;
+            var d1Index = -1;
+            var d2Index = -1;
+            List<int> upGroup = [];
+            List<int> downGroup = [];
+            for (int i = 4; i < 7; i++)
             {
-                var tIndex = P4Tether[0] == -1 ? 1 : 0;
-                var nIndex = P4Tether[2] == -1 ? 3 : 2;
-                var d1Index = -1;
-                var d2Index = -1;
-                List<int> upGroup = [];
-                List<int> downGroup = [];
-                for (int i = 4; i < 7; i++)
+                for (int j = i + 1; j < 8; j++)
                 {
-                    for (int j = i + 1; j < 8; j++)
+                    if (P4Tether[i] != -1 && P4Tether[j] != -1)
                     {
-                        if (P4Tether[i] != -1 && P4Tether[j] != -1)
-                        {
-                            d1Index = i;
-                            d2Index = j;
-                        }
+                        d1Index = i;
+                        d2Index = j;
                     }
                 }
-                // t连线 高d 低d 蝴蝶结
-                if ((P4Tether[tIndex] == d1Index && P4Tether[d2Index] == tIndex) || (P4Tether[tIndex] == d2Index && P4Tether[d1Index] == tIndex))
-                {
-                    upGroup.Add(tIndex);
-                    upGroup.Add(nIndex);
-                    downGroup.Add(d1Index);
-                    downGroup.Add(d2Index);
-                }
-                // t连线 高d n 方块
-                if ((P4Tether[tIndex] == d1Index && P4Tether[nIndex] == tIndex) || (P4Tether[d1Index] == tIndex && P4Tether[tIndex] == nIndex))
-                {
-                    upGroup.Add(d1Index);
-                    upGroup.Add(nIndex);
-                    downGroup.Add(tIndex);
-                    downGroup.Add(d2Index);
-                }
-                // t连线 低d n 沙漏
-                if ((P4Tether[tIndex] == d2Index && P4Tether[nIndex] == tIndex) || (P4Tether[d2Index] == tIndex && P4Tether[tIndex] == nIndex))
-                {
-                    upGroup.Add(tIndex);
-                    upGroup.Add(d1Index);
-                    downGroup.Add(nIndex);
-                    downGroup.Add(d2Index);
-                }
+            }
+            // t连线 高d 低d 蝴蝶结
+            if ((P4Tether[tIndex] == d1Index && P4Tether[d2Index] == tIndex) || (P4Tether[tIndex] == d2Index && P4Tether[d1Index] == tIndex))
+            {
+                upGroup.Add(tIndex);
+                upGroup.Add(nIndex);
+                downGroup.Add(d1Index);
+                downGroup.Add(d2Index);
+            }
+            // t连线 高d n 方块
+            if ((P4Tether[tIndex] == d1Index && P4Tether[nIndex] == tIndex) || (P4Tether[d1Index] == tIndex && P4Tether[tIndex] == nIndex))
+            {
+                upGroup.Add(d1Index);
+                upGroup.Add(nIndex);
+                downGroup.Add(tIndex);
+                downGroup.Add(d2Index);
+            }
+            // t连线 低d n 沙漏
+            if ((P4Tether[tIndex] == d2Index && P4Tether[nIndex] == tIndex) || (P4Tether[d2Index] == tIndex && P4Tether[tIndex] == nIndex))
+            {
+                upGroup.Add(tIndex);
+                upGroup.Add(d1Index);
+                downGroup.Add(nIndex);
+                downGroup.Add(d2Index);
+            }
 
-                var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-                Vector3 dealpos = upGroup.Contains(myIndex) ? new(100, 0, 92) : new(100, 0, 108);
+            var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            Vector3 dealpos = upGroup.Contains(myIndex) ? new(100, 0, 92) : new(100, 0, 108);
 
-                var dur = 10000;
-                var dp = accessory.Data.GetDefaultDrawProperties();
-                dp.Name = "P4_暗光龙诗_塔处理位置";
-                dp.Scale = new(2);
-                dp.ScaleMode |= ScaleMode.YByDistance;
-                dp.Owner = accessory.Data.Me;
-                dp.TargetPosition = dealpos;
-                dp.Color = accessory.Data.DefaultSafeColor;
-                dp.DestoryAt = dur;
-                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+            var dur = 10000;
+            var dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_塔处理位置";
+            dp.Scale = new(2);
+            dp.ScaleMode |= ScaleMode.YByDistance;
+            dp.Owner = accessory.Data.Me;
+            dp.TargetPosition = dealpos;
+            dp.Color = accessory.Data.DefaultSafeColor;
+            dp.DestoryAt = dur;
+            accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
 
-                dp = accessory.Data.GetDefaultDrawProperties();
-                dp.Name = "P4_暗光龙诗_塔处理位置";
-                dp.Scale = new(4);
-                dp.ScaleMode |= ScaleMode.YByDistance;
-                dp.Position = dealpos;
-                dp.Color = accessory.Data.DefaultSafeColor;
-                dp.DestoryAt = dur;
-                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Circle, dp);
-            });
-            
+            dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_塔处理位置";
+            dp.Scale = new(4);
+            dp.ScaleMode |= ScaleMode.YByDistance;
+            dp.Position = dealpos;
+            dp.Color = accessory.Data.DefaultSafeColor;
+            dp.DestoryAt = dur;
+            accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Circle, dp);
+
+
         }
-        [ScriptMethod(name: "P4_暗光龙诗_引导处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"])]
+        [ScriptMethod(name: "P4_暗光龙诗_引导处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"], suppress: 2000)]
         public void P4_暗光龙诗_引导处理位置(Event @event, ScriptAccessory accessory)
         {
             if (parse != 4.2) return;
-            lock (this)
+            phase4_1_ManualReset.WaitOne();
+
+            List<int> idles = [];
+            for (int i = 0; i < 8; i++)
             {
-                if (P4TetherDone) return;
-                P4TetherDone = true;
-            }
-            Task.Delay(250).ContinueWith(t =>
-            {
-                List<int> idles = [];
-                for (int i = 0; i < 8; i++)
+                if (P4Tether[i] == -1)
                 {
-                    if (P4Tether[i] == -1)
-                    {
-                        idles.Add(i);
-                    }
+                    idles.Add(i);
                 }
-                var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-                if (!idles.Contains(myIndex)) return;
-                Vector3 dealpos = idles.IndexOf(myIndex) switch
-                {
-                    0 => new(095.8f, 0, 098.0f),
-                    1 => new(104.2f, 0, 098.0f),
-                    2 => new(095.8f, 0, 102.0f),
-                    3 => new(104.2f, 0, 102.0f),
-                };
+            }
+            var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            if (!idles.Contains(myIndex)) return;
+            Vector3 dealpos = idles.IndexOf(myIndex) switch
+            {
+                0 => new(095.8f, 0, 098.0f),
+                1 => new(104.2f, 0, 098.0f),
+                2 => new(095.8f, 0, 102.0f),
+                3 => new(104.2f, 0, 102.0f),
+            };
 
-                var dur = 10000;
-                var dp = accessory.Data.GetDefaultDrawProperties();
-                dp.Name = "P4_暗光龙诗_引导处理位置";
-                dp.Scale = new(2);
-                dp.ScaleMode |= ScaleMode.YByDistance;
-                dp.Owner = accessory.Data.Me;
-                dp.TargetPosition = dealpos;
-                dp.Color = accessory.Data.DefaultSafeColor;
-                dp.DestoryAt = dur;
-                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
-            });
-
+            var dur = 10000;
+            var dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_引导处理位置";
+            dp.Scale = new(2);
+            dp.ScaleMode |= ScaleMode.YByDistance;
+            dp.Owner = accessory.Data.Me;
+            dp.TargetPosition = dealpos;
+            dp.Color = accessory.Data.DefaultSafeColor;
+            dp.DestoryAt = dur;
+            accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
         }
         [ScriptMethod(name: "P4_暗光龙诗_分摊处理位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(4022[78])$"])]
         public void P4_暗光龙诗_分摊处理位置(Event @event, ScriptAccessory accessory)
@@ -9528,7 +9631,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 downGroup.Add(nIndex);
                 downGroup.Add(d2Index);
             }
-
+            //Phase4_1_StackType
             var stack1 = P4Stack.IndexOf(1);
             var stack2 = P4Stack.LastIndexOf(1);
             var tetherStack = P4Tether[stack1] == -1 ? stack2 : stack1;
@@ -9543,43 +9646,100 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 }
             }
             var ii = idles.IndexOf(idleStack);
+            if(Phase4_1_StackType==Phase4_1_StackTypeEnum.双换)
+            {
+                if (upGroup.Contains(tetherStack))
+                {
+                    //线分摊在上
+                    if (ii == 0 || ii == 2)
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                        upGroup.Add(idles[3]);//lowD
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                    }
+                }
+                if (downGroup.Contains(tetherStack))
+                {
+                    //线分摊在下
+                    if (ii == 0 || ii == 2)
+                    {
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        upGroup.Add(idles[1]);
+                        upGroup.Add(idles[3]);
+                        downGroup.Add(idles[0]);
+                        downGroup.Add(idles[2]);
+                    }
+                }
+            }
+            if (Phase4_1_StackType == Phase4_1_StackTypeEnum.单换)
+            {
+                if (upGroup.Contains(tetherStack))
+                {
+                    //线分摊在上
+                    if (ii == 0)//闲t分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 1)//闲n分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2 || ii==3)//闲D分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
 
-            if (upGroup.Contains(tetherStack))
-            {
-                //线分摊在上
-                if (ii == 0 || ii == 2)
-                {
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
                 }
-                if (ii == 1 || ii == 3)
+                if (downGroup.Contains(tetherStack))
                 {
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
-                }
-            }
-            if (downGroup.Contains(tetherStack))
-            {
-                //线分摊在下
-                if (ii == 0 || ii == 2)
-                {
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
-                }
-                if (ii == 1 || ii == 3)
-                {
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
+                    //线分摊在下
+                    if (ii == 0 || ii == 1)//tn分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2)//highD分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 3)//lowD分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
                 }
             }
+
 
             var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
