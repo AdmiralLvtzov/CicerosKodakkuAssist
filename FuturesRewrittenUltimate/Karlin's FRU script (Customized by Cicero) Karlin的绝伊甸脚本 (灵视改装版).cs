@@ -4213,7 +4213,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             else
             {
-                int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                //int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                int[] group = [4, 5, 6, 7, 0, 7, 2, 3];
                 var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 for (int i = 0; i < 4; i++)
                 {
