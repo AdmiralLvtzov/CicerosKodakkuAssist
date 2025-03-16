@@ -11,10 +11,10 @@
   {
     "Name":"Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
     "Guid":"148718fd-575d-493a-8ac7-1cc7092aff85",
-    "Version":"0.0.0.73",
+    "Version":"0.0.0.80",
     "Author":"Karlin",
     "TerritoryIds":[1238],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/FuturesRewrittenUltimate/Karlin's%20FRU%20script%20(Customized%20by%20Cicero)%20Karlin%E7%9A%84%E7%BB%9D%E4%BC%8A%E7%94%B8%E8%84%9A%E6%9C%AC%20(%E7%81%B5%E8%A7%86%E6%94%B9%E8%A3%85%E7%89%88).cs",
-    "UpdateInfo":"Now working on a 21-day plan... Try to post a refined version before Futures Rewritten Ultimate is released on CN.\n正在写21天计划,详见Discord...争取在国服开绝伊甸之前发布一个精修完的版本。"
+    "UpdateInfo":"Finish Phase 1 and Phase 2. More refinements for Phase 3. New strat for the first half of Phase 4 and marking supports for the second half. P1和P2完工。P3继续精修。P4一运新打法,二运标记相关支持。"
   }
 ]

@@ -3,7 +3,7 @@ using KodakkuAssist.Module.GameEvent;
 using KodakkuAssist.Script;
 using KodakkuAssist.Module.GameEvent.Struct;
 using KodakkuAssist.Module.Draw;
-// using System.Windows.Forms;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons;
@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-// using System.DirectoryServices;
+using System.DirectoryServices;
 using System.Xml.Linq;
 using CicerosKodakkuAssist.FuturesRewrittenUltimate;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -24,12 +24,10 @@ using Newtonsoft.Json.Linq;
 namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 {
     
-    // [ScriptType(name:"Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
-    [ScriptType(name:"HelloWorldFru",
+    [ScriptType(name:"Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
         territorys:[1238],
-        // guid:"148718fd-575d-493a-8ac7-1cc7092aff85",
-        guid:"asdflocl",
-        version:"0.0.0.73",
+        guid:"148718fd-575d-493a-8ac7-1cc7092aff85",
+        version:"0.0.0.80",
         note:notesOfTheScript,
         author:"Karlin")]
     
@@ -58,20 +56,27 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         And of course you need to have the plugin Daily routines installed and enabled if you'd like to use Daily Routines TTS.
         The language of TTS prompts would be consistent with that of text prompts.
         2. For any marking feature, please make sure that only one member in the party enables it, and the party are not running any similar marking feature from other plugins or triggers.
-        3. Marks during Fall Of Faith in Phase 1 involves three different types: Target To Attack, Target To Bind, Target To Ignore.
+        3. There may not be exact 2 players being marked during Utopian Sky if the initial positions of players are unbearably deviant. The marks would be based on the real-time positions of each player.
+        4. Marks during Fall Of Faith in Phase 1 involves three different types: Target To Attack, Target To Bind, Target To Ignore.
         Target To Ignore 1 and 2: The tethered players in the north. Numbers stand for the round of the play.
         Target To Bind 1 and 2: The tethered players in the south. Numbers stand for the round of the play.
         Target To Attack 1 and 2: The untethered players in the north. Number 1 stands for the player with higher priority.
         Target To Attack 3 and 4: The untethered players in the north. Number 3 stands for the player with higher priority.
         (Assuming the priority is MT OT H1 H2 M1 M2 R1 R2, then:
            Higher priority <- MT OT H1 H2 M1 M2 R1 R2 -> Lower priority)
-        4. In the descriptions of Mirror Mirror strats in Phase 2, the left and right here refer to the left and right while facing red mirrors from the center.
-        5. It's required to select a proper initial position for your Light Rampant strat, otherwise the guidance may be not reliable.
+        5. In the descriptions of Mirror Mirror strats in Phase 2, the left and right here refer to the left and right while facing red mirrors from the center.
+        6. It's required to select a proper initial position for your Light Rampant strat, otherwise the guidance may be not reliable.
         For example, if you've selected Star_Of_David_Japanese_PF, your should also select one of the two positions where supporters are all in the north.
-        6. If a player with the Wyrmclaw (the red debuff) takes a residue from Drachen Wanderers, or a player with the Wyrmfang (the blue debuff) hits a Drachen Wanderers,
+        7. If a player is in position and facing the Boss at the end of the first half of Phase 3, the player will definitely not be affected by Shadoweye.
+        In some cases it could be hard for the players deal with the last mechanism to be in position on time. An alternative would be looking at the light belongs to the player.
+        8. If the logic of residue guidance in Phase 4 was set to Mark_Teammates_With_Wyrmfang, then the teammates would be automatically marked. If not, the following setting the logic of marking teammates could be ignored.
+        If the logic of marking teammates was set to According_To_Debuffs, then the teammates would be marked according to debuff settings. Allocating the same residue for different debuffs would cause exceptions.
+        If the logic of residue guidance was set to According_To_Signs_On_Me, then the guidance would be based on the signs (Attack 1 to 4) on yourself from other plugins, triggers or manually marking.
+        If the logic of residue guidance was set to According_To_Debuffs, then the guidance would be based on the debuffs. All signs would be ignored.
+        9. If a player with the Wyrmclaw (the red debuff) takes a residue from Drachen Wanderers, or a player with the Wyrmfang (the blue debuff) hits a Drachen Wanderers,
         the related drawing may be removed with delay and may cause some confusion in the second half of Phase 4.
         Anyway, those situations are pretty much already a wipe. Aside from that, fixing this issue is technically difficult, so I'll just leave it there.
-        7. It's highly recommended to run the script while running the plugin A Realm Record (ARR) and enabling its recording feature.
+        10. It's highly recommended to run the script while running the plugin A Realm Record (ARR) and enabling its recording feature.
         If you encounter any issue or bug, leave the duty to cut off the recording (which would help me quickly pinpoint the pull with issues).
         After that, please describe the issue and share the related ARR recording with me. Appreciate your help!
         
@@ -80,33 +85,40 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         当然,如果选择了Daily Routines TTS,你需要已经安装并启用了Daily Routines插件。
         TTS提示的语言与文本提示语言相同。
         2. 对于任何标记队友的功能,小队里只能有一个玩家启用,并且也不与其他科技的兼容。
-        3. P1信仰崩塌(四连抓)期间的标记涉及到攻击,止步和禁止三种。
+        3. P1乐园绝技(雾龙)期间被标记的玩家可能少于或者多于2人,因为会捕获玩家的实时位置进行计算,站位不标准可能会导致这种情况。
+        4. P1信仰崩塌(四连抓)期间的标记涉及到攻击,止步和禁止三种。
         禁止1和2:前往北侧的被连线玩家。数字就是抓人的轮数。
         锁链1和2:前往南侧的被连线玩家。数字就是抓人的轮数。
         攻击1和2:前往北侧的闲人。数字1是优先级更高的。
         攻击3和4:前往南侧的闲人。数字3是优先级更高的。
         (假设优先级为 MT ST H1 H2 D1 D2 D3 D4, 那么高优先级指的是:
            高优先级 <- MT ST H1 H2 D1 D2 D3 D4 -> 低优先级)
-        4. P2镜中奇遇攻略的描述中,左和右的基准指的是从场中面向两面红色镜子时的左和右。
-        5. P2光之失控(光暴)必须在配置中设定相应的预站位,否则指路会电椅。
+        5. P2镜中奇遇攻略的描述中,左和右的基准指的是从场中面向两面红色镜子时的左和右。
+        6. P2光之失控(光暴)必须在配置中设定相应的预站位,否则指路会电椅。
         例如如果你选择"六芒星日服野队法",你必须要选择两种蓝绿在北半场的预站位之一。
-        6. 如果P4二运持有圣龙爪(红)debuff的玩家吃了圣龙气息(龙头)的白圈,或者持有圣龙牙(蓝)debuff的玩家撞了圣龙气息(龙头),
+        7. P3一运的最后如果玩家站在指路的点上并面向Boss,就一定不会吃到暗影之眼(石化眼)。
+        值得一提的是处理最后机制的人可能来不及就位,这种情况下可以通过面向自己的灯解决。
+        8. 如果P4二运的白圈指路逻辑设置为"标记圣龙牙的队友",则会对队友进行标记。如果设置的不是此项,可以无视下面标记队友的逻辑这一设置。
+        如果标记队友的逻辑设置为"根据Debuff",则会根据Debuff设置进行标记。为不同Debuff分配相同白圈将导致错误。
+        如果P4二运的白圈指路逻辑设置为"根据我身上的目标标记",则会根据来自其他科技或者手摇的自身的标记(攻击1到4)指路。
+        如果P4二运的白圈指路逻辑设置为"根据Debuff",则只会根据Debuff指路,标记将完全被无视。
+        9. 如果P4二运持有圣龙爪(红)debuff的玩家吃了圣龙气息(龙头)的白圈,或者持有圣龙牙(蓝)debuff的玩家撞了圣龙气息(龙头),
         那么相关绘制的移除可能有延迟并且会干扰玩家。
         不过如果已经这样那大概率是要团灭了,修复这个问题在技术层面上也有点难度,所以我就不管了。
-        7. 非常建议在用这个脚本打本的同时,启用插件A Realm Record(ARR)并开启录制。
+        10. 非常建议在用这个脚本打本的同时,启用插件A Realm Record(ARR)并开启录制。
         如果遇到了问题或bug,请退本一次来切断录像(这样我能快速定位出问题的那一把)。
         然后,简单描述一下问题并分享一下那份出了问题的ARR录像。非常感谢!
         
         ***** Credits *****
         ***** 致谢 *****
         
-        The original author also the founder: @karlin_z
+        The original author, the founder and the co-maintainer: @karlin_z
         Helpers (sorted lexicographically):
          - @abigseal provided Fixed_H1_H2_R2_The_Rest_Fill_Vacancies for towers at the end of Phase 1. (Mar 9, 2025)
          - @alexandria_prime provided Single_Line_In_HTD_Order, Single_Line_In_H1TDH2_Order and Face_The_Boss for Fall Of Faith in Phase 1. (Mar 5, 2025)
          - @veever2464 provided supports of Daily Routines TTS for each TTS prompt. (Mar 10, 2025)
         
-        原作者兼奠基人: @karlin_z
+        原作者,奠基人兼共同维护者: @karlin_z
         提供帮助的人(按字典序排序):
         - @abigseal为P1末尾踩塔提供了打法"固定H1_H2_D4剩余人补位"。 (2025.03.09)
         - @alexandria_prime为P1信仰崩塌(四连抓)提供了打法"按HTD顺序单排","按H1TDH2顺序单排"和"面向Boss"。 (2025.03.05)
@@ -118,6 +130,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         Phase 1:
          - Refinements for the entire phase;
          - New strats for Utopian Sky, Fall Of Faith and the towers at the end;
+         - Player marking for Utopian Sky;
          - Reworked player marking during Fall Of Faith;
         Phase 2:
          - Reworked guidance after the knockback during Diamond Dust.
@@ -126,8 +139,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         Phase 3:
          - Guidance of the second half (including the Double Group strat and the Locomotive strat);
         Phase 4:
+         - New strat of the first half (Single Swap).
          - Guidance related to Drachen Wanderer residues of the second half;
          - Fixes and refinements for vanilla guidance of the second half;
+         - New strat (HTD priority) and player marking of the second half;
         Phase 5:
          - Guidance of Wings Dark And Light;
          - Guidance of Polarizing Strikes.
@@ -135,6 +150,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         P1:
          - 整个阶段的精修;
          - 乐园绝技(雾龙),信仰崩塌(四连抓)和最后踩塔都增加了新攻略;
+         - 乐园绝技(雾龙)的玩家标记;
          - 重做信仰崩塌(四连抓)的玩家标记;
         P2:
          - 钻石星辰击退后指路重做;
@@ -143,8 +159,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         P3:
          - 二运指路(包括双分组法和车头法);
         P4:
+         - 一运新攻略(单换);
          - 二运圣龙气息(龙头)白圈相关的指路;
          - 二运原版指路修复和细化;
+         - 二运新攻略(HTD优先级)与玩家标记;
         P5:
          - 光与暗之翼(踩塔)指路;
          - 极化打击(挡枪)指路。
@@ -152,17 +170,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         ***** Known Issues *****
         ***** 已知问题 *****
         
-        Phase 2:
-         - Diamond Dust: If the Default Draw Mode was set to Imgui in Kodakku settings, then the guidance after knockback will always be incorrect, although the prompt is still reliable.
-           The issue will be fixed after the next update of Kodakku itself.
         Phase 3:
          - Ultimate Relativity: The guidance of Sinbound Meltdown may disappear earlier than the time that the direction is anchored. Please make sure that bait it precisely before leaving.
            The timeline here would be refined in the future.
-        Phase 4:
-         - Darklit Dragonsong: The strat on CN (Single Swap) has not been added yet but it's on the way.
-           The current strat is Double Swaps. Aside from that, there's also a rare chance that the guidance of stacks here is not reliable. It will be fixed while adding the new strart in future.
-         - Crystallize Time: The priority on CN (HTD) has not been added yet but it's on the way.
-           The current priority is THD. The priority here only involves Wyrmclaw (the red debuff).
         Phase 5:
          - Fulgent Blade: The guidance has been added yet. I've asked @milkvio for the permission of his implementation and got his approval. Therefore, I will add it very soon.
          - Polarizing Strikes: The order of taking towers regarding the Grey9 Brain Dead strat on CN has been adjusted a little bit, and the new version has not been added yet. It's on the way.
@@ -170,17 +180,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         
         After all the known issues are resolved, there will be no more major update. The version will be considered as the final version.
         
-        P2:
-         - 钻石星尘: 如果在可达鸭的设置里将默认绘图模式设为了Imgui,则击退后指路一定会失效,但是提示仍然正确。
-           这一问题将在下一次可达鸭本体的更新中修复。
         P3:
          - 时间压缩·绝(一运): 罪缚熔毁(激光)的指路变化时间可能早于实际判定时间。请确保成功引导后再移动。
            会在未来精修此处的时间轴。
-        P4:
-         - 暗光龙诗(一运): 国服攻略(但换)尚未适配,但很快就会做。
-           现在的攻略是双换。这里的分摊指路也有小概率电椅,在未来添加攻略时会顺带修复。
-         - 时间结晶(二运): 国服优先级(HTD)尚未适配,但很快就会做。
-           现在的优先级是THD。这里的优先级仅与圣龙爪(红)debuff有关。
         P5:
          - 璀璨之刃(地火): 尚未添加指路,但我已经向 @milkvio 申请使用他的地火指路并且得到本人同意了。很快就会补上这部分。
          - 极化打击(挡枪): 国服的灰九脑死塔踩塔顺序有点改动,尚未适配,但很快就会做。
@@ -252,54 +254,59 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public bool Enable_Vanilla_TTS { get; set; } = true;
         [UserSetting("启用Daily Routines TTS (It requires the plugin Daily Routines to be enabled already!/需要已经启用插件Daily Routines!)")]
         public bool Enable_Daily_Routines_TTS { get; set; } = false;
-        
-        [UserSetting("-----策略设置----- (No actual meaning for this setting/此设置无实际意义)")]
-        public bool _____Strategy_Settings_____ { get; set; } = true;
-        [UserSetting("绝伊甸解法策略预设选项")]
-        public Fru_StrategyPackEnum Fru_StrategyPack { get; set; }
 
         [UserSetting("-----P1设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase1_Settings_____ { get; set; } = true;
-        [UserSetting("P1 乐园绝技(雾龙)待机站位")]
+        [UserSetting("P1乐园绝技(雾龙) 待机站位")]
         public Phase1_Standby_Positions_Of_Utopian_Sky Phase1_Standby_Position_Of_Utopian_Sky { get; set; }
+        [UserSetting("P1乐园绝技(雾龙) 标记在安全位置的玩家")]
+        public bool Phase1_Mark_Players_In_Safe_Positions { get; set; } = false;
         [UserSetting("P1 燃烧击(火雷直线)特性的颜色")]
         public ScriptColor Phase1_Colour_Of_Burnt_Strike_Characteristics { get; set; } = new() { V4=new(1f,1f,0f,1f) };
-        [UserSetting("P1 光轮召唤分组")]
+        [UserSetting("P1光轮召唤 分组")]
         public Phase1_Groups_Of_Turn_Of_The_Heavens Phase1_Group_Of_Turn_Of_The_Heavens { get; set; }
-        [UserSetting("* P1 信仰崩塌(四连抓)攻略")]
+        [UserSetting("P1信仰崩塌(四连抓) 攻略")]
         public Phase1_Strats_Of_Fall_Of_Faith Phase1_Strat_Of_Fall_Of_Faith { get; set; }
-        [UserSetting("P1 信仰崩塌(四连抓)标记玩家 (Make sure only one in the party enables this!/小队内只能有一人启用此选项!)")]
+        [UserSetting("P1信仰崩塌(四连抓) 标记玩家 (Make sure only one in the party enables this!/小队内只能有一人启用此选项!)")]
         public bool Phase1_Mark_Players_During_Fall_Of_Faith { get; set; } = false;
-        [UserSetting("P1 信仰崩塌(四连抓)的面向基准")]
+        [UserSetting("P1信仰崩塌(四连抓) 面向基准")]
         public Phase1_Orientation_Benchmarks_During_Fall_Of_Faith Phase1_Orientation_Benchmark_During_Fall_Of_Faith { get; set; }
-        [UserSetting("P1 踩塔攻略")]
+        [UserSetting("P1踩塔 攻略")]
         public Phase1_Strats_Of_Towers Phase1_Strat_Of_Towers { get; set; }
 
         [UserSetting("-----P2设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase2_Settings_____ { get; set; } = true;
-        [UserSetting("P2 击退后攻略")]
+        [UserSetting("P2钻石星辰 击退后攻略")]
         public Phase2_Strats_After_Knockback Phase2_Strat_After_Knockback { get; set; }
         [UserSetting("P2镜中奇遇 攻略")]
         public Phase2_Strats_Of_Mirror_Mirror Phase2_Strat_Of_Mirror_Mirror { get; set; }
-        [UserSetting("P2 镜子粗略指路的颜色")]
+        [UserSetting("P2镜中奇遇 镜子粗略指路的颜色")]
         public ScriptColor Phase2_Colour_Of_Mirror_Rough_Guidance { get; set; } = new() { V4=new(1f,1f,0f,1f) };
-        [UserSetting("P2 潜在危险区的颜色")]
+        [UserSetting("P2镜中奇遇 潜在危险区的颜色")]
         public ScriptColor Phase2_Colour_Of_Potential_Dangerous_Zones { get; set; } = new() { V4=new(1f,0f,0f,1f) };
         [UserSetting("P2光之失控(光暴) 初始八方站位")]
         public Phase2_Initial_Protean_Positions_Of_Light_Rampant Phase2_Initial_Protean_Position_Of_Light_Rampant { get; set; }
-        [UserSetting("* P2光之失控(光暴) 攻略")]
+        [UserSetting("P2光之失控(光暴) 攻略")]
         public Phase2_Strats_Of_Light_Rampant Phase2_Strat_Of_Light_Rampant { get; set; }
+        [UserSetting("P2光之失控(光暴) 大致路径的颜色")]
+        public ScriptColor Phase2_Colour_Of_Rough_Paths { get; set; } = new() { V4=new(1f,1f,0f,1f) };
 
         [UserSetting("-----P3设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase3_Settings_____ { get; set; } = true;
         [UserSetting("P3一运 攻略")]
         public Phase3_Strats_Of_The_First_Half Phase3_Strat_Of_The_First_Half { get; set; }
-        [UserSetting("* P3二运 攻略")]
+        [UserSetting("P3二运 攻略")]
         public Phase3_Strats_Of_The_Second_Half Phase3_Strat_Of_The_Second_Half { get; set; }
+        [UserSetting("P3二运 双分组法的分支")]
+        public Phase3_Branches_Of_The_Double_Group_Strat Phase3_Branch_Of_The_Double_Group_Strat { get; set; } = Phase3_Branches_Of_The_Double_Group_Strat.Based_On_Safe_Positions_安全区为基准;
+        [UserSetting("P3二运 车头低换法的分支")]
+        public Phase3_Branches_Of_The_Locomotive_Strat Phase3_Branch_Of_The_Locomotive_Strat { get; set; }
         [UserSetting("P3二运 场地划分方式")]
         public Phase3_Divisions_Of_The_Zone Phase3_Division_Of_The_Zone { get; set; } = Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南;
-        [UserSetting("P3二运 粗略指路与倒数第二次启示(地火)的颜色")]
-        public ScriptColor Phase3_Colour_Of_Rough_Guidance_And_The_Penultimate_Apocalypse { get; set; } = new() { V4=new(0,1f,1f,1f) };
+        [UserSetting("P3二运 粗略指路的颜色")]
+        public ScriptColor Phase3_Colour_Of_Rough_Guidance { get; set; } = new() { V4=new(1f,1f,0f,1f) };
+        [UserSetting("P3二运 倒数第二次启示(地火)的颜色")]
+        public ScriptColor Phase3_Colour_Of_The_Penultimate_Apocalypse { get; set; } = new() { V4=new(0,1f,1f,1f) };
         [UserSetting("P3二运 引导暗夜舞蹈(最远死刑)的T")]
         public Tanks Phase3_Tank_Who_Baits_Darkest_Dance { get; set; } = Tanks.OT_ST;
         [UserSetting("P3二运 暗夜舞蹈(最远死刑)的颜色")]
@@ -307,29 +314,47 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         [UserSetting("-----P4设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase4_Settings_____ { get; set; } = true;
+        [UserSetting("P4一运 水分摊换位方式")]
+        public Phase4_Strats_Of_The_First_Half Phase4_Strat_Of_The_First_Half { get; set; }
+        [UserSetting("P4一运 忧郁舞蹈(远近死刑)的颜色")]
+        public ScriptColor Phase4_Colour_Of_Somber_Dance { get; set; } = new() { V4=new(1f,0f,0f,1f) };
         [UserSetting("P4二运 正常灯和延时灯的范围显示时间(second/秒)")]
         public float Phase4_Drawing_Duration_Of_Normal_And_Delayed_Lights { get; set; } = 3f;
+        [UserSetting("P4二运 圣龙爪(红)玩家优先级")]
+        public Phase4_Priorities_Of_The_Players_With_Wyrmclaw Phase4_Priority_Of_The_Players_With_Wyrmclaw { get; set; }
         [UserSetting("P4二运 圣龙气息(龙头)碰撞箱的颜色")]
-        public ScriptColor Phase4_Colour_Of_Drachen_Wanderer_Hitboxes { get; set; } = new() { V4=new(0,1f,1f,1f) };
+        public ScriptColor Phase4_Colour_Of_Drachen_Wanderer_Hitboxes { get; set; } = new() { V4=new(1f,1f,0f,1f) };
         [UserSetting("P4二运 圣龙气息(龙头)碰撞箱的长度(meter/米)")]
         public float Phase4_Length_Of_Drachen_Wanderer_Hitboxes { get; set; } = 1.5f;
         [UserSetting("P4二运 光之潮汐(地火)的颜色")]
         public ScriptColor Phase4_Colour_Of_Tidal_Light { get; set; } = new() { V4=new(1f,1f,0f,1f) };
-        [UserSetting("P4二运 暗炎喷发(分散)的白圈")]
+        [UserSetting("P4二运 白圈指路的逻辑 (Make sure only one in the party enables marking!/小队内只能有一人启用标记!)")]
+        public Phase4_Logics_Of_Residue_Guidance Phase4_Logic_Of_Residue_Guidance { get; set; }
+        [UserSetting("P4二运 标记圣龙牙(蓝)队友的逻辑")]
+        public Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang Phase4_Logic_Of_Marking_Teammates_With_Wyrmfang { get; set; }
+        [UserSetting("P4二运 暗炎喷发(分散)的白圈 (Debuff Setting/Debuff设置)")]
         public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Dark_Eruption { get; set; } = Phase4_Relative_Positions_Of_Residues.Eastmost_最东侧;
-        [UserSetting("P4二运 黑暗神圣(后分摊)的白圈")]
+        [UserSetting("P4二运 黑暗神圣(后分摊)的白圈 (Debuff Setting/Debuff设置)")]
         public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Unholy_Darkness { get; set; } = Phase4_Relative_Positions_Of_Residues.About_East_次东侧;
-        [UserSetting("P4二运 黑暗冰封(月环)的白圈")]
+        [UserSetting("P4二运 黑暗冰封(月环)的白圈 (Debuff Setting/Debuff设置)")]
         public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Dark_Blizzard_III { get; set; } = Phase4_Relative_Positions_Of_Residues.About_West_次西侧;
-        [UserSetting("P4二运 黑暗狂水(先分摊)的白圈")]
+        [UserSetting("P4二运 黑暗狂水(先分摊)的白圈 (Debuff Setting/Debuff设置)")]
         public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Dark_Water_III { get; set; } = Phase4_Relative_Positions_Of_Residues.Westmost_最西侧;
+        [UserSetting("P4二运 攻击1的白圈 (Sign Setting/目标标记设置)")]
+        public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Attack1 { get; set; } = Phase4_Relative_Positions_Of_Residues.Eastmost_最东侧;
+        [UserSetting("P4二运 攻击2的白圈 (Sign Setting/目标标记设置)")]
+        public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Attack2 { get; set; } = Phase4_Relative_Positions_Of_Residues.About_East_次东侧;
+        [UserSetting("P4二运 攻击3的白圈 (Sign Setting/目标标记设置)")]
+        public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Attack3 { get; set; } = Phase4_Relative_Positions_Of_Residues.About_West_次西侧;
+        [UserSetting("P4二运 攻击4的白圈 (Sign Setting/目标标记设置)")]
+        public Phase4_Relative_Positions_Of_Residues Phase4_Residue_Belongs_To_Attack4 { get; set; } = Phase4_Relative_Positions_Of_Residues.Westmost_最西侧;
         [UserSetting("P4二运 白圈指路的颜色")]
         public ScriptColor Phase4_Colour_Of_Residue_Guidance { get; set; } = new() { V4=new(1f,1f,0f,1f) };
 
         [UserSetting("-----P5设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase5_Settings_____ { get; set; } = true;
         [UserSetting("P5 璀璨之刃(地火)颜色")]
-        public ScriptColor Phase5_Colour_Of_Fulgent_Blade { get; set; } = new() { V4=new(0,1,1,1)};
+        public ScriptColor Phase5_Colour_Of_Fulgent_Blade { get; set; } = new() { V4=new(0,1f,1f,1f) };
         [UserSetting("P5 Boss中轴线的颜色")]
         public ScriptColor Phase5_Colour_Of_The_Boss_Central_Axis { get; set; } = new() { V4=new(1f,0f,0f,1f) };
         [UserSetting("P5 璀璨之刃(地火)后Boss面向人群")]
@@ -350,8 +375,21 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         double parse = 0;
         volatile bool isInPhase5=false;
 
-        int P1雾龙计数 =0;
+        int P1雾龙计数=0;
+        readonly Object P1雾龙计数读写锁_AsAConstant=new Object();
+        int P1雾龙计数2=0;
+        readonly Object P1雾龙计数2读写锁_AsAConstant=new Object();
         int[] P1雾龙记录 = [0, 0, 0, 0];
+        List<MarkType> phase1_markForThePlayersInSafePositions_asAConstant=[
+            MarkType.Attack1,
+            MarkType.Attack2,
+            MarkType.Attack3,
+            MarkType.Attack4,
+            MarkType.Attack5,
+            MarkType.Attack6,
+            MarkType.Attack7,
+            MarkType.Attack8
+        ];
         bool P1雾龙雷=false;
         List<int> P1转轮召抓人 = [0, 0, 0, 0, 0, 0, 0, 0];
         volatile int phase1_timesBurnishedGloryWasCast=0;
@@ -435,16 +473,40 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         List<int> P4Stack = [0, 0, 0, 0, 0, 0, 0, 0];
         bool P4TetherDone = false;
         List<int> P4ClawBuff = [0, 0, 0, 0, 0, 0, 0, 0];
+        volatile int phase4_numberOfWyrmfangHasBeenCounted=0;
+        readonly Object phase4_readwriteLockOfWyrmfangCounter_AsAConstant=new Object();
+        System.Threading.AutoResetEvent phase4_semaphoreWyrmfangWasConfirmed=new System.Threading.AutoResetEvent(false);
+        volatile int phase4_numberOfIncidentalDebuffsHaveBeenCounted=0;
+        readonly Object phase4_readwriteLockOfIncidentalDebuffCounter_AsAConstant=new Object();
+        System.Threading.AutoResetEvent phase4_semaphoreIncidentalDebuffsWereConfirmed=new System.Threading.AutoResetEvent(false);
+        List<MarkType> phase4_markForPlayersWithWyrmfang_asAConstant=[
+            MarkType.Attack1,
+            MarkType.Attack2,
+            MarkType.Attack3,
+            MarkType.Attack4
+        ];
         List<int> P4OtherBuff = [0, 0, 0, 0, 0, 0, 0, 0];
+        volatile List<MarkType> phase4_marksOfPlayersWithWyrmfang=[
+            MarkType.Stop1,
+            MarkType.Stop1,
+            MarkType.Stop1,
+            MarkType.Stop1,
+            MarkType.Stop1,
+            MarkType.Stop1,
+            MarkType.Stop1,
+            MarkType.Stop1
+        ];
         int P4BlueTether = 0;
         List<Vector3> P4WaterPos = [];
         volatile string phase4_id1OfTheDrachenWanderers="";
         volatile string phase4_id2OfTheDrachenWanderers="";
-        readonly Object phase4_ReadwriteLockOfDrachenWandererIds_AsAConstant=new Object();
+        readonly Object phase4_readwriteLockOfDrachenWandererIds_AsAConstant=new Object();
         volatile int phase4_timesTheWyrmclawDebuffWasRemoved=0;
         volatile List<ulong> phase4_residueIdsFromEastToWest=[0,0,0,0];
         // The leftmost (0), the about left (1), the about right (2), the rightmost (3) while facing south.
         volatile bool phase4_guidanceOfResiduesHasBeenGenerated=false;
+        System.Threading.ManualResetEvent phase4_1_ManualReset = new System.Threading.ManualResetEvent(false);
+        int phase4_1_TetherCount = 0;
 
         volatile string phase5_bossId="";
         volatile bool phase5_hasAcquiredTheFirstTower=false;
@@ -466,8 +528,6 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         Vector3 phase5_positionToBeCoveredOnTheRight_asAConstant=new Vector3(106.19f,0,106.19f);
         Vector3 phase5_positionToStandbyOnTheRight_asAConstant=new Vector3(100.76f,0,108.72f);
         // The left and right here refer to the left and right while facing the center of the zone (100,0,100).
-        
-        private static ulong fruStragetyId = 0;
         
         public enum Languages_Of_Prompts {
         
@@ -567,11 +627,24 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         public enum Phase3_Strats_Of_The_Second_Half {
             
-            Double_Group_Based_On_Safe_双分组安全区基准,
-            Double_Group_Based_On_Apocalypse2nd_双分组二火基准,
-            MT_And_D1_As_Locomotives_车头低换MTD1车头,
-            Others_As_Locomotives_车头低换人群车头,
+            Double_Group_双分组法,
+            High_Priority_As_Locomotives_车头低换法,
             Other_Strats_Are_Work_In_Progress_其他攻略正在施工中
+            
+        }
+
+        public enum Phase3_Branches_Of_The_Double_Group_Strat {
+            
+            Based_On_Safe_Positions_安全区为基准,
+            Based_On_The_Second_Apocalypse_第二次启示为基准
+            
+        }
+
+        public enum Phase3_Branches_Of_The_Locomotive_Strat {
+            
+            MT_And_M1_As_Locomotives_MT和D1为车头,
+            Others_As_Locomotives_人群为车头
+            
         }
 
         public enum Phase3_Divisions_Of_The_Zone {
@@ -587,6 +660,35 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             MEDIUM,
             SHORT,
             NONE
+            
+        }
+        public enum Phase4_Strats_Of_The_First_Half {
+            
+            Single_Swap_单换,
+            Double_Swaps_双换
+            
+        }
+        
+        public enum Phase4_Priorities_Of_The_Players_With_Wyrmclaw {
+            
+            In_THD_Order_按THD顺序,
+            In_HTD_Order_按HTD顺序
+            
+        }
+
+        public enum Phase4_Logics_Of_Residue_Guidance {
+            
+            According_To_Debuffs_根据Debuff,
+            According_To_Signs_On_Me_根据我身上的目标标记,
+            Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友
+            
+        }
+        
+        public enum Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang {
+            
+            According_To_Debuffs_根据Debuff,
+            According_To_The_Priority_THD_根据THD优先级,
+            According_To_The_Priority_HTD_根据HTD优先级,
             
         }
 
@@ -614,14 +716,6 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             
         }
 
-        public enum Fru_StrategyPackEnum: ulong
-        {
-            不使用预设策略 = 0,
-            HTD双排_六芒星_就近近战右_车头MTD1 = 1 *StrategyIdx.htd双排 + 10 * StrategyIdx.六芒星 + 100 *StrategyIdx.就近近战右 + 1000 *StrategyIdx.车头MTD1,
-            HTD双排_新灰九_就近近战右_双分组安基 = 1 *StrategyIdx.htd双排 + 10 * StrategyIdx.新灰九 + 100 *StrategyIdx.就近近战右 + 1000 *StrategyIdx.双分组安基,
-            HTDH双排_六芒星_就近近战右_双分组安基 = 1 *StrategyIdx.htdh单排 + 10 * StrategyIdx.六芒星 + 100 *StrategyIdx.就近近战右 + 1000 *StrategyIdx.双分组安基,
-        }
-
         public void Init(ScriptAccessory accessory)
         {
             accessory.Method.RemoveDraw(".*");
@@ -631,7 +725,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             isInPhase5=false;
             
             P1雾龙记录 = [0, 0, 0, 0];
-            P1雾龙计数 = 0;
+            P1雾龙计数=0;
+            P1雾龙计数2=0;
             P1转轮召抓人 = [0, 0, 0, 0, 0, 0, 0, 0];
             phase1_timesBurnishedGloryWasCast=0;
             phase1_tetheredPlayersDuringFallOfFaith = [];
@@ -686,6 +781,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             phase3_locomotive_rightPositionToStackOfTheSecondRound=new Vector3(100,0,100);
             phase3_finalPositionOfTheBoss=new Vector3(100,0,100);
 
+            phase4_numberOfWyrmfangHasBeenCounted=0;
+            phase4_semaphoreWyrmfangWasConfirmed=new System.Threading.AutoResetEvent(false);
+            phase4_numberOfIncidentalDebuffsHaveBeenCounted=0;
+            phase4_semaphoreIncidentalDebuffsWereConfirmed=new System.Threading.AutoResetEvent(false);
+            phase4_marksOfPlayersWithWyrmfang=[
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1
+            ];
             phase4_id1OfTheDrachenWanderers="";
             phase4_id2OfTheDrachenWanderers="";
             phase4_timesTheWyrmclawDebuffWasRemoved=0;
@@ -696,150 +805,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             phase5_hasAcquiredTheFirstTower=false;
             phase5_indexOfTheFirstTower="";
             phase5_hasConfirmedTheInitialPosition=false;
-            
-            SetFruStrategy(accessory);
         }
 
-        private ulong CalcFruStrategy(ScriptAccessory accessory)
-        {
-            // 计算策略ID
-            ulong id = 0;
-            id += 1 * Phase1_Strat_Of_Fall_Of_Faith switch
-            {
-                Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_THD_Order_按THD顺序单排 => (ulong)StrategyIdx.tdh单排,
-                Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_HTD_Order_按HTD顺序单排 => (ulong)StrategyIdx.htd单排,
-                Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_H1TDH2_Order_按H1TDH2顺序单排 => (ulong)StrategyIdx.htdh单排,
-                Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_H12MOT_Left_M12R12_Right_双排左H12MST右D1234 => (ulong)StrategyIdx.htd双排,
-                Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_MOTH12_Left_M12R12_Right_双排左MSTH12右D1234 => (ulong)StrategyIdx.tdh单排,
-                _ => 0u,
-            };
-            
-            id += 10 * Phase2_Strat_Of_Light_Rampant switch
-            {
-                Phase2_Strats_Of_Light_Rampant.Star_Of_David_Japanese_PF_六芒星日服野队法 => (ulong)StrategyIdx.六芒星,
-                Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法 => (ulong)StrategyIdx.新灰九,
-                Phase2_Strats_Of_Light_Rampant.Lucrezia_L团法 => (ulong)StrategyIdx.L团法,
-                Phase2_Strats_Of_Light_Rampant.Deprecated_Old_Grey9_已废弃的旧灰九法 => (ulong)StrategyIdx.旧灰九,
-                _ => 0u,
-            };
-            
-            id += 100 * Phase2_Strat_Of_Mirror_Mirror switch
-            {
-                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Left_Red_近战组去左红色镜子 => (ulong)StrategyIdx.近战左红,
-                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Right_Red_近战组去右红色镜子 => (ulong)StrategyIdx.近战右红,
-                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Left_If_Same_近战组最近红色镜子距离相同则左 => (ulong)StrategyIdx.就近近战左,
-                Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Right_If_Same_近战组最近红色镜子距离相同则右 => (ulong)StrategyIdx.就近近战右,
-                _ => 0u,
-            };
-
-            id += 1000 * Phase3_Strat_Of_The_Second_Half switch
-            {
-                Phase3_Strats_Of_The_Second_Half.Double_Group_Based_On_Safe_双分组安全区基准 => (ulong)StrategyIdx.双分组安基,
-                Phase3_Strats_Of_The_Second_Half.Double_Group_Based_On_Apocalypse2nd_双分组二火基准 => (ulong)StrategyIdx.双分组二火基,
-                Phase3_Strats_Of_The_Second_Half.MT_And_D1_As_Locomotives_车头低换MTD1车头 => (ulong)StrategyIdx.车头MTD1,
-                Phase3_Strats_Of_The_Second_Half.Others_As_Locomotives_车头低换人群车头 => (ulong)StrategyIdx.车头人群,
-                _ => 0u,
-            };
-
-            return id;
-        }
-
-        private void SetFruStrategy(ScriptAccessory accessory)
-        {
-            var str = "===== 初始化完成 =====\n";
-            if ((ulong)Fru_StrategyPack == 0)
-            {
-                str += "你未使用预设包内集成策略，请自行于用户设置中选择。\n";
-                fruStragetyId = CalcFruStrategy(accessory);
-            }
-            else
-            {
-                str += "你使用了预设包内集成策略，将忽略部分用户设置。\n";
-                fruStragetyId = (ulong)Fru_StrategyPack;
-            }
-            
-            str += "更改策略后，请随时输入【/e init】应用设置。\n";
-            var p1Fof = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P1四连);
-            str += $"- P1 罪壤堕 {p1Fof}：";
-            str += p1Fof switch
-            {
-                (int)StrategyIdx.tdh单排 => "T-H-D单排",
-                (int)StrategyIdx.htd单排 => "H-T-D单排",
-                (int)StrategyIdx.htdh单排 => "H-T-D-H单排",
-                (int)StrategyIdx.htd双排 => "H-T-D双排",
-                (int)StrategyIdx.thd双排 => "T-H-D双排",
-                _ => "禁用指路",
-            };
-            str += "\n";
-
-            var p2Lr = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2光爆);
-            str += $"- P2 光爆 {p2Lr}：";
-            str += p2Lr switch
-            {
-                (int)StrategyIdx.六芒星 => "正六芒星（田园郡）",
-                (int)StrategyIdx.新灰九 => "新灰9（密码表）",
-                (int)StrategyIdx.L团法 => "Lucrezia团",
-                (int)StrategyIdx.旧灰九 => "旧灰9",
-                _ => "禁用指路",
-            };
-            str += "\n";
-
-            
-            var p2Mirror = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2镜子);
-            str += $"- P2 镜子 {p2Mirror}：";
-            str += p2Mirror switch
-            {
-                (int)StrategyIdx.近战左红 => "近战左红",
-                (int)StrategyIdx.近战右红 => "近战右红",
-                (int)StrategyIdx.就近近战左 => "就近，近战左红",
-                (int)StrategyIdx.就近近战右 => "就近，近战右红",
-                _ => "禁用指路",
-            };
-            str += "\n";
-            
-            var p3Apo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            str += $"- P3 地火 {p3Apo}：";
-            str += p3Apo switch
-            {
-                (int)StrategyIdx.双分组安基 => "双分组安全区基准",
-                (int)StrategyIdx.双分组二火基 => "双分组二火基准",
-                (int)StrategyIdx.车头MTD1 => "车头低换MTD1车头",
-                (int)StrategyIdx.车头人群 => "车头低换人群车头",
-                _ => "禁用指路",
-            };
-            
-            // 必须播报
-            accessory.DebugMsg(str, true);
-        }
-        
-        public static int GetDecimalDigit(ulong val, int x)
-        {
-            var valStr = val.ToString();
-            var length = valStr.Length;
-            
-            if (x < 1 || x > length)
-            {
-                return -1;
-            }
-            
-            var digitChar = valStr[length - x];
-            return int.Parse(digitChar.ToString());
-        }
-        
-        [ScriptMethod(name: "默语事件", eventType: EventTypeEnum.Chat, eventCondition: ["Type:Echo"], userControl: false)]
-        public void EchoActive(Event @event, ScriptAccessory accessory)
-        {
-            var msg = @event["Message"];
-            switch (msg)
-            {
-                case "init":
-                    accessory.DebugMsg($"来自Kodakku Assist的消息，正在重置策略：\n", true);
-                    System.Threading.Thread.Sleep(500);
-                    SetFruStrategy(accessory);
-                    break;
-            }
-        }
-        
         #region P1
         
         [ScriptMethod(name:"----- Phase 1 ----- (No actual meaning for this toggle/此开关无实际意义)",
@@ -1350,11 +1317,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             if (parse != 1d) return;
 
-            lock (this)
+            lock (P1雾龙计数读写锁_AsAConstant)
             {
                 P1雾龙计数 ++; 
                 if(P1雾龙计数 != 3) return;
-                Task.Delay(250).ContinueWith(t =>
+                Task.Delay(334).ContinueWith(t =>
                 {
                     if (!P1雾龙雷)
                     {
@@ -1426,6 +1393,117 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     }
                 });
                 
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase1 Mark Players In Safe Positions 标记在安全位置的玩家",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:40158"],
+            userControl:false)]
+        
+        public void Phase1_Mark_Players_In_Safe_Positions_标记在安全位置的玩家(Event @event, ScriptAccessory accessory) {
+
+            if(parse!=1d) {
+                
+                return;
+                
+            }
+
+            if(!Phase1_Mark_Players_In_Safe_Positions) {
+
+                return;
+
+            }
+
+            lock(P1雾龙计数2读写锁_AsAConstant) {
+                
+                ++P1雾龙计数2;
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                if(P1雾龙计数2!=3) {
+                    
+                    return;
+                    
+                }
+                
+                Task.Delay(334).ContinueWith(t => {
+                    // I know this is not a thread safe practice, but I'm just too lazy to rework it in a thread safe way. Please forgive me :(
+                    // And by the way, If something really goes wrong here, it probably indicates that the frame rate of the current user is below 3 FPS.
+                    
+                    int safePositions=P1雾龙记录.IndexOf(0);
+                    List<int> temporaryOrder=[0,1,2,3,4,5,6,7];
+                    string debugOutput="";
+
+                    if(Phase1_Standby_Position_Of_Utopian_Sky==Phase1_Standby_Positions_Of_Utopian_Sky.Swap_OT_And_M2_交换ST与D4) {
+
+                        temporaryOrder=[0,1,7,5,3,4,2,6];
+
+                    }
+                    
+                    if(Phase1_Standby_Position_Of_Utopian_Sky==Phase1_Standby_Positions_Of_Utopian_Sky.Both_Tanks_Go_Center_双T去中间) {
+
+                        temporaryOrder=[0,7,3,5,1,4,2,6];
+
+                    }
+
+                    for(int i=0,j=0;i<temporaryOrder.Count;++i) {
+
+                        var currentObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[temporaryOrder[i]]);
+
+                        if(currentObject!=null) {
+
+                            if(PositionTo8Dir(currentObject.Position,new Vector3(100,0,100))==safePositions
+                               ||
+                               PositionTo8Dir(currentObject.Position,new Vector3(100,0,100))==((safePositions+4)%8)) {
+                                
+                                accessory.Method.Mark(accessory.Data.PartyList[temporaryOrder[i]],phase1_markForThePlayersInSafePositions_asAConstant[j]);
+
+                                debugOutput+=$"temporaryOrder[i]={temporaryOrder[i]},phase1_markForThePlayersInSafePositions_asAConstant[j]={phase1_markForThePlayersInSafePositions_asAConstant[j]}\n";
+
+                                ++j;
+
+                            }
+                            
+                        }
+
+                    }
+
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   {debugOutput}
+                                                   
+                                                   """);
+
+                    }
+                        
+                });
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase1 Clear Marks On Players In Safe Positions 清理安全位置玩家的标记",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:40158"],
+            userControl:false,
+            suppress:2000)]
+        
+        public void Phase1_Clear_Marks_On_Players_In_Safe_Positions_清理安全位置玩家的标记(Event @event, ScriptAccessory accessory) {
+
+            if(parse!=1d) {
+                
+                return;
+                
+            }
+            
+            if(Phase1_Mark_Players_In_Safe_Positions) {
+
+                accessory.Method.MarkClear();
+
             }
 
         }
@@ -2298,11 +2376,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             
             var tetheredPlayers=phase1_tetheredPlayersDuringFallOfFaith.Select(o=>o%10).ToList();
             List<int> untetheredPlayers=[];
-
-            var stratFof = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P1四连);
             
-            if (stratFof is (int)StrategyIdx.tdh单排 or (int)StrategyIdx.thd双排) // TDH
-            {
+            if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_THD_Order_按THD顺序单排
+               ||
+               Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_MOTH12_Left_M12R12_Right_双排左MSTH12右D1234) {
                 
                 for(int i=0;i<accessory.Data.PartyList.Count;++i) {
 
@@ -2316,8 +2393,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
                     
-            if (stratFof is (int)StrategyIdx.htd单排 or (int)StrategyIdx.htd双排) // HTD
-            {
+            if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_HTD_Order_按HTD顺序单排
+               ||
+               Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_H12MOT_Left_M12R12_Right_双排左H12MST右D1234) {
                 // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                 List<int> temporaryPriority=new List<int>{2,3,0,1,4,5,6,7};
@@ -2333,9 +2411,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 }
                         
             }
-            
-            if (stratFof is (int)StrategyIdx.htdh单排)  // HTDH
-            {
+                    
+            if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_H1TDH2_Order_按H1TDH2顺序单排) {
                 // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                 List<int> temporaryPriority=new List<int>{2,0,1,4,5,6,7,3};
@@ -2480,7 +2557,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var dis = 2.5f;//距离点名人
             var far = 5.25f;//距离boss
-            Task.Delay(250).ContinueWith(t =>
+            Task.Delay(334).ContinueWith(t =>
             {
                 var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 Vector3 t1p1 = new(100, 0, 100 - far);
@@ -2589,10 +2666,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     var tehterObjIndex = phase1_tetheredPlayersDuringFallOfFaith.Select(o => o % 10).ToList();
                     var tehterIsFire = phase1_tetheredPlayersDuringFallOfFaith.Select(o => o < 20).ToList();
                     List<int> idleObjIndex = [];
-                    
-                    
-                    var stratFof = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P1四连);
-                    if (stratFof is (int)StrategyIdx.tdh单排 or (int)StrategyIdx.thd双排) // THD单排 或 THD双排
+                    if (Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_THD_Order_按THD顺序单排
+                        ||
+                        Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_MOTH12_Left_M12R12_Right_双排左MSTH12右D1234)
                     {
                         for (int i = 0; i < accessory.Data.PartyList.Count; i++)
                         {
@@ -2601,8 +2677,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         }
                     }
                     
-                    if (stratFof is (int)StrategyIdx.htd单排 or (int)StrategyIdx.htd双排) // HTD单排 或 HTD双排
-                    {
+                    if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_HTD_Order_按HTD顺序单排
+                       ||
+                       Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Double_Lines_H12MOT_Left_M12R12_Right_双排左H12MST右D1234) {
                         // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                         List<int> htdOrder=new List<int>{2,3,0,1,4,5,6,7};
@@ -2619,8 +2696,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                         
                     }
                     
-                    if (stratFof is (int)StrategyIdx.htdh单排)  // HTDH
-                    {
+                    if(Phase1_Strat_Of_Fall_Of_Faith==Phase1_Strats_Of_Fall_Of_Faith.Single_Line_In_H1TDH2_Order_按H1TDH2顺序单排) {
                         // The addition of this strat credits to @alexandria_prime. Appreciate!
                         
                         List<int> h1tdh2Order=new List<int>{2,0,1,4,5,6,7,3};
@@ -2649,7 +2725,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     Vector3 i4p2=new Vector3(100,0,100);
                     Vector3 dealpos1=default;
                     Vector3 dealpos2=default;
-                    
+
                     if(Phase1_Orientation_Benchmark_During_Fall_Of_Faith==Phase1_Orientation_Benchmarks_During_Fall_Of_Faith.High_Priority_Left_Facing_Due_North_面向正北左侧高优先级) {
                         
                         i1p1=tehterIsFire[0]?new(100,0,100-far-dis):new(100-dis,0,100-far);
@@ -2859,7 +2935,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void P1_塔_塔处理位置(Event @event, ScriptAccessory accessory)
         {
             if (parse != 1d) return;
-            Task.Delay(250).ContinueWith(t =>
+            Task.Delay(334).ContinueWith(t =>
             {
                 var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 if (@event["ActionId"] == "40134")
@@ -4305,6 +4381,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             userControl:false)]
         
         public void Phase2_Reset_Semaphores_After_Diamond_Dust_钻石星尘后重置信号灯(Event @event, ScriptAccessory accessory) {
+
+            if(parse!=2.1
+               &&
+               parse!=2.2) {
+                
+                return;
+                
+            }
             
             phase2_semaphoreOfGuidanceBeforeKnockback=new System.Threading.AutoResetEvent(false);
             phase2_semaphoreOfGuidanceAfterKnockback=new System.Threading.AutoResetEvent(false);
@@ -4331,6 +4415,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void P2_双镜_分散分摊(Event @event, ScriptAccessory accessory)
         {
             if(parse != 2.2) return;
+            string prompt="";
             if (@event["ActionId"]=="40221")
             {
                 foreach (var pm in accessory.Data.PartyList)
@@ -4343,11 +4428,23 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.DestoryAt = 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
                 }
+
+                if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
+
+                    prompt="分散";
+
+                }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
+
+                    prompt="Spread";
+
+                }
+                
             }
             else
             {
-                // 此处近战组分摊，远程组分摊
-                // int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
+                //int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
                 int[] group = [4, 5, 6, 7, 0, 1, 2, 3];
                 var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 for (int i = 0; i < 4; i++)
@@ -4360,6 +4457,35 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.DestoryAt = 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
                 }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
+
+                    prompt="分摊";
+
+                }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
+
+                    prompt="Stack";
+
+                }
+                
+            }
+
+            if(!prompt.Equals("")) {
+
+                if(Enable_Text_Prompts) {
+                    
+                    accessory.Method.TextInfo(prompt,1500);
+                    
+                }
+                
+                if(Enable_Vanilla_TTS||Enable_Daily_Routines_TTS) {
+                    
+                    accessory.TTS(prompt,Enable_Vanilla_TTS,Enable_Daily_Routines_TTS);
+                    
+                }
+                
             }
             
         }
@@ -4786,15 +4912,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             
             var currentProperty=accessory.Data.GetDefaultDrawProperties();
-            
-            var stratMirror = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2镜子);
 
             if(((leftMirror+1)%8)==colourlessMirror
                ||
                ((leftMirror+1)%8)==phase2_getOppositeProteanPosition(colourlessMirror)) {
 
-                if (stratMirror is (int)StrategyIdx.近战左红 or (int)StrategyIdx.就近近战左) 
-                {
+                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Left_Red_近战组去左红色镜子
+                   ||
+                   Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Left_If_Same_近战组最近红色镜子距离相同则左) {
 
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4825,8 +4950,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     
                 }
                 
-                if (stratMirror is (int)StrategyIdx.近战右红 or (int)StrategyIdx.就近近战右) 
-                {
+                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Right_Red_近战组去右红色镜子
+                   ||
+                   Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Right_If_Same_近战组最近红色镜子距离相同则右) {
                     
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4861,8 +4987,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             else {
                 
-                if (stratMirror is (int)StrategyIdx.近战左红) 
-                {
+                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Left_Red_近战组去左红色镜子) {
 
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4893,7 +5018,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     
                 }
                 
-                if (stratMirror is (int)StrategyIdx.近战右红) {
+                if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Right_Red_近战组去右红色镜子) {
                     
                     Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -4990,8 +5115,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(discreteDistanceToTheLeft>discreteDistanceToTheRight) {
                     
-                    if (stratMirror is (int)StrategyIdx.就近近战左 or (int)StrategyIdx.就近近战右)
-                    {
+                    if(Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Left_If_Same_近战组最近红色镜子距离相同则左
+                       ||
+                       Phase2_Strat_Of_Mirror_Mirror==Phase2_Strats_Of_Mirror_Mirror.Melee_Group_Closest_Red_Right_If_Same_近战组最近红色镜子距离相同则右) {
                         
                         Vector3 targetPosition=new Vector3(100,0,100);
 
@@ -5063,6 +5189,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         
         public void Phase2_Reset_Semaphores_After_Mirror_Mirror_镜中奇遇后重置信号灯(Event @event, ScriptAccessory accessory) {
             
+            if(parse!=2.2
+               &&
+               parse!=2.3) {
+                
+                return;
+                
+            }
+            
             phase2_semaphoreTheColourlessMirrorWasConfirmed=new System.Threading.AutoResetEvent(false);
             phase2_semaphoreRedMirrorsWereConfirmed=new System.Threading.AutoResetEvent(false);
             
@@ -5082,6 +5216,287 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             phase2_stacksOfLightsteeped=[0,0,0,0,0,0,0,0];
             phase2_writePermissionForLightsteeped=true;
             phase2_semaphoreFinalLightsteepedWasConfirmed=new System.Threading.AutoResetEvent(false);
+            
+        }
+        
+        [ScriptMethod(name:"Phase2 Initial Positions Before Light Rampant 光之失控(光暴)前初始站位",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:40212"])]
+        
+        public void Phase2_Initial_Positions_Before_Light_Rampant_光之失控前初始站位(Event @event, ScriptAccessory accessory) {
+            
+            if(parse!=2.2
+               &&
+               parse!=2.3) {
+                
+                return;
+                
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            double rotation=0d;
+
+            if(Phase2_Initial_Protean_Position_Of_Light_Rampant==Phase2_Initial_Protean_Positions_Of_Light_Rampant.Normal_Protean_Tanks_North_And_East_常规八方T在东北) {
+
+                rotation=0d;
+                
+                rotation+=myIndex switch {
+                    0 => 0d,
+                    7 => 1d,
+                    1 => 2d,
+                    5 => 3d,
+                    3 => 4d,
+                    4 => 5d,
+                    2 => 6d,
+                    6 => 7d
+                };
+                
+            }
+            
+            if(Phase2_Initial_Protean_Position_Of_Light_Rampant==Phase2_Initial_Protean_Positions_Of_Light_Rampant.Supporters_North_MOTH12_蓝绿全部在北MSTH12) {
+
+                rotation=-0.5d;
+                
+                rotation+=myIndex switch {
+                    0 => -1d,
+                    1 => 0d,
+                    2 => 1d,
+                    3 => 2d,
+                    7 => 3d,
+                    6 => 4d,
+                    5 => 5d,
+                    4 => 6d
+                };
+                
+            }
+            
+            if(Phase2_Initial_Protean_Position_Of_Light_Rampant==Phase2_Initial_Protean_Positions_Of_Light_Rampant.Supporters_North_H12MOT_蓝绿全部在北H12MST) {
+
+                rotation=-0.5d;
+                
+                rotation+=myIndex switch {
+                    2 => -1d,
+                    3 => 0d,
+                    0 => 1d,
+                    1 => 2d,
+                    7 => 3d,
+                    6 => 4d,
+                    5 => 5d,
+                    4 => 6d
+                };
+                
+            }
+
+            var currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+            currentproperty.Name="Phase2_Initial_Positions_Before_Light_Rampant_光之失控前初始站位";
+            currentproperty.Scale=new(2);
+            currentproperty.Owner=accessory.Data.Me;
+            currentproperty.TargetPosition=RotatePoint(new Vector3(100,0,95),new Vector3(100,0,100),(float)(float.Pi/4*rotation));;
+            currentproperty.ScaleMode|=ScaleMode.YByDistance;
+            currentproperty.Color=accessory.Data.DefaultSafeColor;
+            currentproperty.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+            
+        }
+        
+        [ScriptMethod(name:"Phase2 Rough Path Of Luminous Hammer 光流侵蚀(放泥)大致路径",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:40212"],
+            suppress:2000)]
+        
+        public void Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径(Event @event, ScriptAccessory accessory) {
+            
+            if(parse!=2.3) {
+                
+                return;
+                
+            }
+            
+            var currentproperty=accessory.Data.GetDefaultDrawProperties();
+
+            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Star_Of_David_Japanese_PF_六芒星日服野队法) {
+
+                Vector3 point1=new Vector3(97.321f,0f,106.467f);
+                Vector3 point1Symmetry=RotatePoint(point1,new Vector3(100,0,100),float.Pi);
+                Vector3 point2=new Vector3(93f,0f,100f);
+                Vector3 point2Symmetry=RotatePoint(point2,new Vector3(100,0,100),float.Pi);
+                Vector3 point3=new Vector3(97.321f,0f,93.533f);
+                Vector3 point3Symmetry=RotatePoint(point3,new Vector3(100,0,100),float.Pi);
+                Vector3 point4=new Vector3(97.321f,0f,82f);
+                Vector3 point4Symmetry=RotatePoint(point4,new Vector3(100,0,100),float.Pi);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point1;
+                currentproperty.TargetPosition=point2;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point2;
+                currentproperty.TargetPosition=point3;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point3;
+                currentproperty.TargetPosition=point4;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point1Symmetry;
+                currentproperty.TargetPosition=point2Symmetry;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point2Symmetry;
+                currentproperty.TargetPosition=point3Symmetry;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point3Symmetry;
+                currentproperty.TargetPosition=point4Symmetry;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+
+            }
+            
+            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法) {
+
+                Vector3 point1=new Vector3(93f,0f,100f);
+                Vector3 point1Symmetry=RotatePoint(point1,new Vector3(100,0,100),float.Pi);
+                Vector3 point2=new Vector3(97.321f,0f,93.533f);
+                Vector3 point2Symmetry=RotatePoint(point2,new Vector3(100,0,100),float.Pi);
+                Vector3 point3=new Vector3(107.071f,0f,92.929f);
+                Vector3 point3Symmetry=RotatePoint(point3,new Vector3(100,0,100),float.Pi);
+                Vector3 point4=new Vector3(112.728f,0f,87.272f);
+                Vector3 point4Symmetry=RotatePoint(point4,new Vector3(100,0,100),float.Pi);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point1;
+                currentproperty.TargetPosition=point2;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point2;
+                currentproperty.TargetPosition=point3;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point3;
+                currentproperty.TargetPosition=point4;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point1Symmetry;
+                currentproperty.TargetPosition=point2Symmetry;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point2Symmetry;
+                currentproperty.TargetPosition=point3Symmetry;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+                currentproperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentproperty.Name="Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale=new(2);
+                currentproperty.Position=point3Symmetry;
+                currentproperty.TargetPosition=point4Symmetry;
+                currentproperty.ScaleMode|=ScaleMode.YByDistance;
+                currentproperty.Color=Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay=3500;
+                currentproperty.DestoryAt=9500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentproperty);
+                
+            }
             
         }
         
@@ -5196,6 +5611,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void P2_光之暴走_分散分摊(Event @event, ScriptAccessory accessory)
         {
             if (parse != 2.3) return;
+            string prompt="";
             if (@event["ActionId"] == "40221")
             {
                 foreach (var pm in accessory.Data.PartyList)
@@ -5208,6 +5624,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.DestoryAt = 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
                 }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
+
+                    prompt="分散";
+
+                }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
+
+                    prompt="Spread";
+
+                }
+                
             }
             else
             {
@@ -5223,6 +5652,35 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.DestoryAt = 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
                 }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
+
+                    prompt="分摊";
+
+                }
+                
+                if(Language_Of_Prompts==Languages_Of_Prompts.English_英文) {
+
+                    prompt="Stack";
+
+                }
+                
+            }
+            
+            if(!prompt.Equals("")) {
+
+                if(Enable_Text_Prompts) {
+                    
+                    accessory.Method.TextInfo(prompt,1500);
+                    
+                }
+                
+                if(Enable_Vanilla_TTS||Enable_Daily_Routines_TTS) {
+                    
+                    accessory.TTS(prompt,Enable_Vanilla_TTS,Enable_Daily_Routines_TTS);
+                    
+                }
+                
             }
 
         }
@@ -5322,6 +5780,17 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 }
                     
             }
+
+            if(Enable_Text_Prompts) {
+                
+                accessory.Method.SendChat($"""
+                                           /e 
+                                           playersWithTethers.Count={playersWithTethers.Count}
+                                           playersWithTethers[]={playersWithTethers[0]},{playersWithTethers[1]},{playersWithTethers[2]},{playersWithTethers[3]},{playersWithTethers[4]},{playersWithTethers[5]} 
+                                           
+                                           """);
+                
+            }
             
             int myTetherIndex=playersWithTethers.IndexOf(myIndex);
             Vector3 myTower=new Vector3(100,0,100);
@@ -5344,11 +5813,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             Vector3 eastMeetingPoint=new Vector3(118.00f,0,100.00f);
             Vector3 southMeetingPoint=new Vector3(100.00f,0,118.00f);
             Vector3 westMeetingPoint=new Vector3(82.00f,0,100.00f);
-
-
-            var stratLr = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P2光爆);
-            if (stratLr is (int)StrategyIdx.六芒星)   // 六芒星
-            {
+            
+            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Star_Of_David_Japanese_PF_六芒星日服野队法) {
+                
                 myTower=myTetherIndex switch {
                     1 => tower4,
                     4 => tower1,
@@ -5376,12 +5843,21 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if (stratLr is (int)StrategyIdx.新灰九)   // 新灰9
-            {
+            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法) {
                 
                 int numberOfPlayersWithLuminousHammerBefore=0;
                 
                 if(myIndex==0) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
                     
                     myTower=tower4;
                     
@@ -5391,6 +5867,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==7) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=(phase2_playersWithLuminousHammer.Contains(0))?(tower4):(tower6);
                     
                 }
@@ -5398,6 +5884,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 numberOfPlayersWithLuminousHammerBefore+=(phase2_playersWithLuminousHammer.Contains(7))?(1):(0);
                 
                 if(myIndex==1) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
 
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower2,
@@ -5411,6 +5907,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==5) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower5,
                         1 => tower2,
@@ -5422,6 +5928,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 numberOfPlayersWithLuminousHammerBefore+=(phase2_playersWithLuminousHammer.Contains(5))?(1):(0);
                 
                 if(myIndex==3) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
                     
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower3,
@@ -5435,10 +5951,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==4) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower1,
                         1 => tower3,
-                        2 => tower6
+                        2 => tower5
                     };
                     
                 }
@@ -5447,11 +5973,33 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==2) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=(phase2_playersWithLuminousHammer.Contains(6))?(tower1):(tower3);
                     
                 }
                 
+                numberOfPlayersWithLuminousHammerBefore+=(phase2_playersWithLuminousHammer.Contains(2))?(1):(0);
+                
                 if(myIndex==6) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
                     
                     myTower=tower1;
                     
@@ -5475,8 +6023,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if (stratLr is (int)StrategyIdx.L团法)   // L团
-            {
+            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Lucrezia_L团法) {
                 
                 myTower=myTetherIndex switch {
                     1 => tower1,
@@ -5505,12 +6052,21 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if (stratLr is (int)StrategyIdx.旧灰九)   // 旧灰9
-            {
+            if(Phase2_Strat_Of_Light_Rampant==Phase2_Strats_Of_Light_Rampant.Deprecated_Old_Grey9_已废弃的旧灰九法) {
                 
                 int numberOfPlayersWithLuminousHammerBefore=0;
                 
                 if(myIndex==0) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
                     
                     myTower=tower4;
                     
@@ -5520,6 +6076,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==7) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=(phase2_playersWithLuminousHammer.Contains(0))?(tower4):(tower2);
                     
                 }
@@ -5527,6 +6093,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 numberOfPlayersWithLuminousHammerBefore+=(phase2_playersWithLuminousHammer.Contains(7))?(1):(0);
                 
                 if(myIndex==1) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
 
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower6,
@@ -5540,6 +6116,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==5) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower3,
                         1 => tower6,
@@ -5551,6 +6137,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 numberOfPlayersWithLuminousHammerBefore+=(phase2_playersWithLuminousHammer.Contains(5))?(1):(0);
                 
                 if(myIndex==3) {
+                    
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
                     
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower5,
@@ -5564,6 +6160,16 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==4) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=numberOfPlayersWithLuminousHammerBefore switch {
                         0 => tower1,
                         1 => tower5,
@@ -5576,11 +6182,33 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 if(myIndex==2) {
                     
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
+                    
                     myTower=(phase2_playersWithLuminousHammer.Contains(6))?(tower1):(tower5);
                     
                 }
                 
+                numberOfPlayersWithLuminousHammerBefore+=(phase2_playersWithLuminousHammer.Contains(2))?(1):(0);
+                
                 if(myIndex==6) {
+                        
+                    if(Enable_Developer_Mode) {
+
+                        accessory.Method.SendChat($"""
+                                                   /e 
+                                                   numberOfPlayersWithLuminousHammerBefore={numberOfPlayersWithLuminousHammerBefore}
+
+                                                   """);
+
+                    }
                     
                     myTower=tower1;
                     
@@ -5814,6 +6442,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             userControl:false)]
         
         public void Phase2_Reset_Semaphores_After_Light_Rampant_光之失控后重置信号灯(Event @event, ScriptAccessory accessory) {
+
+            if(parse!=2.3) {
+                
+                return;
+                
+            }
             
             phase2_semaphoreLuminousHammerWasConfirmed=new System.Threading.AutoResetEvent(false);
             phase2_semaphoreFinalLightsteepedWasConfirmed=new System.Threading.AutoResetEvent(false);
@@ -6575,10 +7209,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             
             System.Threading.Thread.MemoryBarrier();
             
-            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            
-            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
+                
                 bool goLeft=phase3_doubleGroup_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
                 bool stayInTheGroup=phase3_doubleGroup_shouldStayInTheGroup(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
                 string prompt="";
@@ -6668,8 +7300,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
+
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 bool goLeft=phase3_locomotive_shouldGoLeft(myIndex);
                 string prompt="";
@@ -6717,8 +7349,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
                 }
 
-                if (stratApo is (int)StrategyIdx.车头MTD1)
-                {
+                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.MT_And_M1_As_Locomotives_MT和D1为车头) {
+
                     if(myIndex!=0&&myIndex!=4) {
 
                         if(Language_Of_Prompts==Languages_Of_Prompts.Simplified_Chinese_简体中文) {
@@ -6753,8 +7385,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
                 
-                if (stratApo is (int)StrategyIdx.车头人群)
-                {
+                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.Others_As_Locomotives_人群为车头) {
 
                     if(myIndex!=0&&myIndex!=4) {
 
@@ -6880,12 +7511,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             
             var currentProperty=accessory.Data.GetDefaultDrawProperties();
-            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            
-            System.Threading.Thread.MemoryBarrier();
-            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
-            {
-               
+
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
+                
                 if(phase3_numberOfDarkWaterIiiHasBeenProcessed==6) {
                     
                     int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
@@ -6998,8 +7626,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
                 
                 if(phase3_numberOfDarkWaterIiiHasBeenProcessed==6) {
                     
@@ -7124,9 +7751,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             currentProperty.Color=accessory.Data.DefaultSafeColor;
             currentProperty.DestoryAt=5000;
 
-            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
                 
                 bool goLeft=phase3_doubleGroup_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
                 bool stayInTheGroup=phase3_doubleGroup_shouldStayInTheGroup(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
@@ -7309,8 +7934,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
                 
                 bool goLeft=phase3_locomotive_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
 
@@ -7703,9 +8327,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             currentProperty.Delay=1250;
             currentProperty.DestoryAt=2500;
 
-            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
 
                 int myDoubleGroupIndex=phase3_doubleGroup_getDoubleGroupIndex(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
 
@@ -7838,6 +8460,133 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
+            else {
+
+                var temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+
+                Vector3 point1=new Vector3(93f,0f,101f);
+                Vector3 point1Extension=new Vector3(93f,0f,109f);
+                Vector3 point2=new Vector3(93f,0f,99f);
+                Vector3 point2Extension=new Vector3(93f,0f,91f);
+                Vector3 point3=new Vector3(92f,0f,101f);
+                Vector3 point3Extension=new Vector3(85.072f,0f,105f);
+                Vector3 point4=new Vector3(92f,0f,99f);
+                Vector3 point4Extension=new Vector3(85.072f,0f,95f);
+                Vector3 point5=new Vector3(107f,0f,101f);
+                Vector3 point5Extension=new Vector3(107f,0f,109f);
+                Vector3 point6=new Vector3(107f,0f,99f);
+                Vector3 point6Extension=new Vector3(107f,0f,91f);
+                Vector3 point7=new Vector3(108f,0f,101f);
+                Vector3 point7Extension=new Vector3(114.928f,0f,105f);
+                Vector3 point8=new Vector3(108f,0f,99f);
+                Vector3 point8Extension=new Vector3(114.928f,0f,95f);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point1;
+                temporaryProperty.TargetPosition=point1Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point2;
+                temporaryProperty.TargetPosition=point2Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point3;
+                temporaryProperty.TargetPosition=point3Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point4;
+                temporaryProperty.TargetPosition=point4Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point5;
+                temporaryProperty.TargetPosition=point5Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point6;
+                temporaryProperty.TargetPosition=point6Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point7;
+                temporaryProperty.TargetPosition=point7Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+                temporaryProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                temporaryProperty.Name="Phase3_Rough_Guidance_Of_Spirit_Taker_碎灵一击粗略指路";
+                temporaryProperty.Scale=new(2);
+                temporaryProperty.Position=point8;
+                temporaryProperty.TargetPosition=point8Extension;
+                temporaryProperty.ScaleMode|=ScaleMode.YByDistance;
+                temporaryProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
+                temporaryProperty.Delay=1250;
+                temporaryProperty.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,temporaryProperty);
+                
+            }
+
             if(targetPositionConfirmed) {
 
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperty);
@@ -7896,11 +8645,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
 
-                if (stratApo is (int)StrategyIdx.双分组安基) {
+                if(Phase3_Branch_Of_The_Double_Group_Strat==Phase3_Branches_Of_The_Double_Group_Strat.Based_On_Safe_Positions_安全区为基准) {
 
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -7996,8 +8743,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
                 
-                if (stratApo is (int)StrategyIdx.双分组二火基)
-                {
+                if(Phase3_Branch_Of_The_Double_Group_Strat==Phase3_Branches_Of_The_Double_Group_Strat.Based_On_The_Second_Apocalypse_第二次启示为基准) {
 
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -8095,10 +8841,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群)
-            {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
 
-                if (stratApo is (int)StrategyIdx.车头MTD1) {
+                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.MT_And_M1_As_Locomotives_MT和D1为车头) {
 
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -8194,7 +8939,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
 
-                if (stratApo is (int)StrategyIdx.车头人群) {
+                if(Phase3_Branch_Of_The_Locomotive_Strat==Phase3_Branches_Of_The_Locomotive_Strat.Others_As_Locomotives_人群为车头) {
                     
                     if(Phase3_Division_Of_The_Zone==Phase3_Divisions_Of_The_Zone.North_To_Southwest_For_The_Left_Group_左组从正北到西南) {
 
@@ -8388,7 +9133,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             dp.Name = "P3_二运_地火_第三点_11";
             dp.Scale = new(9);
             dp.Position = RotatePoint(pos, centre, float.Pi / 2 * clockwise);
-            dp.Color = Phase3_Colour_Of_Rough_Guidance_And_The_Penultimate_Apocalypse.V4;
+            dp.Color = Phase3_Colour_Of_The_Penultimate_Apocalypse.V4.WithW(1f);
             dp.Delay = 3000;
             dp.DestoryAt = 8000 - preTime;
             accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
@@ -8404,7 +9149,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             dp.Name = "P3_二运_地火_第三点_21";
             dp.Scale = new(9);
             dp.Position = RotatePoint(pos, centre, float.Pi / 2 * clockwise + float.Pi);
-            dp.Color = Phase3_Colour_Of_Rough_Guidance_And_The_Penultimate_Apocalypse.V4;
+            dp.Color = Phase3_Colour_Of_The_Penultimate_Apocalypse.V4.WithW(1f);
             dp.Delay = 3000;
             dp.DestoryAt = 8000 - preTime;
             accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
@@ -8455,12 +9200,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             currentProperty.Scale=new(2);
             currentProperty.ScaleMode|=ScaleMode.YByDistance;
             currentProperty.Owner=accessory.Data.Me;
-            currentProperty.Color=Phase3_Colour_Of_Rough_Guidance_And_The_Penultimate_Apocalypse.V4;
+            currentProperty.Color=Phase3_Colour_Of_Rough_Guidance.V4.WithW(1f);
             currentProperty.Delay=500;
             currentProperty.DestoryAt=6500;
 
-            var stratApo = GetDecimalDigit(fruStragetyId, (int)StrategyIdx.P3地火);
-            if (stratApo is (int)StrategyIdx.双分组安基 or (int)StrategyIdx.双分组二火基) {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.Double_Group_双分组法) {
 
                 if(0<=accessory.Data.PartyList.IndexOf(accessory.Data.Me)
                    &&
@@ -8484,7 +9228,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
             
-            if (stratApo is (int)StrategyIdx.车头MTD1 or (int)StrategyIdx.车头人群) {
+            if(Phase3_Strat_Of_The_Second_Half==Phase3_Strats_Of_The_Second_Half.High_Priority_As_Locomotives_车头低换法) {
 
                 bool goLeft=phase3_locomotive_shouldGoLeft(accessory.Data.PartyList.IndexOf(accessory.Data.Me));
 
@@ -9117,7 +9861,66 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             P4Tether = [-1, -1, -1, -1, -1, -1, -1, -1];
             P4Stack = [0, 0, 0, 0, 0, 0, 0, 0];
             P4TetherDone = false;
+            phase4_1_ManualReset.Reset();
+            phase4_1_TetherCount = 0;
         }
+        
+        [ScriptMethod(name:"Phase4 Initial Position Before Darklit Dragonsong 暗光龙诗前预站位",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:40239"])]
+        
+        public void Phase4_Initial_Position_Before_Darklit_Dragonsong_暗光龙诗前预站位(Event @event, ScriptAccessory accessory) {
+
+            if(parse!=4.1
+               &&
+               parse!=4.2) {
+
+                return;
+
+            }
+
+            List<Vector3> initialPosition=[
+                new Vector3(95.5f,0f,94f),
+                new Vector3(98.5f,0f,94f),
+                new Vector3(101.5f,0f,94f),
+                new Vector3(104.5f,0f,94f),
+                new Vector3(95.5f,0f,106f),
+                new Vector3(98.5f,0f,106f),
+                new Vector3(101.5f,0f,106f),
+                new Vector3(104.5f,0f,106f),
+            ];
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            var currentProperty=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<initialPosition.Count;++i) {
+                
+                currentProperty=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperty.Name="Phase4_Initial_Position_Before_Darklit_Dragonsong_暗光龙诗前预站位";
+                currentProperty.Scale=new(0.5f);
+                currentProperty.Position=initialPosition[i];
+                currentProperty.Color=(i==myIndex)?accessory.Data.DefaultSafeColor:accessory.Data.DefaultDangerColor;
+                currentProperty.DestoryAt=5500;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperty);
+                
+            }
+            
+            currentProperty=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperty.Name="Phase4_Initial_Position_Before_Darklit_Dragonsong_暗光龙诗前预站位";
+            currentProperty.Scale=new(2);
+            currentProperty.ScaleMode|=ScaleMode.YByDistance;
+            currentProperty.Owner=accessory.Data.Me;
+            currentProperty.TargetPosition=initialPosition[myIndex];
+            currentProperty.Color=accessory.Data.DefaultSafeColor;
+            currentProperty.DestoryAt=5500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperty);
+
+        }
+        
         [ScriptMethod(name: "P4_暗光龙诗_Buff记录", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2461"], userControl: false)]
         public void P4_暗光龙诗_Buff记录(Event @event, ScriptAccessory accessory)
         {
@@ -9134,7 +9937,17 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var sIndex = accessory.Data.PartyList.IndexOf(((uint)sid));
             var tIndex = accessory.Data.PartyList.IndexOf(((uint)tid));
-            P4Tether[sIndex] = tIndex;
+            lock(this)
+            {
+                P4Tether[sIndex] = tIndex;
+                phase4_1_TetherCount++;
+                if (phase4_1_TetherCount == 4)
+                {
+                    phase4_1_ManualReset.Set();
+                }
+            }
+            
+
         }
         [ScriptMethod(name: "P4_暗光龙诗_引导扇形", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40187"])]
         public void P4_暗光龙诗_引导扇形(Event @event, ScriptAccessory accessory)
@@ -9256,40 +10069,97 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             var ii = idles.IndexOf(idleStack);
 
-            if (upGroup.Contains(tetherStack))
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Double_Swaps_双换)
             {
-                //线分摊在上
-                if (ii==0||ii==2)
+                if (upGroup.Contains(tetherStack))
                 {
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
+                    //线分摊在上
+                    if (ii == 0 || ii == 2)
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                        upGroup.Add(idles[3]);//lowD
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                    }
                 }
-                if (ii == 1 || ii == 3)
+                if (downGroup.Contains(tetherStack))
                 {
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
+                    //线分摊在下
+                    if (ii == 0 || ii == 2)
+                    {
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        upGroup.Add(idles[1]);
+                        upGroup.Add(idles[3]);
+                        downGroup.Add(idles[0]);
+                        downGroup.Add(idles[2]);
+                    }
                 }
             }
-            if (downGroup.Contains(tetherStack))
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_单换)
             {
-                //线分摊在下
-                if (ii == 0 || ii == 2)
+                if (upGroup.Contains(tetherStack))
                 {
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
+                    //线分摊在上
+                    if (ii == 0)//闲t分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 1)//闲n分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2 || ii == 3)//闲D分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+
                 }
-                if (ii == 1 || ii == 3)
+                if (downGroup.Contains(tetherStack))
                 {
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
+                    //线分摊在下
+                    if (ii == 0 || ii == 1)//tn分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2)//highD分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 3)//lowD分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
                 }
             }
 
@@ -9333,151 +10203,172 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
         }
         #region 远近跳
-        //[ScriptMethod(name: "P4_暗光龙诗_远近跳", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40283"])]
-        //public void P4_暗光龙诗_远近跳(Event @event, ScriptAccessory accessory)
-        //{
-        //    if (parse != 4.2) return;
-        //    if (!ParseObjectId(@event["SourceId"], out var sid)) return;
+        [ScriptMethod(name: "P4_暗光龙诗_远跳", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40283"])]
+        public void P4_暗光龙诗_远跳(Event @event, ScriptAccessory accessory)
+        {
+            if (parse != 4.2) return;
+            if (!ParseObjectId(@event["SourceId"], out var sid)) return;
 
-        //    var dp = accessory.Data.GetDefaultDrawProperties();
-        //    dp.Name = "P4_暗光龙诗_远跳";
-        //    dp.Scale = new(8);
-        //    dp.Owner = sid;
-        //    dp.CentreResolvePattern = PositionResolvePatternEnum.PlayerFarestOrder;
-        //    dp.Color = accessory.Data.DefaultDangerColor;
-        //    dp.DestoryAt = 5000;
-        //    accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
+            var dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_远跳";
+            dp.Scale = new(8);
+            dp.Owner = sid;
+            dp.CentreResolvePattern = PositionResolvePatternEnum.PlayerFarestOrder;
+            dp.Color = Phase4_Colour_Of_Somber_Dance.V4.WithW(3f);
+            dp.Delay = 2000;
+            dp.DestoryAt = 3000;
+            accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
 
-        //    dp = accessory.Data.GetDefaultDrawProperties();
-        //    dp.Name = "P4_暗光龙诗_近跳";
-        //    dp.Scale = new(8);
-        //    dp.Owner = sid;
-        //    dp.CentreResolvePattern = PositionResolvePatternEnum.PlayerNearestOrder;
-        //    dp.Color = accessory.Data.DefaultDangerColor;
-        //    dp.Delay = 5000;
-        //    dp.Delay = 3500;
-        //    accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
+           
 
-        //}
+        }
+        [ScriptMethod(name: "P4_暗光龙诗_近跳", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40284"])]
+        public void P4_暗光龙诗_近跳(Event @event, ScriptAccessory accessory)
+        {
+            if (parse != 4.2) return;
+            var pos = JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            var dp2 = accessory.Data.GetDefaultDrawProperties();
+            dp2.Name = "P4_暗光龙诗_近跳";
+            dp2.Scale = new(8);
+            dp2.Position = pos;
+            dp2.CentreResolvePattern = PositionResolvePatternEnum.PlayerNearestOrder;
+            dp2.Color = Phase4_Colour_Of_Somber_Dance.V4.WithW(3f);
+            dp2.DestoryAt = 3500;
+            accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp2);
+
+        }
         #endregion
+        [ScriptMethod(name: "P4_暗光龙诗_光之束缚_保持距离提示", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40271"], suppress: 2000)]
+        public void P4_暗光龙诗_光之束缚_保持距离提示(Event @event, ScriptAccessory accessory)
+        {
+            if (parse != 4.2) return;
+            if (P4Tether[accessory.Data.PartyList.IndexOf(accessory.Data.Me)]==-1) return;
+            if (Language_Of_Prompts == Languages_Of_Prompts.Simplified_Chinese_简体中文)
+            {
+                if(Enable_Text_Prompts)accessory.Method.TextInfo("线未消失,保持距离", 1500);
+                accessory.TTS($"线未消失,保持距离",
+                    Enable_Vanilla_TTS, Enable_Daily_Routines_TTS);
+            }
+
+            if (Language_Of_Prompts == Languages_Of_Prompts.English_英文)
+            {
+                if(Enable_Text_Prompts)accessory.Method.TextInfo("The tether is still, keep your distance", 1500);
+                accessory.TTS($"The tether is still, keep your distance",
+                    Enable_Vanilla_TTS, Enable_Daily_Routines_TTS);
+            }
+        }
         [ScriptMethod(name: "P4_暗光龙诗_塔处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"])]
         public void P4_暗光龙诗_塔处理位置(Event @event, ScriptAccessory accessory)
         {
             if (parse != 4.2) return;
-            
+
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             if (sid != accessory.Data.Me) return;
             //accessory.Log.Debug("线");
-            Task.Delay(250).ContinueWith(t =>
+            phase4_1_ManualReset.WaitOne();
+
+            var tIndex = P4Tether[0] == -1 ? 1 : 0;
+            var nIndex = P4Tether[2] == -1 ? 3 : 2;
+            var d1Index = -1;
+            var d2Index = -1;
+            List<int> upGroup = [];
+            List<int> downGroup = [];
+            for (int i = 4; i < 7; i++)
             {
-                var tIndex = P4Tether[0] == -1 ? 1 : 0;
-                var nIndex = P4Tether[2] == -1 ? 3 : 2;
-                var d1Index = -1;
-                var d2Index = -1;
-                List<int> upGroup = [];
-                List<int> downGroup = [];
-                for (int i = 4; i < 7; i++)
+                for (int j = i + 1; j < 8; j++)
                 {
-                    for (int j = i + 1; j < 8; j++)
+                    if (P4Tether[i] != -1 && P4Tether[j] != -1)
                     {
-                        if (P4Tether[i] != -1 && P4Tether[j] != -1)
-                        {
-                            d1Index = i;
-                            d2Index = j;
-                        }
+                        d1Index = i;
+                        d2Index = j;
                     }
                 }
-                // t连线 高d 低d 蝴蝶结
-                if ((P4Tether[tIndex] == d1Index && P4Tether[d2Index] == tIndex) || (P4Tether[tIndex] == d2Index && P4Tether[d1Index] == tIndex))
-                {
-                    upGroup.Add(tIndex);
-                    upGroup.Add(nIndex);
-                    downGroup.Add(d1Index);
-                    downGroup.Add(d2Index);
-                }
-                // t连线 高d n 方块
-                if ((P4Tether[tIndex] == d1Index && P4Tether[nIndex] == tIndex) || (P4Tether[d1Index] == tIndex && P4Tether[tIndex] == nIndex))
-                {
-                    upGroup.Add(d1Index);
-                    upGroup.Add(nIndex);
-                    downGroup.Add(tIndex);
-                    downGroup.Add(d2Index);
-                }
-                // t连线 低d n 沙漏
-                if ((P4Tether[tIndex] == d2Index && P4Tether[nIndex] == tIndex) || (P4Tether[d2Index] == tIndex && P4Tether[tIndex] == nIndex))
-                {
-                    upGroup.Add(tIndex);
-                    upGroup.Add(d1Index);
-                    downGroup.Add(nIndex);
-                    downGroup.Add(d2Index);
-                }
+            }
+            // t连线 高d 低d 蝴蝶结
+            if ((P4Tether[tIndex] == d1Index && P4Tether[d2Index] == tIndex) || (P4Tether[tIndex] == d2Index && P4Tether[d1Index] == tIndex))
+            {
+                upGroup.Add(tIndex);
+                upGroup.Add(nIndex);
+                downGroup.Add(d1Index);
+                downGroup.Add(d2Index);
+            }
+            // t连线 高d n 方块
+            if ((P4Tether[tIndex] == d1Index && P4Tether[nIndex] == tIndex) || (P4Tether[d1Index] == tIndex && P4Tether[tIndex] == nIndex))
+            {
+                upGroup.Add(d1Index);
+                upGroup.Add(nIndex);
+                downGroup.Add(tIndex);
+                downGroup.Add(d2Index);
+            }
+            // t连线 低d n 沙漏
+            if ((P4Tether[tIndex] == d2Index && P4Tether[nIndex] == tIndex) || (P4Tether[d2Index] == tIndex && P4Tether[tIndex] == nIndex))
+            {
+                upGroup.Add(tIndex);
+                upGroup.Add(d1Index);
+                downGroup.Add(nIndex);
+                downGroup.Add(d2Index);
+            }
 
-                var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-                Vector3 dealpos = upGroup.Contains(myIndex) ? new(100, 0, 92) : new(100, 0, 108);
+            var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            Vector3 dealpos = upGroup.Contains(myIndex) ? new(100, 0, 92) : new(100, 0, 108);
 
-                var dur = 10000;
-                var dp = accessory.Data.GetDefaultDrawProperties();
-                dp.Name = "P4_暗光龙诗_塔处理位置";
-                dp.Scale = new(2);
-                dp.ScaleMode |= ScaleMode.YByDistance;
-                dp.Owner = accessory.Data.Me;
-                dp.TargetPosition = dealpos;
-                dp.Color = accessory.Data.DefaultSafeColor;
-                dp.DestoryAt = dur;
-                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+            var dur = 10000;
+            var dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_塔处理位置";
+            dp.Scale = new(2);
+            dp.ScaleMode |= ScaleMode.YByDistance;
+            dp.Owner = accessory.Data.Me;
+            dp.TargetPosition = dealpos;
+            dp.Color = accessory.Data.DefaultSafeColor;
+            dp.DestoryAt = dur;
+            accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
 
-                dp = accessory.Data.GetDefaultDrawProperties();
-                dp.Name = "P4_暗光龙诗_塔处理位置";
-                dp.Scale = new(4);
-                dp.ScaleMode |= ScaleMode.YByDistance;
-                dp.Position = dealpos;
-                dp.Color = accessory.Data.DefaultSafeColor;
-                dp.DestoryAt = dur;
-                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Circle, dp);
-            });
-            
+            dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_塔处理位置";
+            dp.Scale = new(4);
+            dp.ScaleMode |= ScaleMode.YByDistance;
+            dp.Position = dealpos;
+            dp.Color = accessory.Data.DefaultSafeColor;
+            dp.DestoryAt = dur;
+            accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Circle, dp);
+
+
         }
-        [ScriptMethod(name: "P4_暗光龙诗_引导处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"])]
+        [ScriptMethod(name: "P4_暗光龙诗_引导处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"], suppress: 2000)]
         public void P4_暗光龙诗_引导处理位置(Event @event, ScriptAccessory accessory)
         {
             if (parse != 4.2) return;
-            lock (this)
+            phase4_1_ManualReset.WaitOne();
+
+            List<int> idles = [];
+            for (int i = 0; i < 8; i++)
             {
-                if (P4TetherDone) return;
-                P4TetherDone = true;
-            }
-            Task.Delay(250).ContinueWith(t =>
-            {
-                List<int> idles = [];
-                for (int i = 0; i < 8; i++)
+                if (P4Tether[i] == -1)
                 {
-                    if (P4Tether[i] == -1)
-                    {
-                        idles.Add(i);
-                    }
+                    idles.Add(i);
                 }
-                var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-                if (!idles.Contains(myIndex)) return;
-                Vector3 dealpos = idles.IndexOf(myIndex) switch
-                {
-                    0 => new(095.8f, 0, 098.0f),
-                    1 => new(104.2f, 0, 098.0f),
-                    2 => new(095.8f, 0, 102.0f),
-                    3 => new(104.2f, 0, 102.0f),
-                };
+            }
+            var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            if (!idles.Contains(myIndex)) return;
+            Vector3 dealpos = idles.IndexOf(myIndex) switch
+            {
+                0 => new(095.8f, 0, 098.0f),
+                1 => new(104.2f, 0, 098.0f),
+                2 => new(095.8f, 0, 102.0f),
+                3 => new(104.2f, 0, 102.0f),
+            };
 
-                var dur = 10000;
-                var dp = accessory.Data.GetDefaultDrawProperties();
-                dp.Name = "P4_暗光龙诗_引导处理位置";
-                dp.Scale = new(2);
-                dp.ScaleMode |= ScaleMode.YByDistance;
-                dp.Owner = accessory.Data.Me;
-                dp.TargetPosition = dealpos;
-                dp.Color = accessory.Data.DefaultSafeColor;
-                dp.DestoryAt = dur;
-                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
-            });
-
+            var dur = 10000;
+            var dp = accessory.Data.GetDefaultDrawProperties();
+            dp.Name = "P4_暗光龙诗_引导处理位置";
+            dp.Scale = new(2);
+            dp.ScaleMode |= ScaleMode.YByDistance;
+            dp.Owner = accessory.Data.Me;
+            dp.TargetPosition = dealpos;
+            dp.Color = accessory.Data.DefaultSafeColor;
+            dp.DestoryAt = dur;
+            accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
         }
         [ScriptMethod(name: "P4_暗光龙诗_分摊处理位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(4022[78])$"])]
         public void P4_暗光龙诗_分摊处理位置(Event @event, ScriptAccessory accessory)
@@ -9523,7 +10414,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 downGroup.Add(nIndex);
                 downGroup.Add(d2Index);
             }
-
+            //Phase4_Strat_Of_The_First_Half
             var stack1 = P4Stack.IndexOf(1);
             var stack2 = P4Stack.LastIndexOf(1);
             var tetherStack = P4Tether[stack1] == -1 ? stack2 : stack1;
@@ -9538,43 +10429,100 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 }
             }
             var ii = idles.IndexOf(idleStack);
+            if(Phase4_Strat_Of_The_First_Half==Phase4_Strats_Of_The_First_Half.Double_Swaps_双换)
+            {
+                if (upGroup.Contains(tetherStack))
+                {
+                    //线分摊在上
+                    if (ii == 0 || ii == 2)
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                        upGroup.Add(idles[3]);//lowD
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                    }
+                }
+                if (downGroup.Contains(tetherStack))
+                {
+                    //线分摊在下
+                    if (ii == 0 || ii == 2)
+                    {
+                        upGroup.Add(idles[0]);
+                        upGroup.Add(idles[2]);
+                        downGroup.Add(idles[1]);
+                        downGroup.Add(idles[3]);
+                    }
+                    if (ii == 1 || ii == 3)
+                    {
+                        upGroup.Add(idles[1]);
+                        upGroup.Add(idles[3]);
+                        downGroup.Add(idles[0]);
+                        downGroup.Add(idles[2]);
+                    }
+                }
+            }
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_单换)
+            {
+                if (upGroup.Contains(tetherStack))
+                {
+                    //线分摊在上
+                    if (ii == 0)//闲t分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 1)//闲n分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2 || ii==3)//闲D分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
 
-            if (upGroup.Contains(tetherStack))
-            {
-                //线分摊在上
-                if (ii == 0 || ii == 2)
-                {
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
                 }
-                if (ii == 1 || ii == 3)
+                if (downGroup.Contains(tetherStack))
                 {
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
-                }
-            }
-            if (downGroup.Contains(tetherStack))
-            {
-                //线分摊在下
-                if (ii == 0 || ii == 2)
-                {
-                    upGroup.Add(idles[0]);
-                    upGroup.Add(idles[2]);
-                    downGroup.Add(idles[1]);
-                    downGroup.Add(idles[3]);
-                }
-                if (ii == 1 || ii == 3)
-                {
-                    upGroup.Add(idles[1]);
-                    upGroup.Add(idles[3]);
-                    downGroup.Add(idles[0]);
-                    downGroup.Add(idles[2]);
+                    //线分摊在下
+                    if (ii == 0 || ii == 1)//tn分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 2)//highD分摊
+                    {
+                        downGroup.Add(idles[0]);//t
+                        downGroup.Add(idles[3]);//lowD
+                        upGroup.Add(idles[2]);//highD
+                        upGroup.Add(idles[1]);//n
+                    }
+                    if (ii == 3)//lowD分摊
+                    {
+                        upGroup.Add(idles[0]);//t
+                        upGroup.Add(idles[3]);//lowD
+                        downGroup.Add(idles[2]);//highD
+                        downGroup.Add(idles[1]);//n
+                    }
                 }
             }
+
 
             var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
@@ -9598,6 +10546,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             parse = 4.3d;
             P4ClawBuff = [0, 0, 0, 0, 0, 0, 0, 0];
+            phase4_numberOfWyrmfangHasBeenCounted=0;
+            phase4_semaphoreWyrmfangWasConfirmed=new System.Threading.AutoResetEvent(false);
+            phase4_numberOfIncidentalDebuffsHaveBeenCounted=0;
+            phase4_semaphoreIncidentalDebuffsWereConfirmed=new System.Threading.AutoResetEvent(false);
+            phase4_marksOfPlayersWithWyrmfang=[
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1,
+                MarkType.Stop1
+            ];
             P4OtherBuff = [0, 0, 0, 0, 0, 0, 0, 0];
             P4WaterPos = [];
             phase4_id1OfTheDrachenWanderers="";
@@ -9649,7 +10611,216 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             {
                 P4OtherBuff[index] = 5;
             }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            if(id.Equals("3264")) {
+
+                lock(phase4_readwriteLockOfWyrmfangCounter_AsAConstant) {
+
+                    ++phase4_numberOfWyrmfangHasBeenCounted;
+                    
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    if(phase4_numberOfWyrmfangHasBeenCounted==4) {
+
+                        phase4_semaphoreWyrmfangWasConfirmed.Set();
+
+                    }
+
+                }
+                
+            }
+            
+            if(id.Equals("2460")
+               ||
+               id.Equals("2461")
+               ||
+               id.Equals("2462")
+               ||
+               id.Equals("2463")
+               ||
+               id.Equals("2454")) {
+
+                lock(phase4_readwriteLockOfIncidentalDebuffCounter_AsAConstant) {
+
+                    ++phase4_numberOfIncidentalDebuffsHaveBeenCounted;
+                    
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    if(phase4_numberOfIncidentalDebuffsHaveBeenCounted==8) {
+
+                        phase4_semaphoreIncidentalDebuffsWereConfirmed.Set();
+
+                    }
+
+                }
+                
+            }
+            
         }
+        
+        [ScriptMethod(name:"Phase4 Mark Teammates With Wyrmfang Debuffs 标记圣龙牙(蓝)Debuff的队友",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:40298"],
+            userControl:false,
+            suppress:2000)]
+        
+        public void Phase4_Mark_Teammates_With_Wyrmfang_Debuffs_标记圣龙牙Debuff的队友(Event @event, ScriptAccessory accessory) {
+
+            if(parse!=4.3) {
+                
+                return;
+                
+            }
+
+            if(Phase4_Logic_Of_Residue_Guidance!=Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            phase4_semaphoreWyrmfangWasConfirmed.WaitOne();
+            phase4_semaphoreIncidentalDebuffsWereConfirmed.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            if(phase4_numberOfWyrmfangHasBeenCounted!=4) {
+
+                return;
+
+            }
+
+            string debugOutput="";
+
+            if(Phase4_Logic_Of_Marking_Teammates_With_Wyrmfang==Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang.According_To_Debuffs_根据Debuff) {
+                
+                for(int i=0;i<8;++i) {
+
+                    if(P4ClawBuff[i]==3) {
+
+                        int markIndex=-1;
+
+                        if(P4OtherBuff[i]==4) {
+
+                            markIndex=phase4_getMarkIndex(Phase4_Residue_Belongs_To_Dark_Eruption);
+
+                        }
+                        
+                        if(P4OtherBuff[i]==5) {
+
+                            markIndex=phase4_getMarkIndex(Phase4_Residue_Belongs_To_Unholy_Darkness);
+
+                        }
+                        
+                        if(P4OtherBuff[i]==1) {
+
+                            markIndex=phase4_getMarkIndex(Phase4_Residue_Belongs_To_Dark_Blizzard_III);
+
+                        }
+                        
+                        if(P4OtherBuff[i]==3) {
+
+                            markIndex=phase4_getMarkIndex(Phase4_Residue_Belongs_To_Dark_Water_III);
+
+                        }
+
+                        if(markIndex!=-1) {
+                            
+                            accessory.Method.Mark(accessory.Data.PartyList[i],phase4_markForPlayersWithWyrmfang_asAConstant[markIndex]);
+
+                            debugOutput+=$"i={i},markIndex={markIndex},phase4_markForPlayersWithWyrmfang_asAConstant[markIndex]={phase4_markForPlayersWithWyrmfang_asAConstant[markIndex]}\n";
+
+                        }
+
+                    }
+                    
+                }
+                
+            }
+            
+            if(Phase4_Logic_Of_Marking_Teammates_With_Wyrmfang==Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang.According_To_The_Priority_THD_根据THD优先级) {
+
+                for(int i=0,j=0;i<8;++i) {
+
+                    if(P4ClawBuff[i]==3&&j<4) {
+                        
+                        accessory.Method.Mark(accessory.Data.PartyList[i],phase4_markForPlayersWithWyrmfang_asAConstant[j]);
+                        
+                        debugOutput+=$"i={i},phase4_markForPlayersWithWyrmfang_asAConstant[j]={phase4_markForPlayersWithWyrmfang_asAConstant[j]}\n";
+
+                        ++j;
+
+                    }
+                    
+                }
+                
+            }
+            
+            if(Phase4_Logic_Of_Marking_Teammates_With_Wyrmfang==Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang.According_To_The_Priority_HTD_根据HTD优先级) {
+                
+                List<int> temporaryOrder=[2,3,0,1,4,5,6,7];
+
+                for(int i=0,j=0;i<temporaryOrder.Count;++i) {
+
+                    if(P4ClawBuff[temporaryOrder[i]]==3&&j<4) {
+                        
+                        accessory.Method.Mark(accessory.Data.PartyList[i],phase4_markForPlayersWithWyrmfang_asAConstant[j]);
+                        
+                        debugOutput+=$"temporaryOrder[i]={temporaryOrder[i]},phase4_markForPlayersWithWyrmfang_asAConstant[j]={phase4_markForPlayersWithWyrmfang_asAConstant[j]}\n";
+                        
+                        ++j;
+
+                    }
+                    
+                }
+                
+            }
+
+            if(Enable_Developer_Mode) {
+
+                accessory.Method.SendChat($"""
+                                           /e 
+                                           {debugOutput}
+                                           
+                                           """);
+
+            }
+
+        }
+
+        private int phase4_getMarkIndex(Phase4_Relative_Positions_Of_Residues currentPosition) {
+
+            if(currentPosition==Phase4_Relative_Positions_Of_Residues.Eastmost_最东侧) {
+
+                return 0;
+
+            }
+            
+            if(currentPosition==Phase4_Relative_Positions_Of_Residues.About_East_次东侧) {
+
+                return 1;
+
+            }
+            
+            if(currentPosition==Phase4_Relative_Positions_Of_Residues.About_West_次西侧) {
+
+                return 2;
+
+            }
+            
+            if(currentPosition==Phase4_Relative_Positions_Of_Residues.Westmost_最西侧) {
+
+                return 3;
+
+            }
+
+            return -1;
+
+        }
+        
         [ScriptMethod(name: "P4_时间结晶_蓝线收集", eventType: EventTypeEnum.Tether, eventCondition: ["Id:0085"], userControl: false)]
         public void P4_时间结晶_蓝线收集(Event @event, ScriptAccessory accessory)
         {
@@ -9754,7 +10925,42 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             //短红
             if (P4ClawBuff[myIndex] == 1)
             {
-                var isHigh = P4ClawBuff.IndexOf(1) == myIndex;
+                bool isHigh=true;
+                
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_THD_Order_按THD顺序) {
+                    
+                    isHigh=(P4ClawBuff.IndexOf(1)==myIndex);
+                    
+                }
+
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_HTD_Order_按HTD顺序) {
+
+                    List<int> temporaryPriority=[2,3,0,1,4,5,6,7];
+
+                    for(int i=0;i<temporaryPriority.Count;++i) {
+
+                        if(P4ClawBuff[temporaryPriority[i]]==1) {
+
+                            if(temporaryPriority[i]==myIndex) {
+
+                                isHigh=true;
+
+                            }
+
+                            else {
+
+                                isHigh=false;
+
+                            }
+
+                            break;
+
+                        }
+                        
+                    }
+
+                }
+                
                 Vector3 dealpos= isHigh ? new(87, 0, 100) : new(113, 0, 100);
 
                 var dp = accessory.Data.GetDefaultDrawProperties();
@@ -9819,7 +11025,42 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             //长红
             if (P4ClawBuff[myIndex] == 2)
             {
-                var isHigh = P4ClawBuff.IndexOf(2) == myIndex;
+                bool isHigh=true;
+                
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_THD_Order_按THD顺序) {
+                    
+                    isHigh=(P4ClawBuff.IndexOf(2)==myIndex);
+                    
+                }
+
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_HTD_Order_按HTD顺序) {
+
+                    List<int> temporaryPriority=[2,3,0,1,4,5,6,7];
+
+                    for(int i=0;i<temporaryPriority.Count;++i) {
+
+                        if(P4ClawBuff[temporaryPriority[i]]==2) {
+
+                            if(temporaryPriority[i]==myIndex) {
+
+                                isHigh=true;
+
+                            }
+
+                            else {
+
+                                isHigh=false;
+
+                            }
+
+                            break;
+
+                        }
+                        
+                    }
+
+                }
+                
                 Vector3 dealpos1 = isHigh ? new(088.5f, 0, 115.5f) : new(111.5f, 0, 115.5f);
                 Vector3 dealpos2 = isHigh ? new(090.2f, 0, 117.0f) : new(109.8f, 0, 117.0f);
                 Vector3 dealpos3 = isHigh ? new(092.5f, 0, 118.0f) : new(107.5f, 0, 118.0f);
@@ -10045,7 +11286,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            lock(phase4_ReadwriteLockOfDrachenWandererIds_AsAConstant) {
+            lock(phase4_readwriteLockOfDrachenWandererIds_AsAConstant) {
 
                 if(phase4_id1OfTheDrachenWanderers.Equals("")) {
 
@@ -10407,15 +11648,32 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             if(Enable_Developer_Mode) {
 
-                accessory.Method.SendChat($"""
-                                           /e 
-                                           phase4_residueIdsFromEastToWest[]={phase4_residueIdsFromEastToWest[0]},{phase4_residueIdsFromEastToWest[1]},{phase4_residueIdsFromEastToWest[2]},{phase4_residueIdsFromEastToWest[3]}
-                                           P4ClawBuff={P4ClawBuff[myIndex]}
-                                           P4OtherBuff={P4OtherBuff[myIndex]}
-                                           relativePositionOfMyResidue={relativePositionOfMyResidue}
-                                           idOfMyResidue={idOfMyResidue}
-                                           
-                                           """);
+                if(Phase4_Logic_Of_Residue_Guidance==Phase4_Logics_Of_Residue_Guidance.According_To_Signs_On_Me_根据我身上的目标标记) {
+                    
+                    accessory.Method.SendChat($"""
+                                               /e 
+                                               phase4_residueIdsFromEastToWest[]={phase4_residueIdsFromEastToWest[0]},{phase4_residueIdsFromEastToWest[1]},{phase4_residueIdsFromEastToWest[2]},{phase4_residueIdsFromEastToWest[3]}
+                                               phase4_marksOfPlayersWithWyrmfang[myIndex]={phase4_marksOfPlayersWithWyrmfang[myIndex]}
+                                               relativePositionOfMyResidue={relativePositionOfMyResidue}
+                                               idOfMyResidue={idOfMyResidue}
+
+                                               """);
+                    
+                }
+
+                else {
+                    
+                    accessory.Method.SendChat($"""
+                                               /e 
+                                               phase4_residueIdsFromEastToWest[]={phase4_residueIdsFromEastToWest[0]},{phase4_residueIdsFromEastToWest[1]},{phase4_residueIdsFromEastToWest[2]},{phase4_residueIdsFromEastToWest[3]}
+                                               P4ClawBuff={P4ClawBuff[myIndex]}
+                                               P4OtherBuff={P4OtherBuff[myIndex]}
+                                               relativePositionOfMyResidue={relativePositionOfMyResidue}
+                                               idOfMyResidue={idOfMyResidue}
+
+                                               """);
+                    
+                }
                 
             }
 
@@ -10450,8 +11708,6 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                     accessory.TTS($"{phase4_getResidueDescription(relativePositionOfMyResidue)}", 
                                     Enable_Vanilla_TTS, Enable_Daily_Routines_TTS);
-
-
 
                     if (Enable_Developer_Mode) {
 
@@ -10662,8 +11918,54 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         }
         
-        private Phase4_Relative_Positions_Of_Residues phase4_getRelativePosition(int currentIndex) {
+        [ScriptMethod(name:"Phase4 Record Signs On Party Members 记录小队队员的目标标记",
+            eventType:EventTypeEnum.Marker,
+            userControl:false)]
 
+        public void Phase4_Record_Signs_On_Party_Members_记录小队队员的目标标记(Event @event, ScriptAccessory accessory) {
+            
+            if(parse!=4.3) {
+
+                return;
+
+            }
+
+            if(!ParseObjectId(@event["TargetId"], out var targetId)) {
+
+                return;
+
+            }
+
+            if(!int.TryParse(@event["Id"], out var sign)) {
+                
+                return;
+                
+            }
+
+            MarkType currentType=sign switch {
+                1 => MarkType.Attack1,
+                2 => MarkType.Attack2,
+                3 => MarkType.Attack3,
+                4 => MarkType.Attack4,
+                _ => MarkType.Stop1
+            };
+
+            int currentIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(0<=currentIndex&&currentIndex<=7) {
+                
+                lock(phase4_marksOfPlayersWithWyrmfang) {
+
+                    phase4_marksOfPlayersWithWyrmfang[currentIndex]=currentType;
+
+                }
+                
+            }
+
+        }
+        
+        private Phase4_Relative_Positions_Of_Residues phase4_getRelativePosition(int currentIndex) {
+            
             if(currentIndex<0||currentIndex>7) {
                 
                 return Phase4_Relative_Positions_Of_Residues.Unknown_未知;
@@ -10677,37 +11979,76 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if(P4ClawBuff[currentIndex]==3) {
-                // 3 stands for Wyrmfang (the blue debuff).
+            if(Phase4_Logic_Of_Residue_Guidance==Phase4_Logics_Of_Residue_Guidance.According_To_Debuffs_根据Debuff) {
+                
+                if(P4ClawBuff[currentIndex]==3) {
+                    // 3 stands for Wyrmfang (the blue debuff).
 
-                if(P4OtherBuff[currentIndex]==4) {
-                    // 4 stands for Dark Eruption.
+                    if(P4OtherBuff[currentIndex]==4) {
+                        // 4 stands for Dark Eruption.
 
-                    return Phase4_Residue_Belongs_To_Dark_Eruption;
+                        return Phase4_Residue_Belongs_To_Dark_Eruption;
+
+                    }
+
+                    if(P4OtherBuff[currentIndex]==5) {
+                        // 5 stands for Unholy Darkness.
+
+                        return Phase4_Residue_Belongs_To_Unholy_Darkness;
+
+                    }
+
+                    if(P4OtherBuff[currentIndex]==1) {
+                        // 1 stands for Dark Blizzard III.
+
+                        return Phase4_Residue_Belongs_To_Dark_Blizzard_III;
+
+                    }
+
+                    if(P4OtherBuff[currentIndex]==3) {
+                        // 3 stands for Dark Water III.
+
+                        return Phase4_Residue_Belongs_To_Dark_Water_III;
+
+                    }
 
                 }
+                
+            }
 
-                if(P4OtherBuff[currentIndex]==5) {
-                    // 5 stands for Unholy Darkness.
+            if(Phase4_Logic_Of_Residue_Guidance==Phase4_Logics_Of_Residue_Guidance.According_To_Signs_On_Me_根据我身上的目标标记
+               ||
+               Phase4_Logic_Of_Residue_Guidance==Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友) {
+                
+                
+                if(P4ClawBuff[currentIndex]==3) {
 
-                    return Phase4_Residue_Belongs_To_Unholy_Darkness;
+                    if(phase4_marksOfPlayersWithWyrmfang[currentIndex]==MarkType.Attack1) {
+
+                        return Phase4_Residue_Belongs_To_Attack1;
+
+                    }
+
+                    if(phase4_marksOfPlayersWithWyrmfang[currentIndex]==MarkType.Attack2) {
+
+                        return Phase4_Residue_Belongs_To_Attack2;
+
+                    }
+                    
+                    if(phase4_marksOfPlayersWithWyrmfang[currentIndex]==MarkType.Attack3) {
+
+                        return Phase4_Residue_Belongs_To_Attack3;
+
+                    }
+                    
+                    if(phase4_marksOfPlayersWithWyrmfang[currentIndex]==MarkType.Attack4) {
+
+                        return Phase4_Residue_Belongs_To_Attack4;
+
+                    }
 
                 }
-
-                if(P4OtherBuff[currentIndex]==1) {
-                    // 1 stands for Dark Blizzard III.
-
-                    return Phase4_Residue_Belongs_To_Dark_Blizzard_III;
-
-                }
-
-                if(P4OtherBuff[currentIndex]==3) {
-                    // 3 stands for Dark Water III.
-
-                    return Phase4_Residue_Belongs_To_Dark_Water_III;
-
-                }
-
+                
             }
 
             return Phase4_Relative_Positions_Of_Residues.Unknown_未知;
@@ -10855,6 +12196,31 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
 
+        }
+        
+        [ScriptMethod(name:"Phase2 Reset Semaphores After Crystallize Time 时间结晶后重置信号灯",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:40332"],
+            userControl:false,
+            suppress:10000)]
+        
+        public void Phase2_Reset_Semaphores_After_Crystallize_Time_时间结晶后重置信号灯(Event @event, ScriptAccessory accessory) {
+            
+            if(parse!=4.3) {
+
+                return;
+
+            }
+            
+            phase4_semaphoreWyrmfangWasConfirmed=new System.Threading.AutoResetEvent(false);
+            phase4_semaphoreIncidentalDebuffsWereConfirmed=new System.Threading.AutoResetEvent(false);
+
+            if(Phase4_Logic_Of_Residue_Guidance==Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友) {
+                
+                accessory.Method.MarkClear();
+                
+            }
+            
         }
 
         #endregion
@@ -12513,46 +13879,5 @@ public static class Extensions
             }
         }
     }
-    
-    public static void DebugMsg(this ScriptAccessory accessory, string str, bool debugMode = false)
-    {
-        if (!debugMode)
-            return;
-        accessory.Method.SendChat($"/e [DEBUG] {str}");
-    }
-}
-
-public enum StrategyIdx : int
-{ 
-    // 位数记录
-    P1四连 = 1,
-    P2光爆 = 2,
-    P2镜子 = 3,
-    P3地火 = 4,
-    
-    // P1 四连
-    tdh单排 = 1,
-    htd单排 = 2,
-    htdh单排 = 3,
-    htd双排 = 4,
-    thd双排 = 5,
-    
-    // P2 镜子
-    近战左红 = 1,
-    近战右红 = 2,
-    就近近战左 = 3,
-    就近近战右 = 4,
-    
-    // P2 光爆
-    六芒星 = 1,
-    新灰九 = 2,
-    L团法 = 3,
-    旧灰九 = 4,
-    
-    // P3 地火
-    双分组安基 = 1,
-    双分组二火基 = 2,
-    车头MTD1 = 3,
-    车头人群 = 4,
 }
 
