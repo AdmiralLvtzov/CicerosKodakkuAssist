@@ -3,7 +3,7 @@ using KodakkuAssist.Module.GameEvent;
 using KodakkuAssist.Script;
 using KodakkuAssist.Module.GameEvent.Struct;
 using KodakkuAssist.Module.Draw;
-using System.Windows.Forms;
+// using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons;
@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.DirectoryServices;
+// using System.DirectoryServices;
 using System.Xml.Linq;
 using CicerosKodakkuAssist.FuturesRewrittenUltimate;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -6454,9 +6454,27 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             
         }
         
-        [ScriptMethod(name:"----- Phase 2.5 ----- (No actual meaning for this toggle/此开关无实际意义)",
-            eventType:EventTypeEnum.NpcYell,
-            eventCondition:["Your huddled masses yearning to breathe free",
+        [ScriptMethod(name: "P2_光之暴走_光球爆炸时间绘制", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40219)$"],
+            userControl: true)]
+        public void P2_光之暴走_光球爆炸时间绘制(Event @ev, ScriptAccessory sa)
+        {
+            // 
+            if (!ParseObjectId(@ev["SourceId"], out var sid)) return;
+            ScriptColor ColorRed = new ScriptColor { V4 = new Vector4(1.0f, 0f, 0f, 1.0f) };
+            var dp = sa.Data.GetDefaultDrawProperties();
+            dp.Name = $"光球{sid}";
+            dp.Scale = new(11f);
+            dp.Owner = sid;
+            dp.Color = ColorRed.V4.WithW(4f);
+            dp.Delay = 2500;
+            dp.DestoryAt = 2500;
+            dp.ScaleMode |= ScaleMode.ByTime;
+            sa.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Circle, dp);
+        }
+        
+        [ScriptMethod(name: "----- Phase 2.5 ----- (No actual meaning for this toggle/此开关无实际意义)",
+            eventType: EventTypeEnum.NpcYell,
+            eventCondition: ["Your huddled masses yearning to breathe free",
                             "蜷缩着祈盼自由呼吸的人"])]
         
         public void Phase2point5_Placeholder(Event @event, ScriptAccessory accessory) { }
