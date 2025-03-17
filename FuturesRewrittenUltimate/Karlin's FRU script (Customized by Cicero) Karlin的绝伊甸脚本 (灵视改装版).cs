@@ -2903,6 +2903,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.Delay = 13000;
                     dp.DestoryAt = 6000;
                     accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+
+                    if (t1p1 != t1p2)
+                    {
+                        dp = accessory.Data.GetDefaultDrawProperties();
+                        dp.Name = "P1_四连线_线1处理位置2预指";
+                        dp.Scale = new(2);
+                        dp.Position = t1p1;
+                        dp.TargetPosition = t1p2;
+                        dp.ScaleMode |= ScaleMode.YByDistance;
+                        dp.Color = accessory.Data.DefaultDangerColor;
+                        dp.DestoryAt = 13000;
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    }
                 }
                 if (phase1_tetheredPlayersDuringFallOfFaith.Count == 2 && tid == accessory.Data.Me)
                 {
@@ -2926,6 +2939,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.Delay = 13500;
                     dp.DestoryAt = 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    if (t2p1 != t2p2)
+                    {
+                        dp = accessory.Data.GetDefaultDrawProperties();
+                        dp.Name = "P1_四连线_线2处理位置2预指";
+                        dp.Scale = new(2);
+                        dp.Position = t2p1;
+                        dp.TargetPosition = t2p2;
+                        dp.ScaleMode |= ScaleMode.YByDistance;
+                        dp.Color = accessory.Data.DefaultDangerColor;
+                        dp.DestoryAt = 13500;
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    }
                 }
                 if (phase1_tetheredPlayersDuringFallOfFaith.Count == 3 && tid == accessory.Data.Me)
                 {
@@ -2949,6 +2974,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.Delay = 7500;
                     dp.DestoryAt = 6000;
                     accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    if (t3p1 != t3p2)
+                    {
+                        dp = accessory.Data.GetDefaultDrawProperties();
+                        dp.Name = "P1_四连线_线3处理位置2预指";
+                        dp.Scale = new(2);
+                        dp.Position = t3p1;
+                        dp.TargetPosition = t3p2;
+                        dp.ScaleMode |= ScaleMode.YByDistance;
+                        dp.Color = accessory.Data.DefaultDangerColor;
+                        dp.DestoryAt = 7500;
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    }
                 }
                 if (phase1_tetheredPlayersDuringFallOfFaith.Count == 4 && tid == accessory.Data.Me)
                 {
@@ -2972,6 +3009,18 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.Delay = 8500;
                     dp.DestoryAt = 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    if (t4p1 != t4p2)
+                    {
+                        dp = accessory.Data.GetDefaultDrawProperties();
+                        dp.Name = "P1_四连线_线4处理位置2预指";
+                        dp.Scale = new(2);
+                        dp.Position = t4p1;
+                        dp.TargetPosition = t4p2;
+                        dp.ScaleMode |= ScaleMode.YByDistance;
+                        dp.Color = accessory.Data.DefaultDangerColor;
+                        dp.DestoryAt = 8500;
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    }
                 }
                 if (phase1_tetheredPlayersDuringFallOfFaith.Count == 4)
                 {
@@ -3116,6 +3165,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     dp.Delay = upgroup ? 5000 : 8500;
                     dp.DestoryAt = upgroup ? 6000 : 5000;
                     accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+
+                    if (dealpos1 != dealpos2)
+                    {
+                        dp = accessory.Data.GetDefaultDrawProperties();
+                        dp.Name = "P1_四连线_处理位置2预指";
+                        dp.Scale = new(2);
+                        dp.Position = dealpos1;
+                        dp.TargetPosition = dealpos2;
+                        dp.ScaleMode |= ScaleMode.YByDistance;
+                        dp.Color = accessory.Data.DefaultDangerColor;
+                        dp.DestoryAt = upgroup ? 5000 : 8500;
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
+                    }
                 }
             });
         }
