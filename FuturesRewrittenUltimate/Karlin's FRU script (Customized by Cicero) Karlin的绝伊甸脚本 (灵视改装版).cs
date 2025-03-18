@@ -13181,8 +13181,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
             if (Phase4_Position_Before_Knockback == Phase4_Positions_Before_Knockback.Y_Formation_Y字队形)
             {
-                Vector3 mtPos = P4WaterPos[1].Z < 100 ? new(92, 0, 90) : new(92, 0, 110);
-                Vector3 stPos = P4WaterPos[1].Z < 100 ? new(108, 0, 90) : new(108, 0, 110);
+                Vector3 mtPos = P4WaterPos[1].Z < 100 ? new(92, 0, 90) : new(108, 0, 110);
+                Vector3 stPos = P4WaterPos[1].Z < 100 ? new(108, 0, 90) : new(92, 0, 110);
                 Vector3 gPos = P4WaterPos[1].Z < 100 ? new(100, 0, 96) : new(100, 0, 104);
                 if (myindex == 0)
                 {
