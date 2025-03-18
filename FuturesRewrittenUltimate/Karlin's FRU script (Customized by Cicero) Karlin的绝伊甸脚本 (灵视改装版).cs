@@ -28,7 +28,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
     [ScriptType(name: "Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
         territorys: [1238],
         guid: "148718fd-575d-493a-8ac7-1cc7092aff85",
-        version: "0.0.0.87",
+        version: "0.0.0.90",
         note: notesOfTheScript,
         author: "Karlin")]
 
@@ -60,7 +60,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         The language of TTS prompts would be consistent with that of text prompts.
         3. For any marking feature, please make sure that only one member in the party enables it, and the party are not running any similar marking feature from other plugins or triggers.
         4. There may not be exact 2 players being marked during Utopian Sky if the initial positions of players are unbearably deviant. The marks would be based on the real-time positions of each player.
-        5. Marks during Fall Of Faith in Phase 1 involves three different types: Target To Attack, Target To Bind, Target To Ignore.
+        5. Marks during Fall Of Faith in Phase 1 involve three different types: Target To Attack, Target To Bind, Target To Ignore.
         Target To Ignore 1 and 2: The tethered players in the north. Numbers stand for the round of the play.
         Target To Bind 1 and 2: The tethered players in the south. Numbers stand for the round of the play.
         Target To Attack 1 and 2: The untethered players in the north. Number 1 stands for the player with higher priority.
@@ -75,16 +75,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         9. If Moglin_Meow_Based_On_Signs was selected for the second half of Phase 3, then all following drawing and guidance would be based on the signs on players from Moglin Meow's Triggers.
         Attack 1 to 4 stand for the players in the left group, bind 1 to three & square stand for the players on the right. The marks with the number 1 or 2 stand for the players on melee positions.
         Missing signs or incorrect signs will cause unreliable results.
-        10. If the logic of residue guidance in Phase 4 was set to Mark_Teammates_With_Wyrmfang, then the teammates would be automatically marked. If not, the following setting the logic of marking teammates could be ignored.
+        10. Marks for players with Wyrmclaw (red) debuffs during the second half of Phase 4 involve Target To Ignore and Target To Bind.
+        Target To Ignore 1 and 2: The players who are going to deal with the mechanism in the west. Number 2 stands for the longer debuff.
+        Target To Bind 1 and 2: The players who are going to deal with the mechanism in the east. Number 2 stands for the longer debuff.
+        The mark priority would be based on the priority of players with Wyrmclaw (red) above.
+        11. If the logic of residue guidance in Phase 4 was set to Guidance_And_Mark_Teammates_With_Wyrmfang, then the teammates would be automatically marked. If not, the following setting the logic of marking teammates could be ignored.
         If the logic of marking teammates was set to According_To_Debuffs, then the teammates would be marked according to debuff settings. Allocating the same residue for different debuffs would cause exceptions.
         If the logic of residue guidance was set to According_To_Signs_On_Me, then the guidance would be based on the signs (Attack 1 to 4) on yourself from other plugins, triggers or manually marking.
         If the logic of residue guidance was set to According_To_Debuffs, then the guidance would be based on the debuffs. All signs would be ignored.
-        11. If a player with the Wyrmclaw (the red debuff) takes a residue from Drachen Wanderers, or a player with the Wyrmfang (the blue debuff) hits a Drachen Wanderers,
+        12. If a player with the Wyrmclaw (the red debuff) takes a residue from Drachen Wanderers, or a player with the Wyrmfang (the blue debuff) hits a Drachen Wanderers,
         the related drawing may be removed with delay and may cause some confusion in the second half of Phase 4.
         Anyway, those situations are pretty much already a wipe. Aside from that, fixing this issue is technically difficult, so I'll just leave it there.
-        12. The guidance of Fulgent Blade in Phase 5 would be always composed of two steps, one is the current step (green by default) and the other is the next step (yellow by default).
+        13. The guidance of Fulgent Blade in Phase 5 would be always composed of two steps, one is the current step (green by default) and the other is the next step (yellow by default).
         Please be aware that you should never move to the next step in advance, until its colour changes to the safe colour. The guidance of the next step is just a preview, which could make you be ready for it.
-        13. It's highly recommended to run the script while running the plugin A Realm Record (ARR) and enabling its recording feature.
+        14. It's highly recommended to run the script while running the plugin A Realm Record (ARR) and enabling its recording feature.
         If you encounter any issue or bug, leave the duty to cut off the recording (which would help me quickly pinpoint the pull with issues).
         After that, please describe the issue and share the related ARR recording with me. Appreciate your help!
 
@@ -111,16 +115,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         9. 如果P3二运选择了"根据标记的莫灵喵法",则接下来几乎所有绘制和指路都会依赖来自莫灵喵触发器的目标标记。
         攻击1到4代表去左组的人,止步1到3和方块代表去右组的。下标1和2表示站近战位。
         残缺或者错误的标记将导致电椅。
-        10. 如果P4二运的白圈指路逻辑设置为"标记圣龙牙的队友",则会对队友进行标记。如果设置的不是此项,可以无视下面标记队友的逻辑这一设置。
+        10. P4二运对圣龙爪(红)debuff玩家的标记涉及到禁止和止步。
+        禁止1和2:前往西侧处理机制。数字2是长debuff。
+        止步1和2:前往东侧处理机制。数字2是长debuff。
+        标记的优先级将取决于上面圣龙爪(红)玩家优先级的设置。
+        11. 如果P4二运的白圈指路逻辑设置为"指路同时标记圣龙牙的队友",则会对队友进行标记。如果设置的不是此项,可以无视下面标记队友的逻辑这一设置。
         如果标记队友的逻辑设置为"根据Debuff",则会根据Debuff设置进行标记。为不同Debuff分配相同白圈将导致错误。
         如果P4二运的白圈指路逻辑设置为"根据我身上的目标标记",则会根据来自其他科技或者手摇的自身的标记(攻击1到4)指路。
         如果P4二运的白圈指路逻辑设置为"根据Debuff",则只会根据Debuff指路,标记将完全被无视。
-        11. 如果P4二运持有圣龙爪(红)debuff的玩家吃了圣龙气息(龙头)的白圈,或者持有圣龙牙(蓝)debuff的玩家撞了圣龙气息(龙头),
+        12. 如果P4二运持有圣龙爪(红)debuff的玩家吃了圣龙气息(龙头)的白圈,或者持有圣龙牙(蓝)debuff的玩家撞了圣龙气息(龙头),
         那么相关绘制的移除可能有延迟并且会干扰玩家。
         不过如果已经这样那大概率是要团灭了,修复这个问题在技术层面上也有点难度,所以我就不管了。
-        12. P5璀璨之刃(地火)指路被分为两个部分,一部分是当前步(默认绿色),另一部分是下一步(默认黄色)。
+        13. P5璀璨之刃(地火)指路被分为两个部分,一部分是当前步(默认绿色),另一部分是下一步(默认黄色)。
         直到下一步变成安全色之前,永远不要提前移动。下一步的绘制仅作预览用途,让你有个心理准备。
-        13. 非常建议在用这个脚本打本的同时,启用插件A Realm Record(ARR)并开启录制。
+        14. 非常建议在用这个脚本打本的同时,启用插件A Realm Record(ARR)并开启录制。
         如果遇到了问题或bug,请退本一次来切断录像(这样我能快速定位出问题的那一把)。
         然后,简单描述一下问题并分享一下那份出了问题的ARR录像。非常感谢!
 
@@ -272,7 +280,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public bool _____Phase1_Settings_____ { get; set; } = true;
         [UserSetting("P1乐园绝技(雾龙) 待机站位")]
         public Phase1_Standby_Positions_Of_Utopian_Sky Phase1_Standby_Position_Of_Utopian_Sky { get; set; } = Phase1_Standby_Positions_Of_Utopian_Sky.Both_Tanks_Go_Center_双T去中间;
-        [UserSetting("P1乐园绝技(雾龙) 标记在安全位置的玩家")]
+        [UserSetting("P1乐园绝技(雾龙) 标记在安全位置的玩家 (Make sure only one in the party enables this!/小队内只能有一人启用此选项!)")]
         public bool Phase1_Mark_Players_In_Safe_Positions { get; set; } = false;
         [UserSetting("P1 燃烧击(火雷直线)特性的颜色")]
         public ScriptColor Phase1_Colour_Of_Burnt_Strike_Characteristics { get; set; } = new() { V4 = new(1f, 1f, 0f, 1f) };
@@ -330,13 +338,15 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [UserSetting("-----P4设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase4_Settings_____ { get; set; } = true;
         [UserSetting("P4一运 水分摊换位方式")]
-        public Phase4_Strats_Of_The_First_Half Phase4_Strat_Of_The_First_Half { get; set; } = Phase4_Strats_Of_The_First_Half.Pre_Induction_Single_Swap_引导前单换;
+        public Phase4_Strats_Of_The_First_Half Phase4_Strat_Of_The_First_Half { get; set; } = Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_After_先单换再引导;
         [UserSetting("P4一运 忧郁舞蹈(远近死刑)的颜色")]
         public ScriptColor Phase4_Colour_Of_Somber_Dance { get; set; } = new() { V4 = new(1f, 0f, 0f, 1f) };
         [UserSetting("P4二运 正常灯和延时灯的范围显示时间(second/秒)")]
         public float Phase4_Drawing_Duration_Of_Normal_And_Delayed_Lights { get; set; } = 3f;
         [UserSetting("P4二运 圣龙爪(红)玩家优先级")]
         public Phase4_Priorities_Of_The_Players_With_Wyrmclaw Phase4_Priority_Of_The_Players_With_Wyrmclaw { get; set; } = Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_THD_Order_按THD顺序;
+        [UserSetting("P4二运 标记圣龙爪(红)的玩家 (Make sure only one in the party enables this!/小队内只能有一人启用此选项!)")]
+        public bool Phase4_Mark_Players_With_Wyrmclaw { get; set; } = false;
         [UserSetting("P4二运 圣龙气息(龙头)碰撞箱的颜色")]
         public ScriptColor Phase4_Colour_Of_Drachen_Wanderer_Hitboxes { get; set; } = new() { V4 = new(1f, 1f, 0f, 1f) };
         [UserSetting("P4二运 圣龙气息(龙头)碰撞箱的长度(meter/米)")]
@@ -366,7 +376,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [UserSetting("P4二运 白圈指路的颜色")]
         public ScriptColor Phase4_Colour_Of_Residue_Guidance { get; set; } = new() { V4 = new(1f, 1f, 0f, 1f) };
         [UserSetting("P4二运 击退解法")]
-        public Phase4_2_Repel_Enum Phase4_2_Repel { get; set; } = Phase4_2_Repel_Enum.正攻;
+        public Phase4_Positions_Before_Knockback Phase4_Position_Before_Knockback { get; set; } = Phase4_Positions_Before_Knockback.Normal_正攻;
 
         [UserSetting("-----P5设置----- (No actual meaning for this setting/此设置无实际意义)")]
         public bool _____Phase5_Settings_____ { get; set; } = true;
@@ -381,9 +391,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [UserSetting("P5璀璨之刃(地火) 后Boss面向人群")]
         public bool Phase5_Boss_Faces_Players_After_Fulgent_Blade { get; set; } = true;
         [UserSetting("P5光与暗之翼(踩塔) 攻略")]
-        public Phase5_Strats_Of_Wings_Dark_And_Light Phase5_Strat_Of_Wings_Dark_And_Light { get; set; } = Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Reverse_Triangle_Brain_Dead_灰九倒三角脑死法;
-        [UserSetting("P5光与暗之翼(踩塔) 灰9倒三角法的分支")]
-        public Phase5_Branches_Of_Grey9_Reverse_Triangle Phase5_Branch_Of_Grey9_Reverse_Triangle { get; set; } = Phase5_Branches_Of_Grey9_Reverse_Triangle.Healers_First_Then_Melees_Left_Ranges_Right_奶妈先然后近战左远程右;
+        public Phase5_Strats_Of_Wings_Dark_And_Light Phase5_Strat_Of_Wings_Dark_And_Light { get; set; } = Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Brain_Dead_MT_First_Tower_Opposite_灰九脑死法MT一塔对侧;
+        [UserSetting("P5光与暗之翼(踩塔) 灰9脑死法的分支")]
+        public Phase5_Branches_Of_Grey9_Brain_Dead Phase5_Branch_Of_Grey9_Brain_Dead { get; set; } = Phase5_Branches_Of_Grey9_Brain_Dead.Healers_First_Then_Melees_Left_Ranges_Right_奶妈先然后近战左远程右;
         [UserSetting("P5光与暗之翼(踩塔) 挑衅提醒")]
         public bool Phase5_Reminder_To_Provoke_During_Wings_Dark_And_Light { get; set; } = true;
         [UserSetting("P5极化打击(挡枪) 顺序")]
@@ -512,9 +522,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         List<int> P4Stack = [0, 0, 0, 0, 0, 0, 0, 0];
         bool P4TetherDone = false;
         List<int> P4ClawBuff = [0, 0, 0, 0, 0, 0, 0, 0];
-        volatile int phase4_numberOfWyrmfangHasBeenCounted = 0;
-        readonly Object phase4_readwriteLockOfWyrmfangCounter_AsAConstant = new Object();
-        System.Threading.AutoResetEvent phase4_semaphoreWyrmfangWasConfirmed = new System.Threading.AutoResetEvent(false);
+        volatile int phase4_numberOfMajorDebuffsHaveBeenCounted = 0;
+        readonly Object phase4_readwriteLockOfMajorDebuffCounter_AsAConstant = new Object();
+        System.Threading.AutoResetEvent phase4_semaphoreMajorDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
         volatile int phase4_numberOfIncidentalDebuffsHaveBeenCounted = 0;
         readonly Object phase4_readwriteLockOfIncidentalDebuffCounter_AsAConstant = new Object();
         System.Threading.AutoResetEvent phase4_semaphoreIncidentalDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
@@ -526,14 +536,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         ];
         List<int> P4OtherBuff = [0, 0, 0, 0, 0, 0, 0, 0];
         volatile List<MarkType> phase4_marksOfPlayersWithWyrmfang = [
-            MarkType.Stop1,
-            MarkType.Stop1,
-            MarkType.Stop1,
-            MarkType.Stop1,
-            MarkType.Stop1,
-            MarkType.Stop1,
-            MarkType.Stop1,
-            MarkType.Stop1
+            MarkType.Cross,
+            MarkType.Cross,
+            MarkType.Cross,
+            MarkType.Cross,
+            MarkType.Cross,
+            MarkType.Cross,
+            MarkType.Cross,
+            MarkType.Cross
         ];
         int P4BlueTether = 0;
         List<Vector3> P4WaterPos = [];
@@ -729,11 +739,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             NONE
 
         }
+        
         public enum Phase4_Strats_Of_The_First_Half
         {
 
-            Pre_Induction_Single_Swap_引导前单换,
-            Post_Induction_Single_Swap_引导后单换,
+            Single_Swap_Baiting_After_先单换再引导,
+            Single_Swap_Baiting_First_先引导再单换,
             Double_Swaps_双换
 
         }
@@ -777,23 +788,23 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         }
 
-        public enum Phase4_2_Repel_Enum
+        public enum Phase4_Positions_Before_Knockback
         {
 
-            正攻,
-            Y字
+            Normal_正攻,
+            Y_Formation_Y字队形
 
         }
 
         public enum Phase5_Strats_Of_Wings_Dark_And_Light
         {
 
-            Grey9_Reverse_Triangle_Brain_Dead_灰九倒三角脑死法,
+            Grey9_Brain_Dead_MT_First_Tower_Opposite_灰九脑死法MT一塔对侧,
             Other_Strats_Are_Work_In_Progress_其他攻略正在施工中
 
         }
 
-        public enum Phase5_Branches_Of_Grey9_Reverse_Triangle
+        public enum Phase5_Branches_Of_Grey9_Brain_Dead
         {
 
             Healers_First_Then_Melees_Left_Ranges_Right_奶妈先然后近战左远程右,
@@ -927,19 +938,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             phase3_moglinMeow_rightPositionToStackOfTheSecondRound = new Vector3(100, 0, 100);
             phase3_finalPositionOfTheBoss = new Vector3(100, 0, 100);
 
-            phase4_numberOfWyrmfangHasBeenCounted = 0;
-            phase4_semaphoreWyrmfangWasConfirmed = new System.Threading.AutoResetEvent(false);
+            phase4_numberOfMajorDebuffsHaveBeenCounted = 0;
+            phase4_semaphoreMajorDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
             phase4_numberOfIncidentalDebuffsHaveBeenCounted = 0;
             phase4_semaphoreIncidentalDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
             phase4_marksOfPlayersWithWyrmfang = [
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross
             ];
             phase4_id1OfTheDrachenWanderers = "";
             phase4_id2OfTheDrachenWanderers = "";
@@ -6808,7 +6819,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                     }
 
-                    myTower = (phase2_playersWithLuminousHammer.Contains(0)) ? (tower2) : (tower4);
+                    myTower = (phase2_playersWithLuminousHammer.Contains(0)) ? (tower4) : (tower2);
 
                 }
 
@@ -11680,7 +11691,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     }
                 }
             }
-            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Pre_Induction_Single_Swap_引导前单换 || Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Post_Induction_Single_Swap_引导后单换)
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_After_先单换再引导 || Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_First_先引导再单换)
             {
                 if (upGroup.Contains(tetherStack))
                 {
@@ -11913,7 +11924,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             if (parse != 4.2) return;
             phase4_1_ManualReset.WaitOne();
             Vector3 dealpos = new();
-            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Double_Swaps_双换 || Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Post_Induction_Single_Swap_引导后单换)
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Double_Swaps_双换 || Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_First_先引导再单换)
             {
                 List<int> idles = [];
                 for (int i = 0; i < 8; i++)
@@ -11933,7 +11944,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     3 => new(104.2f, 0, 102.0f),
                 };
             }
-            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Pre_Induction_Single_Swap_引导前单换)
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_After_先单换再引导)
             {
                 var tIndex = P4Tether[0] == -1 ? 1 : 0;
                 var nIndex = P4Tether[2] == -1 ? 3 : 2;
@@ -12174,7 +12185,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     }
                 }
             }
-            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Pre_Induction_Single_Swap_引导前单换 || Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Post_Induction_Single_Swap_引导后单换)
+            if (Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_After_先单换再引导 || Phase4_Strat_Of_The_First_Half == Phase4_Strats_Of_The_First_Half.Single_Swap_Baiting_First_先引导再单换)
             {
                 if (upGroup.Contains(tetherStack))
                 {
@@ -12252,19 +12263,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             parse = 4.3d;
             P4ClawBuff = [0, 0, 0, 0, 0, 0, 0, 0];
-            phase4_numberOfWyrmfangHasBeenCounted = 0;
-            phase4_semaphoreWyrmfangWasConfirmed = new System.Threading.AutoResetEvent(false);
+            phase4_numberOfMajorDebuffsHaveBeenCounted = 0;
+            phase4_semaphoreMajorDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
             phase4_numberOfIncidentalDebuffsHaveBeenCounted = 0;
             phase4_semaphoreIncidentalDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
             phase4_marksOfPlayersWithWyrmfang = [
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1,
-                MarkType.Stop1
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross,
+                MarkType.Cross
             ];
             P4OtherBuff = [0, 0, 0, 0, 0, 0, 0, 0];
             P4WaterPos = [];
@@ -12320,20 +12331,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             System.Threading.Thread.MemoryBarrier();
 
-            if (id.Equals("3264"))
+            if (id.Equals("3263")||id.Equals("3264"))
             {
 
-                lock (phase4_readwriteLockOfWyrmfangCounter_AsAConstant)
+                lock (phase4_readwriteLockOfMajorDebuffCounter_AsAConstant)
                 {
 
-                    ++phase4_numberOfWyrmfangHasBeenCounted;
+                    ++phase4_numberOfMajorDebuffsHaveBeenCounted;
 
                     System.Threading.Thread.MemoryBarrier();
 
-                    if (phase4_numberOfWyrmfangHasBeenCounted == 4)
+                    if (phase4_numberOfMajorDebuffsHaveBeenCounted == 8)
                     {
 
-                        phase4_semaphoreWyrmfangWasConfirmed.Set();
+                        phase4_semaphoreMajorDebuffsWereConfirmed.Set();
 
                     }
 
@@ -12388,7 +12399,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (Phase4_Logic_Of_Residue_Guidance != Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友)
+            if (Phase4_Logic_Of_Residue_Guidance != Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友
+                &&
+                !Phase4_Mark_Players_With_Wyrmclaw)
             {
 
                 return;
@@ -12397,12 +12410,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             System.Threading.Thread.MemoryBarrier();
 
-            phase4_semaphoreWyrmfangWasConfirmed.WaitOne();
+            phase4_semaphoreMajorDebuffsWereConfirmed.WaitOne();
             phase4_semaphoreIncidentalDebuffsWereConfirmed.WaitOne();
 
             System.Threading.Thread.MemoryBarrier();
 
-            if (phase4_numberOfWyrmfangHasBeenCounted != 4)
+            if (phase4_numberOfMajorDebuffsHaveBeenCounted != 8)
             {
 
                 return;
@@ -12410,6 +12423,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             }
 
             string debugOutput = "";
+            
+            if(Phase4_Logic_Of_Residue_Guidance==Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友) {
 
             if (Phase4_Logic_Of_Marking_Teammates_With_Wyrmfang == Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang.According_To_Debuffs_根据Debuff)
             {
@@ -12497,7 +12512,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     if (P4ClawBuff[temporaryOrder[i]] == 3 && j < 4)
                     {
 
-                        accessory.Method.Mark(accessory.Data.PartyList[i], phase4_markForPlayersWithWyrmfang_asAConstant[j]);
+                        accessory.Method.Mark(accessory.Data.PartyList[temporaryOrder[i]], phase4_markForPlayersWithWyrmfang_asAConstant[j]);
 
                         debugOutput += $"temporaryOrder[i]={temporaryOrder[i]},phase4_markForPlayersWithWyrmfang_asAConstant[j]={phase4_markForPlayersWithWyrmfang_asAConstant[j]}\n";
 
@@ -12520,7 +12535,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     if (P4ClawBuff[temporaryOrder[i]] == 3 && j < 4)
                     {
 
-                        accessory.Method.Mark(accessory.Data.PartyList[i], phase4_markForPlayersWithWyrmfang_asAConstant[j]);
+                        accessory.Method.Mark(accessory.Data.PartyList[temporaryOrder[i]], phase4_markForPlayersWithWyrmfang_asAConstant[j]);
 
                         debugOutput += $"temporaryOrder[i]={temporaryOrder[i]},phase4_markForPlayersWithWyrmfang_asAConstant[j]={phase4_markForPlayersWithWyrmfang_asAConstant[j]}\n";
 
@@ -12532,6 +12547,59 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
+            }
+
+            if(Phase4_Mark_Players_With_Wyrmclaw) {
+
+                List<int> temporaryOrder=[0,1,2,3,4,5,6,7];
+
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_THD_Order_按THD顺序) {
+                    
+                    temporaryOrder=[0,1,2,3,4,5,6,7];
+                    
+                }
+                
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_HTD_Order_按HTD顺序) {
+                    
+                    temporaryOrder=[2,3,0,1,4,5,6,7];
+                    
+                }
+                
+                if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_H1TDH2_Order_按H1TDH2顺序) {
+                    
+                    temporaryOrder=[2,0,1,4,5,6,7,3];
+                    
+                }
+
+                List<MarkType> marksForShortWyrmclaw=[MarkType.Stop1,MarkType.Bind1];
+                List<MarkType> marksForLongWyrmclaw=[MarkType.Stop2,MarkType.Bind2];
+                
+                for(int i=0,j=0,k=0;i<temporaryOrder.Count;++i) {
+
+                    if(P4ClawBuff[temporaryOrder[i]]==1&&j<2) {
+
+                        accessory.Method.Mark(accessory.Data.PartyList[temporaryOrder[i]],marksForShortWyrmclaw[j]);
+
+                        debugOutput+=$"temporaryOrder[i]={temporaryOrder[i]},marksForShortWyrmclaw[j]={marksForShortWyrmclaw[j]}\n";
+
+                        ++j;
+
+                    }
+                    
+                    if(P4ClawBuff[temporaryOrder[i]]==2&&k<2) {
+
+                        accessory.Method.Mark(accessory.Data.PartyList[temporaryOrder[i]],marksForLongWyrmclaw[k]);
+
+                        debugOutput+=$"temporaryOrder[i]={temporaryOrder[i]},marksForLongWyrmclaw[k]={marksForLongWyrmclaw[k]}\n";
+
+                        ++k;
+
+                    }
+
+                }
+
+            }
+            
             if (Enable_Developer_Mode)
             {
 
@@ -13055,7 +13123,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             if (P4WaterPos.Count == 1) return;
             var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             Vector3 centre = new(100, 0, 100);
-            if (Phase4_2_Repel == Phase4_2_Repel_Enum.正攻)
+            if (Phase4_Position_Before_Knockback == Phase4_Positions_Before_Knockback.Normal_正攻)
             {
                 var dir8 = PositionTo8Dir((P4WaterPos[0] + P4WaterPos[1]) / 2, centre) - 1;
                 Vector3 mtPos = new(107, 0, 88);
@@ -13111,7 +13179,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, dp);
                 }
             }
-            if (Phase4_2_Repel == Phase4_2_Repel_Enum.Y字)
+            if (Phase4_Position_Before_Knockback == Phase4_Positions_Before_Knockback.Y_Formation_Y字队形)
             {
                 Vector3 mtPos = P4WaterPos[1].Z < 100 ? new(92, 0, 90) : new(92, 0, 110);
                 Vector3 stPos = P4WaterPos[1].Z < 100 ? new(108, 0, 90) : new(108, 0, 110);
@@ -13916,7 +13984,11 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 2 => MarkType.Attack2,
                 3 => MarkType.Attack3,
                 4 => MarkType.Attack4,
-                _ => MarkType.Stop1
+                9 => MarkType.Stop1,
+                10 => MarkType.Stop2,
+                6 => MarkType.Bind1,
+                7 => MarkType.Bind2,
+                _ => MarkType.Cross
             };
 
             int currentIndex = accessory.Data.PartyList.IndexOf(((uint)targetId));
@@ -14224,7 +14296,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            phase4_semaphoreWyrmfangWasConfirmed = new System.Threading.AutoResetEvent(false);
+            phase4_semaphoreMajorDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
             phase4_semaphoreIncidentalDebuffsWereConfirmed = new System.Threading.AutoResetEvent(false);
 
             if (Phase4_Logic_Of_Residue_Guidance == Phase4_Logics_Of_Residue_Guidance.Guidance_And_Mark_Teammates_With_Wyrmfang_指路同时标记圣龙牙的队友)
@@ -14893,7 +14965,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (Phase5_Strat_Of_Wings_Dark_And_Light == Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Reverse_Triangle_Brain_Dead_灰九倒三角脑死法)
+            if (Phase5_Strat_Of_Wings_Dark_And_Light == Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Brain_Dead_MT_First_Tower_Opposite_灰九脑死法MT一塔对侧)
             {
 
                 var currentProperty = accessory.Data.GetDefaultDrawProperties();
@@ -15032,7 +15104,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (Phase5_Strat_Of_Wings_Dark_And_Light == Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Reverse_Triangle_Brain_Dead_灰九倒三角脑死法)
+            if (Phase5_Strat_Of_Wings_Dark_And_Light == Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Brain_Dead_MT_First_Tower_Opposite_灰九脑死法MT一塔对侧)
             {
 
                 Vector3 position1OfCurrentMt = RotatePoint(positionOfTheFirstTower, new Vector3(100, 0, 100), float.Pi);
@@ -15265,10 +15337,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (Phase5_Strat_Of_Wings_Dark_And_Light == Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Reverse_Triangle_Brain_Dead_灰九倒三角脑死法)
+            if (Phase5_Strat_Of_Wings_Dark_And_Light == Phase5_Strats_Of_Wings_Dark_And_Light.Grey9_Brain_Dead_MT_First_Tower_Opposite_灰九脑死法MT一塔对侧)
             {
 
-                if (Phase5_Branch_Of_Grey9_Reverse_Triangle == Phase5_Branches_Of_Grey9_Reverse_Triangle.Melees_First_Then_Healers_Left_Ranges_Right_近战先然后奶妈左远程右)
+                if (Phase5_Branch_Of_Grey9_Brain_Dead == Phase5_Branches_Of_Grey9_Brain_Dead.Melees_First_Then_Healers_Left_Ranges_Right_近战先然后奶妈左远程右)
                 {
                     // I'm just too lazy to adjust the indentation here. So I guiltily leave it as it is.
                     // This branch was not necessary before, but the strat on CN does vary a little bit.
@@ -15694,7 +15766,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
                 }
 
-                if (Phase5_Branch_Of_Grey9_Reverse_Triangle == Phase5_Branches_Of_Grey9_Reverse_Triangle.Healers_First_Then_Melees_Left_Ranges_Right_奶妈先然后近战左远程右)
+                if (Phase5_Branch_Of_Grey9_Brain_Dead == Phase5_Branches_Of_Grey9_Brain_Dead.Healers_First_Then_Melees_Left_Ranges_Right_奶妈先然后近战左远程右)
                 {
 
                     var currentProperty = accessory.Data.GetDefaultDrawProperties();
