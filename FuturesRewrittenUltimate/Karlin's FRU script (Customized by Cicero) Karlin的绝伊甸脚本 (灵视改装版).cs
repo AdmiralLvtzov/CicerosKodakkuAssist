@@ -687,6 +687,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             Star_Of_David_Japanese_PF_六芒星日服野队法,
             New_Grey9_新灰九法,
+            South_North_East_West_SNEW_南北东西法,
             Lucrezia_L团法,
             Deprecated_Old_Grey9_已废弃的旧灰九法
 
@@ -6089,7 +6090,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法)
+            if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法
+                    || Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.South_North_East_West_SNEW_南北东西法)
             {
 
                 Vector3 point1 = new Vector3(93f, 0f, 100f);
@@ -6445,6 +6447,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             {
 
                 List<int> orderFromTheWestInclusive = [2, 6, 0, 7, 1, 5, 3, 4];
+                if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.South_North_East_West_SNEW_南北东西法) {
+                    orderFromTheWestInclusive = [0, 7, 1, 5, 3, 4, 2, 6];
+                }
 
                 for (int i = 0; i < orderFromTheWestInclusive.Count; ++i)
                 {
@@ -6464,6 +6469,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             {
 
                 List<int> orderFromTheWestInclusive = [0, 1, 2, 3, 7, 6, 5, 4];
+                if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.South_North_East_West_SNEW_南北东西法) {
+                    orderFromTheWestInclusive = [2, 3, 7, 6, 5, 4, 0, 1];
+                }
 
                 for (int i = 0; i < orderFromTheWestInclusive.Count; ++i)
                 {
@@ -6483,6 +6491,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             {
 
                 List<int> orderFromTheWestInclusive = [2, 3, 0, 1, 7, 6, 5, 4];
+                if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.South_North_East_West_SNEW_南北东西法) {
+                    orderFromTheWestInclusive = [0, 1, 7, 6, 5, 4, 2, 3];
+                }
 
                 for (int i = 0; i < orderFromTheWestInclusive.Count; ++i)
                 {
@@ -6750,6 +6761,39 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     myTower = tower1;
 
                 }
+
+                if (Vector3.Distance(myTower, tower2) < 1
+                   ||
+                   Vector3.Distance(myTower, tower3) < 1
+                   ||
+                   Vector3.Distance(myTower, tower4) < 1)
+                {
+
+                    myMeetingPoint = eastMeetingPoint;
+
+                }
+
+                else
+                {
+
+                    myMeetingPoint = westMeetingPoint;
+
+                }
+
+            }
+
+            if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.South_North_East_West_SNEW_南北东西法)
+            {
+                accessory.Log.Debug("South_North_East_West_SNEW_南北东西法");
+                myTower = myTetherIndex switch
+                {
+                    0 => tower2,
+                    1 => tower5,
+                    2 => tower3,
+                    3 => tower1,
+                    4 => tower4,
+                    5 => tower6
+                };
 
                 if (Vector3.Distance(myTower, tower2) < 1
                    ||
