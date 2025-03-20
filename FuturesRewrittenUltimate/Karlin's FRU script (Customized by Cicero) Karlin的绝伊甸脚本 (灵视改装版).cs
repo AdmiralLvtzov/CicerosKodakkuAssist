@@ -6092,15 +6092,17 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             if (Phase2_Strat_Of_Light_Rampant == Phase2_Strats_Of_Light_Rampant.New_Grey9_新灰九法)
             {
 
-                Vector3 point1 = new Vector3(93f, 0f, 100f);
+                Vector3 point1 = new Vector3(92f, 0f, 100f);
                 Vector3 point1Symmetry = RotatePoint(point1, new Vector3(100, 0, 100), float.Pi);
-                Vector3 point2 = new Vector3(97.321f, 0f, 93.533f);
+                Vector3 point2 = new Vector3(94.343f, 0f, 94.343f);
                 Vector3 point2Symmetry = RotatePoint(point2, new Vector3(100, 0, 100), float.Pi);
-                Vector3 point3 = new Vector3(107.071f, 0f, 92.929f);
+                Vector3 point3 = new Vector3(100f, 0f, 92f);
                 Vector3 point3Symmetry = RotatePoint(point3, new Vector3(100, 0, 100), float.Pi);
-                Vector3 point4 = new Vector3(112.728f, 0f, 87.272f);
+                Vector3 point4 = new Vector3(106.133f, 0f, 91.97f);
                 Vector3 point4Symmetry = RotatePoint(point4, new Vector3(100, 0, 100), float.Pi);
-
+                Vector3 point5 = new Vector3(111.314f, 0f, 88.686f);
+                Vector3 point5Symmetry = RotatePoint(point5, new Vector3(100, 0, 100), float.Pi);
+				
                 currentproperty = accessory.Data.GetDefaultDrawProperties();
 
                 currentproperty.Name = "Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
@@ -6141,7 +6143,20 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, currentproperty);
 
                 currentproperty = accessory.Data.GetDefaultDrawProperties();
+				
+                currentproperty.Name = "Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale = new(2);
+                currentproperty.Position = point4;
+                currentproperty.TargetPosition = point5;
+                currentproperty.ScaleMode |= ScaleMode.YByDistance;
+                currentproperty.Color = Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay = 3500;
+                currentproperty.DestoryAt = 9500;
 
+                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, currentproperty);
+
+                currentproperty = accessory.Data.GetDefaultDrawProperties();
+				
                 currentproperty.Name = "Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
                 currentproperty.Scale = new(2);
                 currentproperty.Position = point1Symmetry;
@@ -6172,6 +6187,19 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 currentproperty.Scale = new(2);
                 currentproperty.Position = point3Symmetry;
                 currentproperty.TargetPosition = point4Symmetry;
+                currentproperty.ScaleMode |= ScaleMode.YByDistance;
+                currentproperty.Color = Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
+                currentproperty.Delay = 3500;
+                currentproperty.DestoryAt = 9500;
+
+                accessory.Method.SendDraw(DrawModeEnum.Imgui, DrawTypeEnum.Displacement, currentproperty);
+				
+				currentproperty = accessory.Data.GetDefaultDrawProperties();
+				
+                currentproperty.Name = "Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径";
+                currentproperty.Scale = new(2);
+                currentproperty.Position = point4Symmetry;
+                currentproperty.TargetPosition = point5Symmetry;
                 currentproperty.ScaleMode |= ScaleMode.YByDistance;
                 currentproperty.Color = Phase2_Colour_Of_Rough_Paths.V4.WithW(1f);
                 currentproperty.Delay = 3500;
