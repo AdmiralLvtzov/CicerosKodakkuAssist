@@ -28,7 +28,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
     [ScriptType(name: "Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
         territorys: [1238],
         guid: "148718fd-575d-493a-8ac7-1cc7092aff85",
-        version: "0.0.1.13",
+        version: "0.0.1.14",
         note: notesOfTheScript,
         author: "Karlin")]
 
@@ -262,24 +262,23 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         Navigate to the Discord of Kodakku Assist, find the post "Cicero's Kodakku Assist 个人在线脚本库" in the channel "示例与分享", and finally check "Pinned Messages" for the script description.
         For PC, "Pinned Messages" is in the upper right corner of the chat bar. For mobile, click the arrow icon in the upper right corner, then there would be a tab "Pins".
         It would take about 5 minutes to go through the English part of the description. Please make sure you have read it in full before running the script. Thank you!
-        Please have a look at the script description after each update, especially for the section of New Features and Known Issues.
         
         脚本描述区域有字数限制,没法放下整个描述,所以我把描述部分移到了Discord上的标注消息中。
         去可达鸭的Discord,在"示例与分享"频道中找到帖子"Cicero's Kodakku Assist 个人在线脚本库",选择"已标注消息",就可以查看脚本描述了。
         对于电脑端,"已标注消息"在聊天栏的右上角。对于手机端,点击右上角的箭头标志,然后可以找到一个名为"标注"的标签页。
         阅读完中文部分大约需要花费5分钟的时间。请先完整地阅读脚本描述再使用本脚本，谢谢！
-        请在每次脚本更新后都检查一下脚本描述,特别是已知问题和新功能部分。
         
         
         
-        比汉尼拔小12岁的西庇阿终于开口了:
-        挑起这场战争的不是罗马人,而是迦太基人。这一事实,汉尼拔,你比谁都清楚。如果是诸神在帮助罗马人一步步走向胜利,那一定是诸神知道错在哪方,所以他愿意庇护为保卫自己而奋起的人。
-        我也知道命运无常,而且,我自以为了解一个人的能量最大限度可以做到什么程度。
-        如果在罗马进军北非之前,你主动离开意大利,或者在我提出的和谈没有破裂之前,你提出这样的建议,也许你会得到满意的答案。
-        遗憾的是,你离开意大利不是出自你的本意。因为罗马进军北非取得了重大的胜利,你不得不撤离意大利。
-        请问,你有什么资格要求我做什么?你换位站在我的立场上,请问,你会怎么做?
-        汉尼拔,你能做的只有好好备战明天的会战。因为迦太基人,尤其是你,实在太不擅长在和平环境中生存了。
-         - 扎马会战前一天西庇阿与汉尼拔的交谈,202BC。在第二天的会战中,西庇阿用汉尼拔创造的战术全歼了汉尼拔的军队,第二次布匿战争罗马完胜。
+        西庇阿·埃米利乌斯(小西庇阿)久久地凝视着脚下广阔的迦太基城。在700年的漫长岁月里,迦太基拥有广阔的土地,众多的岛屿,以及属于其支配的海洋。
+        迦太基所拥有的数量庞大的武器装备,战船,象群以及雄厚的财富,与之前人类历史上任何一个强大的帝国相比都毫不逊色。
+        然而,在今天,城市陷落了,并遭受了彻底的破坏,迦太基城从地面上消失了。想到对手的这种命运,西庇阿·埃米利乌斯不禁潸然泪下。他心潮起伏,此刻的思考已经超乎一个军事胜利者的惯常思维。
+        他想到的是,不仅限于人类,城市也好,国家也好,包括强盛的帝国,都逃避不了灭亡的命运。特洛伊帝国,亚述帝国,波斯帝国,还有20年前的马其顿王国,无不遵循了历史展示给人们的"胜者必衰"的铁律。
+        不知是有意还是无意,这位得胜之师的最高长官吟诵起《荷马史诗》中特洛伊主将赫克托耳的一句名言:
+        "归根结底,特洛伊大概也会随着国王普里阿摩斯和追随他的战士共同死亡吧!"
+        站在他背后的历史学家波里比阿询问他何出此言,西庇阿·埃米利乌斯回过头来,注视着波里比阿这个20年来的亲密朋友,拉着他的手回答:
+        "波里比阿,我们刚刚消灭了一个曾经盛极一时的帝国,赢来了这一'伟大的瞬间'。但是现在充满我胸怀的,却不是胜利的喜悦,我反而有些伤感——我担心我们的罗马也会在某一时刻遭遇与此相同的命运!"
+        ——第三次布匿战争末期,迦太基城沦陷时,146BC
         """;
         
         #region User_Settings_用户设置
@@ -437,7 +436,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         #region Variables_变量
         
         int? firstTargetIcon = null;
-        double parse = 0;
+        int parse=-1;
         volatile bool isInPhase5 = false;
         System.Threading.AutoResetEvent shenaniganSemaphore=new System.Threading.AutoResetEvent(false);
 
@@ -954,7 +953,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                 
             }
             
-            parse = 1d;
+            parse=1;
             isInPhase5 = false;
             shenaniganSemaphore.Set();
 
@@ -1434,7 +1433,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_八方雷火_引导扇形", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^((4014[48])|40329|40330)$"])]
         public void P1_八方雷火_引导扇形(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             foreach (var pm in accessory.Data.PartyList)
             {
@@ -1454,7 +1453,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void P1_八方雷火_后续扇形(Event @event, ScriptAccessory accessory)
         {
             var dur = 2000;
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             if (!float.TryParse(@event["SourceRotation"], out var rot)) return;
             var dp = accessory.Data.GetDefaultDrawProperties();
@@ -1496,7 +1495,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_八方雷火_分散分摊", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^((4014[48])|40329|40330)$"])]
         public void P1_八方雷火_分散分摊(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             string prompt = "";
 
@@ -1586,7 +1585,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_八方雷火_引导位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^((4014[48])|40329|40330)$"])]
         public void P1_八方雷火_引导位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             var spread = @event["ActionId"] == "40148" || @event["ActionId"] == "40330";
@@ -1619,7 +1618,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_T死刑Buff爆炸", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:4166"])]
         public void P1_T死刑Buff爆炸(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             if (!int.TryParse(@event["DurationMilliseconds"], out var dur)) return;
             string prompt = "";
@@ -1706,7 +1705,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_雾龙_位置记录", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40158)$"], userControl: false)]
         public void P1_雾龙_位置记录(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             var obj = accessory.Data.Objects.SearchByEntityId(((uint)sid) + 1);
             if (obj == null) return;
@@ -1716,13 +1715,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_雾龙_雷火记录", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:regex:^(4015[45])$"], userControl: false)]
         public void P1_雾龙_雷火记录(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             P1雾龙雷 = (@event["ActionId"] == "40155");
         }
         [ScriptMethod(name: "P1_雾龙_范围", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40158)$"])]
         public void P1_雾龙_范围(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
 
             var dp = accessory.Data.GetDefaultDrawProperties();
@@ -1737,7 +1736,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_雾龙_分散分摊", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:regex:^(4015[45])$"])]
         public void P1_雾龙_分散分摊(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             string prompt = "";
 
             if (@event["ActionId"] == "40155")
@@ -1835,7 +1834,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Standby_Position_Of_Utopian_Sky_乐园绝技待机位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -1965,7 +1964,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_雾龙_处理位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40158)$"])]
         public void P1_雾龙_处理位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
 
             lock (P1雾龙计数读写锁_AsAConstant)
             {
@@ -2055,7 +2054,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Mark_Players_In_Safe_Positions_标记在安全位置的玩家(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2159,7 +2158,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Clear_Marks_On_Players_In_Safe_Positions_清理安全位置玩家的标记(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2182,7 +2181,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Thunder_Burnt_Strike_雷燃烧击(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2227,7 +2226,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Fire_Burnt_Strike_火燃烧击(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2315,7 +2314,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_转轮召_抓人记录", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:4165"], userControl: false)]
         public void P1_转轮召_抓人记录(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             lock (this)
             {
@@ -2330,7 +2329,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Stack_Range_Of_Turn_Of_The_Heavens_光轮召唤分摊范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2596,7 +2595,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void P1_转轮召_击退处理位置(Event @event, ScriptAccessory accessory)
         {
             //dy 7
-            if (parse != 1d) return;
+            if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
             if (MathF.Abs(pos.Z - 100) > 1) return;
@@ -2706,7 +2705,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Fall_Of_Faith_Control_信仰崩塌控制(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2820,7 +2819,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Record_Tethered_Players_记录被连线的玩家(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2874,7 +2873,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -2925,7 +2924,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Prompt_The_Type_Of_The_Current_Tether_提示当前连线的类型(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -3022,7 +3021,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Range_Of_The_Current_Tether_当前连线的范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -3108,7 +3107,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -3248,7 +3247,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Prompt_All_The_Types_Of_Tethers_提示所有连线的类型(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -3666,7 +3665,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_塔_塔记录器", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(4012[234567]|4013[15])$"], userControl: false)]
         public void P1_塔_塔记录器(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             lock (this)
             {
                 var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
@@ -3704,7 +3703,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase1_Burnt_Strike_With_Towers_And_Tank_Busters_带有塔和死刑的燃烧击(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 1d)
+            if (parse!=1)
             {
 
                 return;
@@ -3804,7 +3803,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P1_塔_塔处理位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40134|40129)$"])]
         public void P1_塔_塔处理位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 1d) return;
+            if (parse!=1) return;
             Task.Delay(334).ContinueWith(t =>
             {
                 var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
@@ -4509,7 +4508,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_换P", eventType: EventTypeEnum.Director, eventCondition: ["Instance:800375BF", "Command:8000001E"], userControl: false)]
         public void P2_换P(Event @event, ScriptAccessory accessory)
         {
-            parse = 2d;
+            parse=2;
         }
 
         [ScriptMethod(name: "Phase2 Diamond Dust Initialization 钻石星尘初始化",
@@ -4520,7 +4519,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Diamond_Dust_Initialization_钻石星尘初始化(Event @event, ScriptAccessory accessory)
         {
 
-            parse = 2.1d;
+            parse=21;
 
             phase2_bossId = @event["SourceId"];
             Phase2_Positions_Of_Icicle_Impact.Clear();
@@ -4622,7 +4621,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             //accessory.Log.Debug($"{ParsTargetIcon(@event["Id"])}");
             if (ParsTargetIcon(@event["Id"]) != 127) return;
-            if (parse != 2.1) return;
+            if (parse!=21) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             if (tid != accessory.Data.Me) return;
             var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
@@ -4683,7 +4682,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Frigid_Needle_冰针(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1)
+            if (parse!=21)
             {
 
                 return;
@@ -4717,7 +4716,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             //accessory.Log.Debug($"{ParsTargetIcon(@event["Id"])}");
             if (ParsTargetIcon(@event["Id"]) != 127) return;
-            if (parse != 2.1) return;
+            if (parse!=21) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             int[] group = [6, 7, 4, 5, 2, 3, 0, 1];
@@ -4757,7 +4756,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Record_Positions_Of_Icicle_Impact_记录冰柱冲击的位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1)
+            if (parse!=21)
             {
 
                 return;
@@ -4797,7 +4796,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Determine_The_Position_To_Be_Knocked_Back_确定击退位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1)
+            if (parse!=21)
             {
 
                 return;
@@ -4839,7 +4838,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Guidance_Of_The_Position_To_Be_Knocked_Back_击退位置指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1)
+            if (parse!=21)
             {
 
                 return;
@@ -4880,7 +4879,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Guidance_After_Knockback_击退后指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1)
+            if (parse!=21)
             {
 
                 return;
@@ -5336,7 +5335,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Prediction_Of_Skating_滑冰预测(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1)
+            if (parse!=21)
             {
 
                 return;
@@ -5410,7 +5409,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_钻石星尘_Boss背对", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:regex:^40208$", "TargetIndex:1"])]
         public void P2_钻石星尘_Boss背对(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.1) return;
+            if (parse!=21) return;
             if (!ParseObjectId(phase2_bossId, out var sid)) return;
 
             var dp = accessory.Data.GetDefaultDrawProperties();
@@ -5434,9 +5433,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Reset_Semaphores_After_Diamond_Dust_钻石星尘后重置信号灯(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.1
+            if (parse!=21
                &&
-               parse != 2.2)
+               parse!=22)
             {
 
                 return;
@@ -5456,7 +5455,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Mirror_Mirror_Initialization_镜中奇遇初始化(Event @event, ScriptAccessory accessory)
         {
 
-            parse = 2.2d;
+            parse=22;
 
             phase2_proteanPositionOfTheColourlessMirror = -1;
             phase2_semaphoreTheColourlessMirrorWasConfirmed = new System.Threading.AutoResetEvent(false);
@@ -5468,7 +5467,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_双镜_分散分摊", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(4022[01])$"])]
         public void P2_双镜_分散分摊(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.2) return;
+            if (parse!=22) return;
             string prompt = "";
             if (@event["ActionId"] == "40221")
             {
@@ -5553,7 +5552,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_双镜_蓝镜月环加引导", eventType: EventTypeEnum.EnvControl, eventCondition: ["DirectorId:800375BF", "State:00020001"])]
         public void P2_双镜_蓝镜月环加引导(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.2) return;
+            if (parse!=22) return;
             if (!int.TryParse(@event["Index"], out var dir8)) return;
             Vector3 npos = new(100, 0, 80);
             dir8--;
@@ -5621,7 +5620,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_双镜_红镜月环加引导", eventType: EventTypeEnum.EnvControl, eventCondition: ["DirectorId:800375BF", "State:02000100"])]
         public void P2_双镜_红月环加引导(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.2) return;
+            if (parse!=22) return;
             if (!int.TryParse(@event["Index"], out var dir8)) return;
             Vector3 npos = new(100, 0, 80);
             dir8--;
@@ -5696,7 +5695,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Determine_The_Protean_Position_Of_The_Colourless_Mirror_确定无色镜子八方位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.2)
+            if (parse!=22)
             {
 
                 return;
@@ -5728,7 +5727,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Rough_Guidance_Of_The_Colourless_Mirror_无色镜子粗略指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.2)
+            if (parse!=22)
             {
 
                 return;
@@ -5840,7 +5839,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Determine_Protean_Positions_Of_Red_Mirrors_确定红色镜子八方位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.2)
+            if (parse!=22)
             {
 
                 return;
@@ -5885,7 +5884,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Rough_Guidance_Of_Red_Mirrors_红色镜子粗略指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.2)
+            if (parse!=22)
             {
 
                 return;
@@ -6304,9 +6303,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Reset_Semaphores_After_Mirror_Mirror_镜中奇遇后重置信号灯(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.2
+            if (parse!=22
                &&
-               parse != 2.3)
+               parse!=23)
             {
 
                 return;
@@ -6326,7 +6325,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Light_Rampant_Initialization_光之失控初始化(Event @event, ScriptAccessory accessory)
         {
 
-            parse = 2.3d;
+            parse=23;
 
             phase2_playersWithLuminousHammer.Clear();
             phase2_semaphoreLuminousHammerWasConfirmed = new System.Threading.AutoResetEvent(false);
@@ -6343,9 +6342,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Initial_Positions_Before_Light_Rampant_光之失控前初始站位(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.2
+            if (parse!=22
                &&
-               parse != 2.3)
+               parse!=23)
             {
 
                 return;
@@ -6434,7 +6433,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Rough_Path_Of_Luminous_Hammer_光流侵蚀大致路径(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -6670,7 +6669,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -6715,7 +6714,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Determine_Stacks_Of_Lightsteeped_During_Light_Rampant_光之失控确定过量光层数(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -6781,7 +6780,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_光之暴走_分散分摊", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(4022[01])$"])]
         public void P2_光之暴走_分散分摊(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.3) return;
+            if (parse!=23) return;
             string prompt = "";
             if (@event["ActionId"] == "40221")
             {
@@ -6865,7 +6864,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_光之暴走_分摊buff", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:4159"])]
         public void P2_光之暴走_分摊buff(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.3) return;
+            if (parse!=23) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var dp = accessory.Data.GetDefaultDrawProperties();
             dp.Name = "P2_光之暴走_分摊buff";
@@ -6891,7 +6890,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -7539,7 +7538,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Determine_Final_Lightsteeped_确定最后的过量光(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -7611,7 +7610,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Guidance_Of_The_Last_Tower_During_Light_Rampant_光之失控踩最后塔指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -7671,7 +7670,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P2_光之暴走_八方分散位置", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:regex:^(4022[01])$"])]
         public void P2_光之暴走_八方分散位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 2.3) return;
+            if (parse!=23) return;
             var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             var rot8 = myindex switch
             {
@@ -7707,7 +7706,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Reset_Semaphores_After_Light_Rampant_光之失控后重置信号灯(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 2.3)
+            if (parse!=23)
             {
 
                 return;
@@ -7771,7 +7770,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_时间压缩_分P", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40266)$"], userControl: false)]
         public void P3_时间压缩_分P(Event @event, ScriptAccessory accessory)
         {
-            parse = 3.1d;
+            parse=31;
             phase3_bossId = @event["SourceId"];
             P3FireBuff = [0, 0, 0, 0, 0, 0, 0, 0];
             P3WaterBuff = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -7782,7 +7781,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_时间压缩_Buff记录", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:regex:^(2455|2456|2464|2462|2461|2460)$"], userControl: false)]
         public void P3_时间压缩_Buff记录(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             if (!float.TryParse(@event["Duration"], out var dur)) return;
             var index = accessory.Data.PartyList.IndexOf(((uint)tid));
@@ -7850,7 +7849,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             //0085紫
             //0086黄
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
             var dir8 = PositionTo8Dir(pos, new(100, 0, 100));
             lock (P3Lamp)
@@ -7862,7 +7861,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void P3_时间压缩_灯顺逆记录(Event @event, ScriptAccessory accessory)
         {
             //buff2970, 13 269顺时针 92 348逆时针
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
             Vector3 centre = new(100, 0, 100);
             var dir8 = PositionTo8Dir(pos, centre);
@@ -7871,7 +7870,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_时间压缩_灯AOE", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40235", "TargetIndex:1"])]
         public void P3_时间压缩_灯AOE(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
             var rot = JsonConvert.DeserializeObject<float>(@event["SourceRotation"]);
             Vector3 centre = new(100, 0, 100);
@@ -7892,7 +7891,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_时间压缩_Buff处理位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40293"])]
         public void P3_时间压缩_Buff处理位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             if (myIndex == -1) return;
             var myDir8 = MyLampIndex(myIndex);
@@ -8180,7 +8179,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_时间压缩_灯处理位置", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2970"])]
         public void P3_时间压缩_灯处理位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             //buff2970, 13 269顺时针 92 348逆时针
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
             Vector3 centre = new(100, 0, 100);
@@ -8208,7 +8207,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Prompt_Before_Shell_Crusher_破盾一击前提示(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.1)
+            if (parse!=31)
             {
 
                 return;
@@ -8258,7 +8257,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_时间压缩_黑暗光环", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40290"])]
         public void P3_时间压缩_黑暗光环(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.1) return;
+            if (parse!=31) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var myindex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
@@ -8279,7 +8278,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Initial_Orientation_Before_The_Second_Half_二运前的初始面向(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.1)
+            if (parse!=31)
             {
 
                 return;
@@ -8374,7 +8373,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_延迟咏唱回响_分P", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(40269)$"], userControl: false)]
         public void P3_延迟咏唱回响_分P(Event @event, ScriptAccessory accessory)
         {
-            parse = 3.2d;
+            parse=32;
             P3FloorFire = -1;
             phase3_typeOfDarkWaterIii = [
                 Phase3_Types_Of_Dark_Water_III.NONE,
@@ -8425,7 +8424,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Record_Signs_On_Party_Members_记录小队队员的目标标记(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -8494,7 +8493,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Determine_Types_Of_Dark_Water_III_确定黑暗狂水类型(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -8596,7 +8595,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Prompt_Before_Dark_Water_III_暗黑狂水前提示(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -8954,7 +8953,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Release_The_Semaphore_Of_Dark_Water_III_释放黑暗狂水的信号灯(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -10116,7 +10115,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Range_Of_Spirit_Taker_碎灵一击范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -10188,7 +10187,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Guidance_Of_Spirit_Taker_碎灵一击指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -10499,7 +10498,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Determine_Initial_Safe_Positions_Of_Apocalypse_确定启示初始安全位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -11020,7 +11019,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_延迟咏唱回响_地火", eventType: EventTypeEnum.ObjectEffect, eventCondition: ["Id1:4", "Id2:regex:^(16|64)$"], suppress: 2000)]
         public void P3_延迟咏唱回响_地火(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.2) return;
+            if (parse!=32) return;
             if (P3FloorFireDone) return;
             P3FloorFireDone = true;
             Vector3 centre = new(100, 0, 100);
@@ -11166,7 +11165,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Rough_Guidance_Of_Initial_Safe_Positions_初始安全位置粗略指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -11277,7 +11276,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Range_Of_Darkest_Dance_暗夜舞蹈范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -11468,7 +11467,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Guidance_Of_Darkest_Dance_暗夜舞蹈指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -11582,7 +11581,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_延迟咏唱回响_击退提示", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40182", "TargetIndex:1"])]
         public void P3_延迟咏唱回响_击退提示(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.2) return;
+            if (parse!=32) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
 
             var dp = accessory.Data.GetDefaultDrawProperties();
@@ -11608,7 +11607,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P3_延迟咏唱回响_地火记录", eventType: EventTypeEnum.ObjectEffect, eventCondition: ["Id1:4", "Id2:regex:^(16|64)$"], userControl: false)]
         public void P3_延迟咏唱回响_地火记录(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 3.2) return;
+            if (parse!=32) return;
             lock (this)
             {
                 if (P3FloorFire != -1) return;
@@ -11628,7 +11627,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Determine_The_Final_Position_Of_The_Boss_确定Boss的最终位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -11646,7 +11645,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase3_Initial_Position_Of_The_Boss_In_Phase4_P4时Boss的初始位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 3.2)
+            if (parse!=32)
             {
 
                 return;
@@ -11816,7 +11815,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_具象化_分P", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40246"], userControl: false)]
         public void P4_具象化_分P(Event @event, ScriptAccessory accessory)
         {
-            parse = 4.1d;
+            parse=41;
         }
         [ScriptMethod(name: "P4_时间结晶_记忆水晶收集", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40174"], userControl: false)]
         public void P4_时间结晶_记忆水晶收集(Event @event, ScriptAccessory accessory)
@@ -11935,7 +11934,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_分P", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40239"], userControl: false)]
         public void P4_暗光龙诗_分P(Event @event, ScriptAccessory accessory)
         {
-            parse = 4.2d;
+            parse=42;
             P4Tether = [-1, -1, -1, -1, -1, -1, -1, -1];
             P4Stack = [0, 0, 0, 0, 0, 0, 0, 0];
             P4TetherDone = false;
@@ -11950,9 +11949,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Initial_Position_Before_Darklit_Dragonsong_暗光龙诗前预站位(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.1
+            if (parse!=41
                &&
-               parse != 4.2)
+               parse!=42)
             {
 
                 return;
@@ -12005,7 +12004,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_Buff记录", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2461"], userControl: false)]
         public void P4_暗光龙诗_Buff记录(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var tIndex = accessory.Data.PartyList.IndexOf(((uint)tid));
             P4Stack[tIndex] = 1;
@@ -12013,7 +12012,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_连线收集", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"], userControl: false)]
         public void P4_暗光龙诗_连线收集(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var sIndex = accessory.Data.PartyList.IndexOf(((uint)sid));
@@ -12033,7 +12032,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_引导扇形", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40187"])]
         public void P4_暗光龙诗_引导扇形(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             for (uint i = 1; i < 5; i++)
             {
@@ -12053,7 +12052,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_碎灵一击", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40187"])]
         public void P4_暗光龙诗_碎灵一击(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
 
             var dp = accessory.Data.GetDefaultDrawProperties();
             dp.Name = "P4_暗光龙诗_碎灵一击_水晶";
@@ -12077,7 +12076,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_神圣之翼", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:regex:^(4022[78])$"])]
         public void P4_暗光龙诗_神圣之翼(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
 
             var dp = accessory.Data.GetDefaultDrawProperties();
@@ -12287,7 +12286,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_远跳", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40283"])]
         public void P4_暗光龙诗_远跳(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
 
             var dp = accessory.Data.GetDefaultDrawProperties();
@@ -12306,7 +12305,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_近跳", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40284"])]
         public void P4_暗光龙诗_近跳(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
 
             var dp2 = accessory.Data.GetDefaultDrawProperties();
@@ -12323,7 +12322,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_光之束缚_保持距离提示", eventType: EventTypeEnum.ActionEffect, eventCondition: ["ActionId:40271"], suppress: 2000)]
         public void P4_暗光龙诗_光之束缚_保持距离提示(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             if (P4Tether[accessory.Data.PartyList.IndexOf(accessory.Data.Me)] == -1) return;
             if (Language_Of_Prompts == Languages_Of_Prompts.Simplified_Chinese_简体中文)
             {
@@ -12342,7 +12341,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_塔处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"])]
         public void P4_暗光龙诗_塔处理位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
 
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
             if (sid != accessory.Data.Me) return;
@@ -12424,7 +12423,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_暗光龙诗_引导处理位置", eventType: EventTypeEnum.Tether, eventCondition: ["Id:006E"], suppress: 2000)]
         public void P4_暗光龙诗_引导处理位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.2) return;
+            if (parse!=42) return;
             
             System.Threading.Thread.MemoryBarrier();
             
@@ -12962,7 +12961,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_时间结晶_分P", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40240"], userControl: false)]
         public void P4_时间结晶_分P(Event @event, ScriptAccessory accessory)
         {
-            parse = 4.3d;
+            parse=43;
 
             _pd.Init(accessory, "时间结晶");
             _cry.Init(accessory, _pd);
@@ -13004,7 +13003,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_时间结晶_Buff收集", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:regex:^(326[34]|2454|246[0123])$"], userControl: false)]
         public void P4_时间结晶_Buff收集(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             var id = @event["StatusID"];
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var index = accessory.Data.PartyList.IndexOf(((uint)tid));
@@ -13114,7 +13113,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         public void P4_时间结晶_计算分组归属(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
 
             _events[0].WaitOne();
             _events[1].WaitOne();
@@ -13141,7 +13140,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         public void P4_时间结晶_接收外部标点(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             if (Phase4_Mark_Players_During_The_Second_Half) return;
 
             _events[2].WaitOne();
@@ -13187,7 +13186,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Mark_Teammates_During_The_Second_Half_二运标记队友(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -13475,14 +13474,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_时间结晶_蓝线收集", eventType: EventTypeEnum.Tether, eventCondition: ["Id:0085"], userControl: false)]
         public void P4_时间结晶_蓝线收集(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
             P4BlueTether = PositionTo6Dir(pos, new(100, 0, 100)) % 3;
         }
         [ScriptMethod(name: "P4_时间结晶_灯AOE", eventType: EventTypeEnum.Tether, eventCondition: ["Id:0085"])]
         public void P4_时间结晶_灯AOE(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
             Vector3 normalPos = new(pos.X, 0, 200 - pos.Z);
             Vector3 fastPos = new(100, 0, pos.Z > 100 ? 111 : 89);
@@ -13519,7 +13518,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_时间结晶_土分摊范围", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2454"])]
         public void P4_时间结晶_土分摊范围(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             var dp = accessory.Data.GetDefaultDrawProperties();
             dp.Name = "P4_时间结晶_土分摊范围";
@@ -13542,7 +13541,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_时间结晶_碎灵一击", eventType: EventTypeEnum.StatusAdd, eventCondition: ["StatusID:2452"])]
         public void P4_时间结晶_碎灵一击(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             if (!ParseObjectId(@event["TargetId"], out var tid)) return;
             if (tid != accessory.Data.Me) return;
 
@@ -13571,7 +13570,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
 
             //buff后3.5s
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             var myIndex = accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             //短红
             if (P4ClawBuff[myIndex] == 1)
@@ -13941,7 +13940,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         [ScriptMethod(name: "P4_时间结晶_放回返位置", eventType: EventTypeEnum.StartCasting, eventCondition: ["ActionId:40251"])]
         public void P4_时间结晶_放回返位置(Event @event, ScriptAccessory accessory)
         {
-            if (parse != 4.3) return;
+            if (parse!=43) return;
             var pos = JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
             P4WaterPos.Add(pos);
             if (P4WaterPos.Count == 1) return;
@@ -14056,7 +14055,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Acquire_IDs_Of_Drachen_Wanderers_获取圣龙气息ID(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14116,7 +14115,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Hitbox_Of_Drachen_Wanderers_圣龙气息碰撞箱(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14152,7 +14151,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Explosion_Range_Of_Drachen_Wanderers_圣龙气息爆炸范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14202,7 +14201,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Remove_Hitboxes_And_Explosion_Ranges_Of_Drachen_Wanderers_移除圣龙气息碰撞箱与爆炸范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14235,7 +14234,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Remove_Hitboxes_And_Explosion_Ranges_Of_Drachen_Wanderers_In_Advance_提前移除圣龙气息碰撞箱与爆炸范围(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14337,7 +14336,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Tidal_Light_光之潮汐(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14371,7 +14370,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Determine_Relative_Positions_Of_Residues_确定白圈相对位置(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14480,7 +14479,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Guidance_Of_Residues_白圈指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14592,7 +14591,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Remove_Guidance_Of_Residues_移除白圈指路(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14624,7 +14623,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Highlight_Of_Residues_白圈高亮(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14667,7 +14666,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Remove_Highlights_Of_Residues_移除白圈高亮(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14714,7 +14713,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Remove_Highlights_Of_Residues_In_Advance_提前移除白圈高亮(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -14800,7 +14799,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase4_Record_Signs_On_Party_Members_记录小队队员的目标标记(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
@@ -15130,7 +15129,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public void Phase2_Reset_Semaphores_After_Crystallize_Time_时间结晶后重置信号灯(Event @event, ScriptAccessory accessory)
         {
 
-            if (parse != 4.3)
+            if (parse!=43)
             {
 
                 return;
