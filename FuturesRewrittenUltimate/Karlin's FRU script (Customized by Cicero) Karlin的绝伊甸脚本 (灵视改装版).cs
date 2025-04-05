@@ -28,7 +28,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
     [ScriptType(name: "Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
         territorys: [1238],
         guid: "148718fd-575d-493a-8ac7-1cc7092aff85",
-        version: "0.0.1.14",
+        version: "0.0.1.15",
         note: notesOfTheScript,
         author: "Karlin")]
 
@@ -366,6 +366,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         public ScriptColor Phase4_Colour_Of_Somber_Dance { get; set; } = new() { V4 = new(1f, 0f, 0f, 1f) };
         [UserSetting("P4二运 标记玩家 (Make sure only one in the party enables this!/小队内只能有一人启用此选项!)")]
         public bool Phase4_Mark_Players_During_The_Second_Half { get; set; } = false;
+        [UserSetting("P4二运 标记玩家的类型")]
+        public Phase4_Player_Types_To_Be_Marked Phase4_Player_Type_To_Be_Marked { get; set; }
         [UserSetting("P4二运 圣龙爪(红)玩家优先级")]
         public Phase4_Priorities_Of_The_Players_With_Wyrmclaw Phase4_Priority_Of_The_Players_With_Wyrmclaw { get; set; } = Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_THD_Order_按THD顺序_莫灵喵;
         [UserSetting("P4二运 标记圣龙爪(红)队友的逻辑")]
@@ -800,6 +802,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
             Single_Swap_Baiting_First_先引导再单换,
             Double_Swaps_Baiting_First_先引导再双换
 
+        }
+
+        public enum Phase4_Player_Types_To_Be_Marked {
+            
+            Both_The_Debuffs_Wyrmclaw_And_Wyrmfang_圣龙爪圣龙牙两种都标记,
+            Only_Wyrmclaw_The_Red_Debuff_仅圣龙爪红色Debuff,
+            Only_Wyrmfang_The_Blue_Debuff_仅圣龙牙蓝色Debuff
+            
         }
 
         public enum Phase4_Priorities_Of_The_Players_With_Wyrmclaw
@@ -13209,6 +13219,10 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             List<int> temporaryOrder=[0,1,2,3,4,5,6,7];
             string debugOutput = "";
+            
+            if(Phase4_Player_Type_To_Be_Marked==Phase4_Player_Types_To_Be_Marked.Both_The_Debuffs_Wyrmclaw_And_Wyrmfang_圣龙爪圣龙牙两种都标记
+               ||
+               Phase4_Player_Type_To_Be_Marked==Phase4_Player_Types_To_Be_Marked.Only_Wyrmfang_The_Blue_Debuff_仅圣龙牙蓝色Debuff) {
 
             if (Phase4_Logic_Of_Marking_Teammates_With_Wyrmfang == Phase4_Logics_Of_Marking_Teammates_With_Wyrmfang.According_To_Debuffs_1234_From_East_To_West_根据Debuff从东到西1234
                 ||
@@ -13333,6 +13347,12 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
+            }
+            
+            if(Phase4_Player_Type_To_Be_Marked==Phase4_Player_Types_To_Be_Marked.Both_The_Debuffs_Wyrmclaw_And_Wyrmfang_圣龙爪圣龙牙两种都标记
+               ||
+               Phase4_Player_Type_To_Be_Marked==Phase4_Player_Types_To_Be_Marked.Only_Wyrmclaw_The_Red_Debuff_仅圣龙爪红色Debuff) {
+
                 temporaryOrder=[0,1,2,3,4,5,6,7];
 
                 if(Phase4_Priority_Of_The_Players_With_Wyrmclaw==Phase4_Priorities_Of_The_Players_With_Wyrmclaw.In_THD_Order_按THD顺序_莫灵喵) {
@@ -13393,6 +13413,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
                     }
 
                 }
+            
+            }
             
             if (Enable_Developer_Mode)
             {
