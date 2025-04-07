@@ -28,7 +28,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
     [ScriptType(name: "Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
         territorys: [1238],
         guid: "148718fd-575d-493a-8ac7-1cc7092aff85",
-        version: "0.0.1.15",
+        version: "0.0.1.16",
         note: notesOfTheScript,
         author: "Karlin")]
 
@@ -152,8 +152,9 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
          - @bupleurum. provided affixes regarding the MMW strats on CN, optimized paths of the New Grey9 strat for Light Rampant in Phase 2. (Mar 20, 2025)
          - @cyf5119 provided ranges of halo AOEs for Turn of the Heavens in Phase 1. (Mar 19, 2025)
          - @milkvio provided guidance for Fulgent Blade in Phase 5. (Mar 16, 2025)
-         - @usamilyan4608 provided warnings by time for AOEs from spheres during Light Rampant in Phase 2, optimized drawing of Drachen Wanderers in the second half of Phae 4, incorrect debug output in the developer mode.
-           (Mar 16, 2025; Mar 22, 2025; Mar 24, 2025)
+         - @usamilyan4608 provided warnings by time for AOEs from spheres during Light Rampant in Phase 2, optimized drawing of Drachen Wanderers in the second half of Phase 4, incorrect debug output in the developer mode.
+           @usamilyan4608 also provided a valuable recording involves a rare local exception during the second half of Phase 3 with some fix suggestions.
+           (Mar 16, 2025; Mar 22, 2025; Mar 24, 2025; Apr 7, 2025)
          - @veever2464 provided supports of Daily Routines TTS for each TTS prompt. (Mar 10, 2025)
 
         原作者,奠基人兼共同维护者: @karlin_z
@@ -164,7 +165,8 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         - @cyf5119为P1光轮召唤提供了雷焰之光轮的AOE范围。 (2025.3.19)
         - @milkvio为P5璀璨之刃(地火)提供了指路。 (2025.03.16)
         - @usamilyan4608为P2光之失控(光暴)期间的光球AOE提供了时间警告,P4二运龙头绘制优化,开发者模式调试输出修复。
-          (2025.03.16, 2025.03.22, 2025.03.24)
+          @usamilyan4608还为P3二运的罕见本地错误提供了珍贵录像和修复建议。
+          (2025.03.16, 2025.03.22, 2025.03.24, 2025.04.07)
         - @veever2464为每一条TTS提示提供了Daily Routines TTS支持。 (2025.03.10)
 
         ***** New Features *****
@@ -8970,6 +8972,15 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
             }
 
+            if(@event["SourceId"].Equals("00000000")) {
+                // A rare local exception. Please refer to the report on Discord for details.
+                // In short, there's a very rare chance that a 2458 status from the entity 00000000 will be applied without valid duration.
+                // Therefore, that weird 2458 status will be removed immediately, and the removal will cause incorrect guidance.
+
+                return;
+
+            }
+
             System.Threading.Thread.MemoryBarrier();
 
             ++phase3_roundOfDarkWaterIii;
@@ -8988,6 +8999,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         public void Phase3_Range_Of_Dark_Water_III_黑暗狂水范围(Event @event, ScriptAccessory accessory)
         {
+            
+            if(@event["SourceId"].Equals("00000000")) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
 
             while (System.Threading.Interlocked.CompareExchange(ref phase3_rangeSemaphoreOfDarkWaterIii, 0, 1) == 0)
             {
@@ -9334,6 +9353,14 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
 
         public void Phase3_Guidance_Of_Dark_Water_III_黑暗狂水指路(Event @event, ScriptAccessory accessory)
         {
+            
+            if(@event["SourceId"].Equals("00000000")) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
 
             while (System.Threading.Interlocked.CompareExchange(ref phase3_guidanceSemaphoreOfDarkWaterIii, 0, 1) == 0)
             {
