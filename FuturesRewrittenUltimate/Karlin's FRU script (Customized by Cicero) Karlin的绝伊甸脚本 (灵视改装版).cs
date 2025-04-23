@@ -28,7 +28,7 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
     [ScriptType(name: "Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
         territorys: [1238],
         guid: "148718fd-575d-493a-8ac7-1cc7092aff85",
-        version: "0.0.1.16",
+        version: "0.0.1.17",
         note: notesOfTheScript,
         author: "Karlin")]
 
@@ -1719,8 +1719,13 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
-            var obj = accessory.Data.Objects.SearchByEntityId(((uint)sid) + 1);
-            if (obj == null) return;
+            
+            KodakkuAssist.Data.IGameObject? obj=null;
+            do {
+                ++sid;
+                obj=accessory.Data.Objects.SearchByEntityId((uint)sid);
+            } while(obj==null);
+            
             var dir8 = PositionTo8Dir(obj.Position, new(100, 0, 100));
             P1雾龙记录[dir8 % 4] = 1;
         }
@@ -1735,11 +1740,17 @@ namespace CicerosKodakkuAssist.FuturesRewrittenUltimate
         {
             if (parse!=1) return;
             if (!ParseObjectId(@event["SourceId"], out var sid)) return;
+            
+            KodakkuAssist.Data.IGameObject? obj=null;
+            do {
+                ++sid;
+                obj=accessory.Data.Objects.SearchByEntityId((uint)sid);
+            } while(obj==null);
 
             var dp = accessory.Data.GetDefaultDrawProperties();
             dp.Name = "P1_雾龙范围";
             dp.Scale = new(16, 50);
-            dp.Owner = sid + 1;
+            dp.Owner = sid;
             dp.Color = accessory.Data.DefaultDangerColor;
             dp.DestoryAt = 9000;
             accessory.Method.SendDraw(DrawModeEnum.Default, DrawTypeEnum.Rect, dp);
