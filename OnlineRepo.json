@@ -16,5 +16,14 @@
     "TerritoryIds":[1238],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/FuturesRewrittenUltimate/Karlin's%20FRU%20script%20(Customized%20by%20Cicero)%20Karlin%E7%9A%84%E7%BB%9D%E4%BC%8A%E7%94%B8%E8%84%9A%E6%9C%AC%20(%E7%81%B5%E8%A7%86%E6%94%B9%E8%A3%85%E7%89%88).cs",
     "UpdateInfo":"The script is almost completed, but refinements are still in process. 脚本已基本完工,但仍然在精修。"
+  },
+  {
+    "Name":"AAC Cruiserweight M4 (Savage)",
+    "Guid":"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
+    "Version":"0.0.0.1",
+    "Author":"Cicero 灵视",
+    "TerritoryIds":[1263],
+    "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/AAC%20Cruiserweight%20M4%20(Savage).cs",
+    "UpdateInfo":"Last update: May 13, 2025.\nUpdate notes: Finish Windfang and Stonefang."
   }
 ]

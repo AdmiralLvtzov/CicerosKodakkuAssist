@@ -27,7 +27,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         const string notesOfTheScript=
             """
+            This is the English version of the script for AAC Cruiserweight M4 (Savage), which is also known as M8S in short.
             
+            The script will adapt to the popular strats among EU Party Finder with priority.
+            
+            The script is still work in progress.
+            
+            Link to RaidPlan 84d (Rinon combined with Quad): https://raidplan.io/plan/B5Q3Mk62YKuTy84d
+            Link to Toxic Friends RaidPlan DOG: https://raidplan.io/plan/9M-1G-mmOaaroDOG
+            Link to Toxic Friends XOs: https://raidplan.io/plan/46uVU6o49FPuYXOs
             """;
 
         #region User_Settings
@@ -72,7 +80,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         #region Variables
         
-        
+        private int currentPhase=1;
+        private int currentSubPhase=1;
+
+        #endregion
+
+        #region Constants
+
+        private readonly Vector3 ARENA_CENTER_OF_PHASE_1=new Vector3(100,0,100);
 
         #endregion
         
@@ -118,7 +133,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         public void Init(ScriptAccessory accessory) {
             
-            
+            currentPhase=1;
+            currentSubPhase=1;
             
             shenaniganSemaphore.Set();
             
@@ -184,7 +200,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         [ScriptMethod(name:"Shenanigans",
             eventType:EventTypeEnum.AddCombatant,
-            eventCondition:["DataId:13843"],
+            eventCondition:["DataId:18215"],
             suppress:10000,
             userControl:false)]
 
@@ -224,7 +240,273 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         #region Phase_1
 
+        [ScriptMethod(name:"Phase 1 Windfang And Stonefang",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(41885|41886|41889|41890)$"])]
+    
+        public void Phase_1_Windfang_And_Stonefang(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            IReadOnlyList<int> getPartner=[6,5,4,7,2,1,0,3];
         
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            string prompt=string.Empty;
+            
+            // 41885: Donut & Stack + Cardinal Lines
+            // 41886: Donut & Stack + Intercardinal Lines
+            // 41889: Circle & Spread + Cardinal Lines
+            // 41890: Circle & Spread + Intercardinal Lines
+
+            if(string.Equals(@event["ActionId"],"41885")||string.Equals(@event["ActionId"],"41886")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(15);
+                currentProperties.InnerScale=new(8);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Scale=new(19);
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+                
+                for(int i=0;i<8;++i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(15);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.TargetObject=accessory.Data.PartyList[i];
+                    currentProperties.Radian=24f.DegToRad();
+                    currentProperties.DestoryAt=6000;
+
+                    if(i==myIndex||i==getPartner[myIndex]) {
+                        
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        
+                    }
+
+                    else {
+                        
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        
+                    }
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+
+                prompt+="Get in and stack at the ";
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"41889")||string.Equals(@event["ActionId"],"41890")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(9);
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                for(int i=0;i<8;++i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(15);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.TargetObject=accessory.Data.PartyList[i];
+                    currentProperties.Radian=24f.DegToRad();
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=6000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+
+                prompt+="Get out and spread at the ";
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"41885")||string.Equals(@event["ActionId"],"41889")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(6,30);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(6,30);
+                currentProperties.Rotation=float.Pi/2;
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+
+                prompt+="intercardinal.";
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"41886")||string.Equals(@event["ActionId"],"41890")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(6,30);
+                currentProperties.Rotation=float.Pi/4;
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(6,30);
+                currentProperties.Rotation=float.Pi/2+float.Pi/4;
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+
+                prompt+="cardinal.";
+
+            }
+
+            if(!string.IsNullOrWhiteSpace(prompt)) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo(prompt,6000);
+                    
+                }
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Windfang And Stonefang (Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(41885|41886|41889|41890)$"])]
+    
+        public void Phase_1_Windfang_And_Stonefang_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            Vector3 rawInnerPosition=new Vector3(100,0,93.5f);
+            Vector3 rawOuterPosition=new Vector3(100,0,89.5f);
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // 41885: Donut & Stack + Cardinal Lines
+            // 41886: Donut & Stack + Intercardinal Lines
+            // 41889: Circle & Spread + Cardinal Lines
+            // 41890: Circle & Spread + Intercardinal Lines
+            
+            if(string.Equals(@event["ActionId"],"41885")) {
+                
+                IReadOnlyList<float> getDegree=[315,135,225,45,225,135,315,45];
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=rotatePositionClockwise(rawInnerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"41886")) {
+                
+                IReadOnlyList<float> getDegree=[0,180,270,90,270,180,0,90];
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=rotatePositionClockwise(rawInnerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"41889")) {
+                
+                IReadOnlyList<float> getDegree=[335,155,245,65,205,115,295,25];
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=rotatePositionClockwise(rawOuterPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"41890")) {
+                
+                IReadOnlyList<float> getDegree=[20,200,290,110,250,160,340,70];
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=rotatePositionClockwise(rawOuterPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+        
+        }
 
         #endregion
         
@@ -322,6 +604,92 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             return new Vector3((float)(center.X+Math.Sin(polarAngleAfterRotation)*positionInVector2.Length()),
                 ((preserveHeight)?(position.Y):(center.Y)),
                 (float)(center.Z-Math.Cos(polarAngleAfterRotation)*positionInVector2.Length()));
+            
+        }
+
+        public static double convertRotation(double rawRotation) {
+            
+            return Math.PI-rawRotation;
+            
+        }
+        
+        public static bool isSupporter(int partyIndex) {
+
+            return partyIndex switch {
+
+                0 => true,
+                1 => true,
+                2 => true,
+                3 => true,
+                _ => false
+
+            };
+
+        }
+
+        public static bool isDps(int partyIndex) {
+
+            return partyIndex switch {
+
+                4 => true,
+                5 => true,
+                6 => true,
+                7 => true,
+                _ => false
+
+            };
+
+        }
+        
+        public static bool isMelee(int partyIndex) {
+
+            return partyIndex switch {
+
+                0 => true,
+                1 => true,
+                4 => true,
+                5 => true,
+                _ => false
+
+            };
+
+        }
+        
+        public static bool isRanged(int partyIndex) {
+
+            return partyIndex switch {
+
+                2 => true,
+                3 => true,
+                6 => true,
+                7 => true,
+                _ => false
+
+            };
+
+        }
+
+        public static bool isTank(int partyIndex) {
+            
+            return isSupporter(partyIndex)&&isMelee(partyIndex);
+            
+        }
+        
+        public static bool isHealer(int partyIndex) {
+            
+            return isSupporter(partyIndex)&&isRanged(partyIndex);
+            
+        }
+        
+        public static bool isMeleeDps(int partyIndex) {
+            
+            return isDps(partyIndex)&&isMelee(partyIndex);
+            
+        }
+        
+        public static bool isRangedDps(int partyIndex) {
+            
+            return isDps(partyIndex)&&isRanged(partyIndex);
             
         }
         
