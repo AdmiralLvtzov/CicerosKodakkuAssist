@@ -18,14 +18,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.1",
-        note:notesOfTheScript,
+        version:"0.0.0.2",
+        note:scriptNotes,
         author:"Cicero 灵视")]
 
     public class AAC_Cruiserweight_M4_Savage
     {
         
-        const string notesOfTheScript=
+        const string scriptNotes=
             """
             This is the English version of the script for AAC Cruiserweight M4 (Savage), which is also known as M8S in short.
             
@@ -33,15 +33,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             The script is still work in progress.
             
-            Link to RaidPlan 84d (Rinon combined with Quad): https://raidplan.io/plan/B5Q3Mk62YKuTy84d
-            Link to Toxic Friends RaidPlan DOG: https://raidplan.io/plan/9M-1G-mmOaaroDOG
-            Link to Toxic Friends XOs: https://raidplan.io/plan/46uVU6o49FPuYXOs
+            Link to RaidPlan 84d (Rinon combined with Quad) for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
+            Link to Toxic Friends RaidPlan DOG for Phase 2: https://raidplan.io/plan/9M-1G-mmOaaroDOG
+            
+            "Half Rinon" during Terrestrial Rage is the one combines the first half of Rinon with the second half of Clock.
             """;
 
         #region User_Settings
 
         [UserSetting("----- Global Settings ----- (This setting has no practical meaning.)")]
-        public bool _____Global_Settings_____ { get; set; } = true;
+        public bool _____Global_Settings_____ { get; set; } = false;
         
         [UserSetting("Enbale Text Prompts")]
         public bool enablePrompts { get; set; } = true;
@@ -50,15 +51,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         [UserSetting("Enable Daily Routines TTS (It requires the plugin \"Daily Routines\" to be installed and enabled!)")]
         public bool enableDailyRoutinesTts { get; set; } = false;
         [UserSetting("Colour Of Highly Dangerous Attacks")]
-        public ScriptColor colourOfHighlyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1f,0f,0f,1f) }; // Red by default.
-        [UserSetting("Colour Of Approximate Guidance")]
-        public ScriptColor colourOfApproximateGuidance { get; set; } = new() { V4 = new Vector4(1f,1f,0f,1f) }; // Yellow by default.
+        public ScriptColor colourOfHighlyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("Enable Shenanigans")]
         public bool enableShenanigans { get; set; } = false;
         
         [UserSetting("----- Phase 1 Settings ----- (This setting has no practical meaning.)")]
-        public bool _____Phase_1_Settings_____ { get; set; } = true;
+        public bool _____Phase_1_Settings_____ { get; set; } = false;
         
+        [UserSetting("Colour Of The Regin Direction")]
+        public ScriptColor colourOfRegins { get; set; } = new() { V4 = new Vector4(1,1,0, 1) }; // Yellow by default.
         [UserSetting("Strats Of Millenial Decay")]
         public StratsOfMillenialDecay stratOfMillenialDecay { get; set; }
         [UserSetting("Tanks Or Melee Go Further For The Second Set While Doing RaidPlan 84d During Millenial Decay")]
@@ -69,19 +70,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         public StratsOfBeckonMoonlight stratOfBeckonMoonlight { get; set; }
         
         [UserSetting("----- Phase 2 Settings ----- (This setting has no practical meaning.)")]
-        public bool _____Phase_2_Settings_____ { get; set; } = true;
+        public bool _____Phase_2_Settings_____ { get; set; } = false;
         
         [UserSetting("Strats Of Phase 2")]
         public StratsOfPhase2 stratOfPhase2 { get; set; }
-        [UserSetting("Colour Of Platforms At Risk During Enrage")]
-        public ScriptColor colourOfPlatformsAtRisk { get; set; } = new() { V4 = new Vector4(1f,1f,0f,1f) }; // Yellow by default.
 
         #endregion
         
         #region Variables
         
-        private int currentPhase=1;
-        private int currentSubPhase=1;
+        private volatile int currentPhase=1;
+        private volatile int currentSubPhase=1;
+        
+        private volatile string reignId=string.Empty;
 
         #endregion
 
@@ -104,7 +105,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         public enum StratsOfTerrestrialRage {
 
-            Rinon_Or_RaidPlan_84d,
+            Full_Rinon_Or_RaidPlan_84d,
+            Half_Rinon,
             // Clock
             Other_Strats_Are_Work_In_Progress
 
@@ -135,6 +137,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             currentPhase=1;
             currentSubPhase=1;
+            
+            reignId=string.Empty;
             
             shenaniganSemaphore.Set();
             
@@ -421,14 +425,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             }
 
-            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
-            
-                return;
-            
-            }
-            
-            Vector3 rawInnerPosition=new Vector3(100,0,93.5f);
-            Vector3 rawOuterPosition=new Vector3(100,0,89.5f);
+            Vector3 innerPosition=new Vector3(100,0,93.5f);
+            Vector3 outerPosition=new Vector3(100,0,89.5f);
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
         
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
@@ -446,7 +444,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(rawInnerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePositionClockwise(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -463,7 +461,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(rawInnerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePositionClockwise(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -480,7 +478,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(rawOuterPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePositionClockwise(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -497,7 +495,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(rawOuterPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePositionClockwise(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -505,6 +503,443 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
             }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Circle)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(43308|43309|43310|43312|43313)$"])]
+    
+        public void Phase_1_Eminent_Reign_And_Revolutionary_Reign_Circle(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            Vector3 targetPosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Position=targetPosition;
+            currentProperties.DestoryAt=7000;
+
+            if(string.Equals(@event["ActionId"],"43312")||string.Equals(@event["ActionId"],"43313")) {
+
+                currentProperties.Color=colourOfRegins.V4.WithW(0.8f);
+
+            }
+
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Direction)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(43312|43313)$"])]
+    
+        public void Phase_1_Eminent_Reign_And_Revolutionary_Reign_Direction(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            Vector3 targetPosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10,50);
+            currentProperties.Position=targetPosition;
+            currentProperties.TargetPosition=ARENA_CENTER_OF_PHASE_1;
+            currentProperties.Color=colourOfRegins.V4.WithW(0.8f);
+            currentProperties.DestoryAt=9100;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,9);
+            currentProperties.Position=targetPosition;
+            currentProperties.TargetPosition=ARENA_CENTER_OF_PHASE_1;
+            currentProperties.Color=colourOfRegins.V4.WithW(1);
+            currentProperties.DestoryAt=7000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,9);
+            currentProperties.Position=targetPosition;
+            currentProperties.TargetPosition=ARENA_CENTER_OF_PHASE_1;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=7000;
+            currentProperties.DestoryAt=2100;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (ID Acquisition)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(43312|43313)$"],
+            userControl:false)]
+    
+        public void Phase_1_Eminent_Reign_And_Revolutionary_ID_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            reignId=@event["ActionId"];
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Combo)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(42927|41880)$"])]
+    
+        public void Phase_1_Eminent_Reign_And_Revolutionary_Reign_Combo(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(string.IsNullOrWhiteSpace(reignId)) {
+
+                return;
+
+            }
+
+            Vector3 effectPosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+        
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // 43312: Fan
+            // 43313: Circle
+
+            if(string.Equals(reignId,"43312")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(20);
+                currentProperties.Position=effectPosition;
+                currentProperties.TargetPosition=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.Radian=float.Pi/3*2;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=3600;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+            }
+            
+            if(string.Equals(reignId,"43313")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(14);
+                currentProperties.Position=effectPosition;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=3600;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(25);
+            currentProperties.Position=effectPosition;
+            currentProperties.TargetObject=accessory.Data.PartyList[0];
+            currentProperties.Radian=float.Pi/3;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=3600;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(25);
+            currentProperties.Position=effectPosition;
+            currentProperties.TargetObject=accessory.Data.PartyList[1];
+            currentProperties.Radian=float.Pi/3;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=3600;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(25);
+            currentProperties.Position=effectPosition;
+            currentProperties.TargetObject=accessory.Data.PartyList[2];
+            currentProperties.Radian=float.Pi/6;
+            currentProperties.DestoryAt=3600;
+
+            if(!isTank(myIndex)&&isInGroup1(myIndex)) {
+
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+            }
+
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(25);
+            currentProperties.Position=effectPosition;
+            currentProperties.TargetObject=accessory.Data.PartyList[3];
+            currentProperties.Radian=float.Pi/6;
+            currentProperties.DestoryAt=3600;
+
+            if(!isTank(myIndex)&&isInGroup2(myIndex)) {
+
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+            }
+
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            reignId=string.Empty;
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(43312|43313)$"])]
+    
+        public void Phase_1_Eminent_Reign_And_Revolutionary_Reign_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            Vector3 targetPosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+
+            // Vector3 bossPosition=new Vector3(100,0,92.487f);
+            Vector3 mtPositionOfEminentReign=new Vector3(97.702f,0,90.559f);
+            Vector3 otPositionOfEminentReign=new Vector3(102.298f,0,90.559f);
+            Vector3 group1PositionOfEminentReign=new Vector3(94.204f,0,94.040f);
+            Vector3 group2PositionOfEminentReign=new Vector3(105.796f,0,94.040f);
+            // Eminent Reign: https://www.geogebra.org/calculator/eju6szvv
+            Vector3 mtPositionOfRevolutionaryReign=new Vector3(89.465f,0,103.165f);
+            Vector3 otPositionOfRevolutionaryReign=new Vector3(110.535f,0,103.165f);
+            Vector3 group1PositionOfRevolutionaryReign=new Vector3(97.507f,0,109.303f);
+            Vector3 group2PositionOfRevolutionaryReign=new Vector3(102.493f,0,109.303f);
+            // Revolutionary Reign: https://www.geogebra.org/calculator/xc8zxmvz
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            Vector3 approximateDestination=rotatePositionClockwise(targetPosition,ARENA_CENTER_OF_PHASE_1,Math.PI);
+            double rotation=getRotation(approximateDestination,ARENA_CENTER_OF_PHASE_1);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
+            int guidanceDelay=0;
+
+            // 43312: Fan
+            // 43313: Circle
+            
+            if(string.Equals(@event["ActionId"],"43312")) {
+
+                myPosition=myIndex switch {
+                    
+                    0 => mtPositionOfEminentReign,
+                    1 => otPositionOfEminentReign,
+                    2 => group1PositionOfEminentReign,
+                    3 => group2PositionOfEminentReign,
+                    4 => group1PositionOfEminentReign,
+                    5 => group2PositionOfEminentReign,
+                    6 => group1PositionOfEminentReign,
+                    7 => group2PositionOfEminentReign,
+                    _ => ARENA_CENTER_OF_PHASE_1
+                    
+                };
+                
+                guidanceDelay=myIndex switch {
+                    
+                    0 => 9100,
+                    1 => 9100,
+                    2 => 7000,
+                    3 => 7000,
+                    4 => 7000,
+                    5 => 7000,
+                    6 => 7000,
+                    7 => 7000,
+                    _ => 0
+                    
+                };
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"43313")) {
+                
+                myPosition=myIndex switch {
+                    
+                    0 => mtPositionOfRevolutionaryReign,
+                    1 => otPositionOfRevolutionaryReign,
+                    2 => group1PositionOfRevolutionaryReign,
+                    3 => group2PositionOfRevolutionaryReign,
+                    4 => group1PositionOfRevolutionaryReign,
+                    5 => group2PositionOfRevolutionaryReign,
+                    6 => group1PositionOfRevolutionaryReign,
+                    7 => group2PositionOfRevolutionaryReign,
+                    _ => ARENA_CENTER_OF_PHASE_1
+                    
+                };
+                
+                guidanceDelay=myIndex switch {
+                    
+                    0 => 0,
+                    1 => 0,
+                    2 => 9100,
+                    3 => 9100,
+                    4 => 9100,
+                    5 => 9100,
+                    6 => 9100,
+                    7 => 9100,
+                    _ => 0
+                    
+                };
+
+            }
+
+            if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                return;
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=rotatePositionClockwise(myPosition,ARENA_CENTER_OF_PHASE_1,rotation);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=guidanceDelay;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=rotatePositionClockwise(myPosition,ARENA_CENTER_OF_PHASE_1,rotation);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=guidanceDelay;
+            currentProperties.DestoryAt=12700-guidanceDelay;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Add)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42893"])]
+    
+        public void Phase_1_Eminent_Reign_And_Revolutionary_Reign_Add(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,25);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
         
         }
 
@@ -593,6 +1028,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 );
                 
             }
+            
+        }
+        
+        public static double getRotation(Vector3 position,Vector3 center) {
+            
+            return (position.Equals(center))?
+                (0):
+                ((Math.PI-Math.Atan2(position.X-center.X,position.Z-center.Z)+2*Math.PI)%(2*Math.PI));
             
         }
         
@@ -690,6 +1133,34 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         public static bool isRangedDps(int partyIndex) {
             
             return isDps(partyIndex)&&isRanged(partyIndex);
+            
+        }
+
+        public static bool isInGroup1(int partyIndex) {
+            
+            return partyIndex switch {
+
+                0 => true,
+                2 => true,
+                4 => true,
+                6 => true,
+                _ => false
+
+            };
+            
+        }
+        
+        public static bool isInGroup2(int partyIndex) {
+            
+            return partyIndex switch {
+
+                1 => true,
+                3 => true,
+                5 => true,
+                7 => true,
+                _ => false
+
+            };
             
         }
         
