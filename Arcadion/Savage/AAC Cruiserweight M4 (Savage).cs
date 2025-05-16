@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Dalamud.Utility.Numerics;
 using ECommons.MathHelpers;
 using KodakkuAssist.Module.GameOperate;
+using Lumina.Data.Parsing;
 using Newtonsoft.Json.Linq;
 
 namespace CicerosKodakkuAssist.Arcadion.Savage
@@ -18,14 +19,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.3",
+        version:"0.0.0.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
     public class AAC_Cruiserweight_M4_Savage
     {
         
-        const string scriptNotes=
+        public const string scriptNotes=
             """
             This is the English version of the script for AAC Cruiserweight M4 (Savage), which is also known as M8S in short.
             
@@ -60,9 +61,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         [UserSetting("----- Phase 1 Settings ----- (This setting has no practical meaning.)")]
         public bool _____Phase_1_Settings_____ { get; set; } = false;
         
-        [UserSetting("Strats Of Millenial Decay")]
-        public StratsOfMillenialDecay stratOfMillenialDecay { get; set; }
-        [UserSetting("Tanks Or Melee Go Further For The Second Set While Doing RaidPlan 84d During Millenial Decay")]
+        [UserSetting("Strats Of Millennial Decay")]
+        public StratsOfMillennialDecay stratOfMillennialDecay { get; set; }
+        [UserSetting("Tanks Or Melee Go Further For The Second Set While Doing RaidPlan 84d During Millennial Decay")]
         public bool meleeGoFurther { get; set; } = true;
         [UserSetting("Strats Of Terrestrial Rage")]
         public StratsOfTerrestrialRage stratOfTerrestrialRage { get; set; }
@@ -82,19 +83,39 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile int currentPhase=1;
         private volatile int currentSubPhase=1;
         
+        /*
+         
+         Phase 1:
+         
+         Sub-phase 1: The first half of Millennial Decay
+         Sub-phase 2: The second half of Millennial Decay
+         
+        */
+        
         private volatile string reignId=string.Empty;
+
+        private volatile int numberOfWindWolves=0;
+        private Vector3 positionOfTheFirstWindWolf=ARENA_CENTER_OF_PHASE_1;
+        private volatile bool windWolvesStartFromTheNorth=false;
+        private volatile bool windWolvesRotateClockwise=false;
+        private System.Threading.AutoResetEvent windWolfRotationSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int roundOfGust=0;
+        private volatile bool gustMarksSupporters=false;
+        private System.Threading.AutoResetEvent gustFirstSetSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent gustSecondSetSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int numberOfDecayBreath=0;
 
         #endregion
 
         #region Constants
 
-        private readonly Vector3 ARENA_CENTER_OF_PHASE_1=new Vector3(100,0,100);
+        private static readonly Vector3 ARENA_CENTER_OF_PHASE_1=new Vector3(100,0,100);
 
         #endregion
         
         #region Enumerations_And_Classes
 
-        public enum StratsOfMillenialDecay {
+        public enum StratsOfMillennialDecay {
 
             Rinon_Or_RaidPlan_84d,
             // Ferring,
@@ -140,8 +161,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             reignId=string.Empty;
             
+            numberOfWindWolves=0;
+            positionOfTheFirstWindWolf=ARENA_CENTER_OF_PHASE_1;
+            windWolvesStartFromTheNorth=false;
+            windWolvesRotateClockwise=false;
+            windWolfRotationSemaphore.Reset();
+            roundOfGust=0;
+            gustMarksSupporters=false;
+            gustFirstSetSemaphore.Reset();
+            gustSecondSetSemaphore.Reset();
+            numberOfDecayBreath=0;
+            
             shenaniganSemaphore.Set();
             
+            baseIdOfTargetIcon=null;
+
         }
 
         #endregion
@@ -149,7 +183,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         #region Shenanigans
         
         private System.Threading.AutoResetEvent shenaniganSemaphore=new System.Threading.AutoResetEvent(false);
-        private readonly List<string> quotes=[
+        private static IReadOnlyList<string> quotes=[
             "Del Giordano le rive saluta, di Sionne le torri atterrate...",
             "Through the graves the wind is blowing.",
             "The enslaved were not bricks in your road, and their lives were not chapters in your redemptive history.",
@@ -631,7 +665,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 if(enablePrompts) {
                     
-                    accessory.Method.TextInfo(prompt,6000);
+                    accessory.Method.TextInfo(prompt,9100);
                     
                 }
                     
@@ -970,6 +1004,438 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
         
         }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Line)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41908"])]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,24);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=2000;
+            currentProperties.DestoryAt=3200;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,24);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=4700;
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Direction Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["Id:0197"],
+            userControl:false)]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_Direction_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+
+            if(numberOfWindWolves>=5) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+        
+            ++numberOfWindWolves;
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            if(numberOfWindWolves>=3) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(numberOfWindWolves==1) {
+                
+                positionOfTheFirstWindWolf=sourcePosition;
+
+                if(sourcePosition.Z<100) {
+                    
+                    windWolvesStartFromTheNorth=true;
+                    
+                }
+
+                else {
+
+                    windWolvesStartFromTheNorth=false;
+
+                }
+
+            }
+
+            else {
+
+                if(numberOfWindWolves==2) {
+                    
+                    if((sourcePosition.X>positionOfTheFirstWindWolf.X&&sourcePosition.Z>positionOfTheFirstWindWolf.Z)
+                       ||
+                       (sourcePosition.X<positionOfTheFirstWindWolf.X&&sourcePosition.Z<positionOfTheFirstWindWolf.Z)) {
+
+                        windWolvesRotateClockwise=true;
+
+                    }
+
+                    else {
+
+                        windWolvesRotateClockwise=false;
+
+                    }
+                
+                    System.Threading.Thread.MemoryBarrier();
+
+                    windWolfRotationSemaphore.Set();
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Direction)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["Id:0197"],
+            suppress:20000)]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_Direction(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            windWolfRotationSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            IReadOnlyList<Vector3> point=[new Vector3(100,0,96),new Vector3(104,0,100),new Vector3(100,0,104),new Vector3(96,0,100)];
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            string prompt=string.Empty;
+
+            if(windWolvesRotateClockwise) {
+
+                for(int i=0;i<=3;++i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    
+                    currentProperties.Scale=new(2,5.657f);
+                    currentProperties.Position=point[i];
+                    currentProperties.TargetPosition=point[(i+1)%4];
+                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                    currentProperties.DestoryAt=16000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+
+                prompt="Clockwise.";
+
+            }
+
+            else {
+                
+                for(int i=4;i>=1;--i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=point[i%4];
+                    currentProperties.TargetPosition=point[i-1];
+                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                    currentProperties.DestoryAt=18000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+                
+                prompt="Counterclockwise.";
+                
+            }
+            
+            if(!string.IsNullOrWhiteSpace(prompt)) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo(prompt,1000);
+                    
+                }
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Gust Acquisition)",
+            eventType:EventTypeEnum.TargetIcon,
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_Gust_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            accessory.Log.Debug($"iconId={iconId}");
+
+            if(iconId!=0) { // 0x178-0x178=0
+
+                return;
+                
+            }
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+
+            if(roundOfGust>=2) {
+
+                return;
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+        
+            ++roundOfGust;
+
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+
+            gustMarksSupporters=isSupporter(targetIndex);
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            if(roundOfGust==1) {
+
+                gustFirstSetSemaphore.Set();
+
+            }
+
+            else {
+
+                if(roundOfGust==2) {
+
+                    gustSecondSetSemaphore.Set();
+                    
+                }
+
+            }
+            
+            accessory.Log.Debug($"gustMarksSupporters={gustMarksSupporters}");
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (First Set Guidance)",
+            eventType:EventTypeEnum.TargetIcon,
+            suppress:7500)]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_First_Set_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"iconId={iconId}");
+
+            if(iconId!=0) { // 0x178-0x178=0
+
+                return;
+                
+            }
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            gustFirstSetSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Second Set Guidance)",
+            eventType:EventTypeEnum.TargetIcon,
+            suppress:7500)]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_Second_Set_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"iconId={iconId}");
+
+            if(iconId!=0) { // 0x178-0x178=0
+
+                return;
+                
+            }
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            gustSecondSetSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Sub-phase 1 Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:41908"],
+            userControl:false)]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_SubPhase_1_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+
+            if(numberOfDecayBreath>=5) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            ++numberOfDecayBreath;
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            if(numberOfDecayBreath>=5) {
+
+                currentSubPhase=2;
+
+                windWolfRotationSemaphore.Reset();
+                gustFirstSetSemaphore.Reset();
+                gustSecondSetSemaphore.Reset();
+
+            }
+
+        }
+        
 
         #endregion
         
