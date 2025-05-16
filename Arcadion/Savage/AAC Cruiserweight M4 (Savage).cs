@@ -18,7 +18,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.2",
+        version:"0.0.0.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -50,6 +50,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         public bool enableVanillaTts { get; set; } = true;
         [UserSetting("Enable Daily Routines TTS (It requires the plugin \"Daily Routines\" to be installed and enabled!)")]
         public bool enableDailyRoutinesTts { get; set; } = false;
+        [UserSetting("Colour Of Direction Indicators")]
+        public ScriptColor colourOfDirectionIndicators { get; set; } = new() { V4 = new Vector4(1,1,0, 1) }; // Yellow by default.
         [UserSetting("Colour Of Highly Dangerous Attacks")]
         public ScriptColor colourOfHighlyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("Enable Shenanigans")]
@@ -58,8 +60,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         [UserSetting("----- Phase 1 Settings ----- (This setting has no practical meaning.)")]
         public bool _____Phase_1_Settings_____ { get; set; } = false;
         
-        [UserSetting("Colour Of The Regin Direction")]
-        public ScriptColor colourOfRegins { get; set; } = new() { V4 = new Vector4(1,1,0, 1) }; // Yellow by default.
         [UserSetting("Strats Of Millenial Decay")]
         public StratsOfMillenialDecay stratOfMillenialDecay { get; set; }
         [UserSetting("Tanks Or Melee Go Further For The Second Set While Doing RaidPlan 84d During Millenial Decay")]
@@ -540,7 +540,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             if(string.Equals(@event["ActionId"],"43312")||string.Equals(@event["ActionId"],"43313")) {
 
-                currentProperties.Color=colourOfRegins.V4.WithW(0.8f);
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(0.8f);
 
             }
 
@@ -581,11 +581,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
         
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            string prompt=string.Empty;
+            
+            // 43312: Fan
+            // 43313: Circle
 
             currentProperties.Scale=new(10,50);
             currentProperties.Position=targetPosition;
             currentProperties.TargetPosition=ARENA_CENTER_OF_PHASE_1;
-            currentProperties.Color=colourOfRegins.V4.WithW(0.8f);
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(0.8f);
             currentProperties.DestoryAt=9100;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
@@ -595,7 +599,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentProperties.Scale=new(2,9);
             currentProperties.Position=targetPosition;
             currentProperties.TargetPosition=ARENA_CENTER_OF_PHASE_1;
-            currentProperties.Color=colourOfRegins.V4.WithW(1);
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
             currentProperties.DestoryAt=7000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
@@ -610,6 +614,30 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentProperties.DestoryAt=2100;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+
+            if(string.Equals(@event["ActionId"],"43312")) {
+
+                prompt="Fan later, get closer.";
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"43313")) {
+
+                prompt="Circle later, stay away.";
+
+            }
+            
+            if(!string.IsNullOrWhiteSpace(prompt)) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo(prompt,6000);
+                    
+                }
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
         
         }
         
