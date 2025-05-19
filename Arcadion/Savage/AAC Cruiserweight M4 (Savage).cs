@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.4",
+        version:"0.0.0.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -103,7 +103,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile bool gustMarksSupporters=false;
         private System.Threading.AutoResetEvent gustFirstSetSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent gustSecondSetSemaphore=new System.Threading.AutoResetEvent(false);
-        private volatile int numberOfDecayBreath=0;
+        private volatile int roundOfGustApplied=0;
 
         #endregion
 
@@ -170,7 +170,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             gustMarksSupporters=false;
             gustFirstSetSemaphore.Reset();
             gustSecondSetSemaphore.Reset();
-            numberOfDecayBreath=0;
+            roundOfGustApplied=0;
             
             shenaniganSemaphore.Set();
             
@@ -1035,7 +1035,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentProperties.Owner=sourceId;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.Delay=2000;
-            currentProperties.DestoryAt=3200;
+            currentProperties.DestoryAt=3700;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
             
@@ -1044,8 +1044,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentProperties.Scale=new(8,24);
             currentProperties.Owner=sourceId;
             currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
-            currentProperties.Delay=4700;
-            currentProperties.DestoryAt=3000;
+            currentProperties.Delay=5200;
+            currentProperties.DestoryAt=2500;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
         
@@ -1206,7 +1206,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
                     
-                    currentProperties.Scale=new(2);
+                    currentProperties.Scale=new(2,5.657f);
                     currentProperties.Position=point[i%4];
                     currentProperties.TargetPosition=point[i-1];
                     currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
@@ -1222,15 +1222,51 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             if(!string.IsNullOrWhiteSpace(prompt)) {
 
+                /*
+                
                 if(enablePrompts) {
                     
                     accessory.Method.TextInfo(prompt,1000);
                     
                 }
+                
+                */
                     
                 accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Anti-knockback Warning)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41912"])]
+    
+        public void Phase_1_The_First_Half_Of_Millennial_Decay_AntiKnockback_Warning(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+
+            string prompt="Enable anti-knockback!";
+            
+            // System.Threading.Thread.Sleep(500);
+            
+            if(enablePrompts) {
+                    
+                accessory.Method.TextInfo(prompt,4500,true);
+                    
+            }
+                    
+            accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
         
         }
         
@@ -1347,7 +1383,59 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             System.Threading.Thread.MemoryBarrier();
             
+            Vector3 northwest=new Vector3(95.417f,0,90);
+            Vector3 northeast=new Vector3(104.583f,0,90);
+            Vector3 southwest=new Vector3(95.417f,0,110);
+            Vector3 southeast=new Vector3(104.583f,0,110);
+            // Initial positions: https://www.geogebra.org/calculator/kt3brffu
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if((isSupporter(myIndex)&&!gustMarksSupporters)
+               ||
+               (isDps(myIndex)&&gustMarksSupporters)) {
+
+                return;
+
+            }
             
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
+            
+            // Northwest: MT(0) or R1(6)
+            // Northeast: H2(3) or R2(7)
+            // Southwest: H1(2) or M1(4)
+            // Southeast: OT(1) or M2(5)
+
+            myPosition=myIndex switch {
+                
+                0 => northwest,
+                1 => southeast,
+                2 => southwest,
+                3 => northeast,
+                4 => southwest,
+                5 => southeast,
+                6 => northwest,
+                7 => northeast,
+                _ => ARENA_CENTER_OF_PHASE_1
+                
+            };
+
+            if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                return;
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5100;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
         }
         
@@ -1389,13 +1477,197 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             System.Threading.Thread.MemoryBarrier();
             
+            Vector3 northwest=new Vector3(95.417f,0,90);
+            Vector3 northeast=new Vector3(104.583f,0,90);
+            Vector3 southwest=new Vector3(95.417f,0,110);
+            Vector3 southeast=new Vector3(104.583f,0,110);
+            // Initial positions: https://www.geogebra.org/calculator/kt3brffu
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if((isSupporter(myIndex)&&!gustMarksSupporters)
+               ||
+               (isDps(myIndex)&&gustMarksSupporters)) {
+
+                return;
+
+            }
             
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
+            int guidanceDelay=0;
+            
+            // Northwest: MT(0) or R1(6)
+            // Northeast: H2(3) or R2(7)
+            // Southwest: H1(2) or M1(4)
+            // Southeast: OT(1) or M2(5)
+
+            if(windWolvesRotateClockwise) {
+                
+                northwest=rotatePositionClockwise(northwest,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                northeast=rotatePositionClockwise(northeast,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                southwest=rotatePositionClockwise(southwest,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                southeast=rotatePositionClockwise(southeast,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+
+            }
+
+            else {
+                
+                northwest=rotatePositionClockwise(northwest,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                northeast=rotatePositionClockwise(northeast,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                southwest=rotatePositionClockwise(southwest,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                southeast=rotatePositionClockwise(southeast,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                
+            }
+
+            if(meleeGoFurther) {
+
+                if(windWolvesRotateClockwise) {
+                    
+                    myPosition=myIndex switch {
+                
+                        0 => northwest,
+                        1 => southeast,
+                        2 => southwest,
+                        3 => northeast,
+                        4 => northwest, // Swap with R1.
+                        5 => southeast,
+                        6 => southwest, // Swap with M1.
+                        7 => northeast,
+                        _ => ARENA_CENTER_OF_PHASE_1
+                
+                    };
+                    
+                }
+
+                else {
+                    
+                    myPosition=myIndex switch {
+                
+                        0 => southwest, // Swap with H1.
+                        1 => northeast, // Swap with H2.
+                        2 => northwest, // Swap with MT.
+                        3 => southeast, // Swap with OT.
+                        4 => southwest,
+                        5 => northeast, // Swap with R2.
+                        6 => northwest,
+                        7 => southeast, // Swap with M2.
+                        _ => ARENA_CENTER_OF_PHASE_1
+                
+                    };
+                    
+                }
+                
+                if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+                
+                guidanceDelay=myIndex switch {
+                    
+                    0 => 3300,
+                    1 => 3300,
+                    2 => 0,
+                    3 => 0,
+                    4 => 3300,
+                    5 => 3300,
+                    6 => 0,
+                    7 => 0,
+                    _ => 0
+                
+                };
+                
+            }
+
+            else {
+                
+                myPosition=myIndex switch {
+                    
+                    0 => northwest,
+                    1 => southeast,
+                    2 => southwest,
+                    3 => northeast,
+                    4 => southwest,
+                    5 => southeast,
+                    6 => northwest,
+                    7 => northeast,
+                    _ => ARENA_CENTER_OF_PHASE_1
+                
+                };
+
+                if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                if(windWolvesRotateClockwise) {
+                    
+                    guidanceDelay=myIndex switch {
+                    
+                        0 => 3300,
+                        1 => 3300,
+                        2 => 0,
+                        3 => 0,
+                        4 => 0,
+                        5 => 3300,
+                        6 => 3300,
+                        7 => 0,
+                        _ => 0
+                
+                    };
+                    
+                }
+
+                else {
+                    
+                    guidanceDelay=myIndex switch {
+                    
+                        0 => 0,
+                        1 => 0,
+                        2 => 3300,
+                        3 => 3300,
+                        4 => 3300,
+                        5 => 0,
+                        6 => 0,
+                        7 => 3300,
+                        _ => 0
+                
+                    };
+                    
+                }
+                
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=guidanceDelay;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=guidanceDelay;
+            currentProperties.DestoryAt=5100-guidanceDelay;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
         
         }
         
         [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Sub-phase 1 Control)",
             eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:41908"],
+            eventCondition:["ActionId:41907"],
+            suppress:2500,
             userControl:false)]
     
         public void Phase_1_The_First_Half_Of_Millennial_SubPhase_1_Control(Event @event,ScriptAccessory accessory) {
@@ -1412,7 +1684,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             }
 
-            if(numberOfDecayBreath>=5) {
+            if(roundOfGustApplied>=2) {
 
                 return;
 
@@ -1420,11 +1692,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             System.Threading.Thread.MemoryBarrier();
 
-            ++numberOfDecayBreath;
+            ++roundOfGustApplied;
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(numberOfDecayBreath>=5) {
+            if(roundOfGustApplied>=2) {
 
                 currentSubPhase=2;
 
