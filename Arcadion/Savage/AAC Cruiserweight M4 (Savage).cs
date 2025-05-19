@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.5",
+        version:"0.0.0.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -94,7 +94,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         private volatile string reignId=string.Empty;
 
-        private volatile int numberOfWindWolves=0;
+        private volatile int numberOfWindWolfLines=0;
         private Vector3 positionOfTheFirstWindWolf=ARENA_CENTER_OF_PHASE_1;
         private volatile bool windWolvesStartFromTheNorth=false;
         private volatile bool windWolvesRotateClockwise=false;
@@ -104,6 +104,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private System.Threading.AutoResetEvent gustFirstSetSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent gustSecondSetSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int roundOfGustApplied=0;
+
+        private volatile List<ulong> windWolfTethersHaveBeenDrawn=[];
+        private volatile int numberOfWindWolfTethers=0;
+        private volatile List<int> getWindWolfTethers=[-1,-1,-1,-1,-1,-1,-1,-1];
+        private volatile bool windWolvesAreOnTheCardinals=false;
+        private System.Threading.AutoResetEvent windWolfTetherSemaphore=new System.Threading.AutoResetEvent(false);
 
         #endregion
 
@@ -161,7 +167,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             reignId=string.Empty;
             
-            numberOfWindWolves=0;
+            numberOfWindWolfLines=0;
             positionOfTheFirstWindWolf=ARENA_CENTER_OF_PHASE_1;
             windWolvesStartFromTheNorth=false;
             windWolvesRotateClockwise=false;
@@ -171,6 +177,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             gustFirstSetSemaphore.Reset();
             gustSecondSetSemaphore.Reset();
             roundOfGustApplied=0;
+            
+            windWolfTethersHaveBeenDrawn=[];
+            numberOfWindWolfTethers=0;
+            getWindWolfTethers=[-1,-1,-1,-1,-1,-1,-1,-1];
+            windWolvesAreOnTheCardinals=false;
+            windWolfTetherSemaphore.Reset();
             
             shenaniganSemaphore.Set();
             
@@ -1070,7 +1082,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             }
 
-            if(numberOfWindWolves>=5) {
+            if(numberOfWindWolfLines>=5) {
 
                 return;
 
@@ -1078,11 +1090,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             System.Threading.Thread.MemoryBarrier();
         
-            ++numberOfWindWolves;
+            ++numberOfWindWolfLines;
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(numberOfWindWolves>=3) {
+            if(numberOfWindWolfLines>=3) {
 
                 return;
 
@@ -1104,7 +1116,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             }
 
-            if(numberOfWindWolves==1) {
+            if(numberOfWindWolfLines==1) {
                 
                 positionOfTheFirstWindWolf=sourcePosition;
 
@@ -1124,7 +1136,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             else {
 
-                if(numberOfWindWolves==2) {
+                if(numberOfWindWolfLines==2) {
                     
                     if((sourcePosition.X>positionOfTheFirstWindWolf.X&&sourcePosition.Z>positionOfTheFirstWindWolf.Z)
                        ||
@@ -1708,6 +1720,394 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         }
         
+        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Fan)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(0039|0001)$"])]
+    
+        public void Phase_1_The_Second_Half_Of_Millennial_Decay_Fan(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(sourcePosition,ARENA_CENTER_OF_PHASE_1)>8.4d) {
+                
+                return;
+                
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+
+            lock(windWolfTethersHaveBeenDrawn) {
+
+                if(windWolfTethersHaveBeenDrawn.Contains(sourceId)) {
+
+                    return;
+
+                }
+
+                else {
+                    
+                    windWolfTethersHaveBeenDrawn.Add(sourceId);
+                    
+                }
+                
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=targetId;
+            currentProperties.Radian=float.Pi/6;
+            currentProperties.DestoryAt=8000;
+
+            if(targetId==accessory.Data.Me) {
+                        
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        
+            }
+
+            else {
+                        
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Anti-knockback Warning)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41912"])]
+    
+        public void Phase_1_The_Second_Half_Of_Millennial_Decay_AntiKnockback_Warning(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            string prompt="Don't enable anti-knockback!";
+            
+            if(enablePrompts) {
+                    
+                accessory.Method.TextInfo(prompt,4700,true);
+                    
+            }
+                    
+            accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Data Acquisition)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(0039|0001)$"],
+            userControl:false)]
+    
+        public void Phase_1_The_Second_Half_Of_Millennial_Decay_Data_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            if(numberOfWindWolfTethers>=4) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(sourcePosition,ARENA_CENTER_OF_PHASE_1)>8.4d) {
+                
+                return;
+                
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER_OF_PHASE_1,8);
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+
+            lock(getWindWolfTethers) {
+
+                if(getWindWolfTethers[targetIndex]==-1) {
+                    
+                    ++numberOfWindWolfTethers;
+                    
+                }
+                
+                getWindWolfTethers[targetIndex]=discretizedPosition;
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                if(numberOfWindWolfTethers>=4) {
+
+                    if(discretizedPosition%2==0) {
+                    
+                        windWolvesAreOnTheCardinals=true;
+
+                    }
+
+                    else {
+                    
+                        windWolvesAreOnTheCardinals=false;
+                    
+                    }
+                
+                    System.Threading.Thread.MemoryBarrier();
+
+                    windWolfTetherSemaphore.Set();
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Guidance)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(0039|0001)$"],
+            suppress:9500)]
+    
+        public void Phase_1_The_Second_Half_Of_Millennial_Decay_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            windWolfTetherSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            Vector3 standbyPositionForTowers=new Vector3(100,0,98);
+            Vector3 finalPositionForTowers=new Vector3(100,0,90);
+            Vector3 standbyPositionForTethers=new Vector3(100,0,97);
+            Vector3 finalPositionForTethers=new Vector3(100,0,89);
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myStandbyPosition=ARENA_CENTER_OF_PHASE_1;
+            Vector3 myFinalPosition=ARENA_CENTER_OF_PHASE_1;
+            
+            // 7 and 0: MT(0) and R1(6)
+            // 1 and 2: H2(3) and R2(7)
+            // 3 and 4: OT(1) and M2(5)
+            // 5 and 6: H1(2) and M1(4)
+
+            if(getWindWolfTethers[myIndex]!=-1) {
+
+                int oppositeDiscretizedPosition=(getWindWolfTethers[myIndex]+4)%8;
+                
+                myStandbyPosition=rotatePositionClockwise(standbyPositionForTethers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*oppositeDiscretizedPosition);
+                myFinalPosition=rotatePositionClockwise(finalPositionForTethers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*oppositeDiscretizedPosition);
+
+            }
+
+            else {
+
+                int myDiscretizedPosition=-1;
+
+                if(windWolvesAreOnTheCardinals) {
+
+                    myDiscretizedPosition=myIndex switch {
+                        
+                        0 => 7,
+                        1 => 3,
+                        2 => 5,
+                        3 => 1,
+                        4 => 5,
+                        5 => 3,
+                        6 => 7,
+                        7 => 1,
+                        _ => -1
+                        
+                    };
+
+                }
+
+                else {
+                    
+                    myDiscretizedPosition=myIndex switch {
+                        
+                        0 => 0,
+                        1 => 4,
+                        2 => 6,
+                        3 => 2,
+                        4 => 6,
+                        5 => 4,
+                        6 => 0,
+                        7 => 2,
+                        _ => -1
+                        
+                    };
+                    
+                }
+
+                if(myDiscretizedPosition==-1) {
+
+                    return;
+
+                }
+                
+                myStandbyPosition=rotatePositionClockwise(standbyPositionForTowers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*myDiscretizedPosition);
+                myFinalPosition=rotatePositionClockwise(finalPositionForTowers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*myDiscretizedPosition);
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myStandbyPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Position=myStandbyPosition;
+            currentProperties.TargetPosition=myFinalPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myFinalPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=5000;
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(getWindWolfTethers[myIndex]==-1) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=myFinalPosition;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=5000;
+                currentProperties.DestoryAt=3000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Sub-phase 2 Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41913"],
+            userControl:false)]
+    
+        public void Phase_1_The_Second_Half_Of_Millennial_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=3;
+
+            windWolfTetherSemaphore.Reset();
+
+        }
 
         #endregion
         
