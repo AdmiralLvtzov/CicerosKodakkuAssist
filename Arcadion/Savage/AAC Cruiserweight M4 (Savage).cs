@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.6",
+        version:"0.0.0.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -490,7 +490,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -507,7 +507,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -524,7 +524,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -541,7 +541,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePositionClockwise(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -883,7 +883,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             Vector3 group2PositionOfRevolutionaryReign=new Vector3(102.493f,0,109.303f);
             // Revolutionary Reign: https://www.geogebra.org/calculator/xc8zxmvz
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-            Vector3 approximateDestination=rotatePositionClockwise(targetPosition,ARENA_CENTER_OF_PHASE_1,Math.PI);
+            Vector3 approximateDestination=rotatePosition(targetPosition,ARENA_CENTER_OF_PHASE_1,Math.PI);
             double rotation=getRotation(approximateDestination,ARENA_CENTER_OF_PHASE_1);
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
@@ -967,7 +967,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             currentProperties.Scale=new(2);
             currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetPosition=rotatePositionClockwise(myPosition,ARENA_CENTER_OF_PHASE_1,rotation);
+            currentProperties.TargetPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_1,rotation);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=guidanceDelay;
@@ -978,7 +978,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             currentProperties.Scale=new(2);
             currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetPosition=rotatePositionClockwise(myPosition,ARENA_CENTER_OF_PHASE_1,rotation);
+            currentProperties.TargetPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_1,rotation);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
             currentProperties.Delay=guidanceDelay;
@@ -1515,19 +1515,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             if(windWolvesRotateClockwise) {
                 
-                northwest=rotatePositionClockwise(northwest,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
-                northeast=rotatePositionClockwise(northeast,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
-                southwest=rotatePositionClockwise(southwest,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
-                southeast=rotatePositionClockwise(southeast,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                northwest=rotatePosition(northwest,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                northeast=rotatePosition(northeast,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                southwest=rotatePosition(southwest,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
+                southeast=rotatePosition(southeast,ARENA_CENTER_OF_PHASE_1,Math.PI/5*3);
 
             }
 
             else {
                 
-                northwest=rotatePositionClockwise(northwest,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
-                northeast=rotatePositionClockwise(northeast,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
-                southwest=rotatePositionClockwise(southwest,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
-                southeast=rotatePositionClockwise(southeast,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                northwest=rotatePosition(northwest,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                northeast=rotatePosition(northeast,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                southwest=rotatePosition(southwest,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
+                southeast=rotatePosition(southeast,ARENA_CENTER_OF_PHASE_1,-(Math.PI/5*3));
                 
             }
 
@@ -1976,8 +1976,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 int oppositeDiscretizedPosition=(getWindWolfTethers[myIndex]+4)%8;
                 
-                myStandbyPosition=rotatePositionClockwise(standbyPositionForTethers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*oppositeDiscretizedPosition);
-                myFinalPosition=rotatePositionClockwise(finalPositionForTethers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*oppositeDiscretizedPosition);
+                myStandbyPosition=rotatePosition(standbyPositionForTethers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*oppositeDiscretizedPosition);
+                myFinalPosition=rotatePosition(finalPositionForTethers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*oppositeDiscretizedPosition);
 
             }
 
@@ -2027,8 +2027,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 }
                 
-                myStandbyPosition=rotatePositionClockwise(standbyPositionForTowers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*myDiscretizedPosition);
-                myFinalPosition=rotatePositionClockwise(finalPositionForTowers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*myDiscretizedPosition);
+                myStandbyPosition=rotatePosition(standbyPositionForTowers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*myDiscretizedPosition);
+                myFinalPosition=rotatePosition(finalPositionForTowers,ARENA_CENTER_OF_PHASE_1,Math.PI/4*myDiscretizedPosition);
 
             }
             
@@ -2205,7 +2205,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
         }
         
-        public static Vector3 rotatePositionClockwise(Vector3 position,Vector3 center,double radian,bool preserveHeight=true) {
+        public static Vector3 rotatePosition(Vector3 position,Vector3 center,double radian,bool preserveHeight=true) {
 
             Vector2 positionInVector2=new Vector2(position.X-center.X,position.Z-center.Z);
             double polarAngleAfterRotation=Math.PI-Math.Atan2(positionInVector2.X,positionInVector2.Y)+radian;
