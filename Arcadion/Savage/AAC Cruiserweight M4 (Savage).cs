@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.7",
+        version:"0.0.0.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -89,6 +89,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          
          Sub-phase 1: The first half of Millennial Decay
          Sub-phase 2: The second half of Millennial Decay
+         Sub-phase 3: Terrestrial Titans
          
         */
         
@@ -110,6 +111,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile List<int> getWindWolfTethers=[-1,-1,-1,-1,-1,-1,-1,-1];
         private volatile bool windWolvesAreOnTheCardinals=false;
         private System.Threading.AutoResetEvent windWolfTetherSemaphore=new System.Threading.AutoResetEvent(false);
+
+        private volatile List<int> riskIndexOfIntercardinals=[0,0,0,0]; // Northeast, southeast, southwest, northwest accordingly.
+        private System.Threading.AutoResetEvent terrestrialTitansSemaphore=new System.Threading.AutoResetEvent(false);
 
         #endregion
 
@@ -183,6 +187,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             getWindWolfTethers=[-1,-1,-1,-1,-1,-1,-1,-1];
             windWolvesAreOnTheCardinals=false;
             windWolfTetherSemaphore.Reset();
+            
+            riskIndexOfIntercardinals=[0,0,0,0];
+            terrestrialTitansSemaphore.Reset();
             
             shenaniganSemaphore.Set();
             
@@ -1065,7 +1072,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Direction Acquisition)",
             eventType:EventTypeEnum.SetObjPos,
-            eventCondition:["Id:0197"],
+            eventCondition:["SourceDataId:18218"],
             userControl:false)]
     
         public void Phase_1_The_First_Half_Of_Millennial_Decay_Direction_Acquisition(Event @event,ScriptAccessory accessory) {
@@ -1164,7 +1171,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Direction)",
             eventType:EventTypeEnum.SetObjPos,
-            eventCondition:["Id:0197"],
+            eventCondition:["SourceDataId:18218"],
             suppress:20000)]
     
         public void Phase_1_The_First_Half_Of_Millennial_Decay_Direction(Event @event,ScriptAccessory accessory) {
@@ -1711,6 +1718,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             if(roundOfGustApplied>=2) {
 
                 currentSubPhase=2;
+                
+                accessory.Log.Debug("Now moving to Sub-phase 2.");
 
                 windWolfRotationSemaphore.Reset();
                 gustFirstSetSemaphore.Reset();
@@ -2104,9 +2113,301 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             System.Threading.Thread.MemoryBarrier();
 
             currentSubPhase=3;
+            
+            accessory.Log.Debug("Now moving to Sub-phase 3.");
 
             windWolfTetherSemaphore.Reset();
 
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Line)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41926"])]
+    
+        public void Phase_1_Terrestrial_Titans_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10,20);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Cross)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41943"])]
+    
+        public void Phase_1_Terrestrial_Titans_Cross(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(7,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(7,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Rotation=float.Pi/2;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Line Direction Acquisition)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41926"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Terrestrial_Titans_Line_Direction_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+
+            double sourceRotation=0;
+
+            try {
+
+                sourceRotation=JsonConvert.DeserializeObject<double>(@event["SourceRotation"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourceRotation deserialization failed.");
+
+                return;
+
+            }
+
+            double actualRotation=convertRotation(sourceRotation);
+            
+            if((Math.Abs(actualRotation-Math.PI/4)<Math.PI*0.05)
+               ||
+               (Math.Abs(actualRotation-Math.PI/4*5)<Math.PI*0.05)) {
+
+                --riskIndexOfIntercardinals[0];
+                --riskIndexOfIntercardinals[2];
+
+            }
+
+            else {
+                
+                --riskIndexOfIntercardinals[1];
+                --riskIndexOfIntercardinals[3];
+                
+            }
+            
+            accessory.Log.Debug($"riskIndexOfIntercardinals={JsonConvert.SerializeObject(riskIndexOfIntercardinals)}");
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Oblique Cross Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18221"],
+            userControl:false)]
+    
+        public void Phase_1_Terrestrial_Titans_Oblique_Cross_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+
+            double sourceRotation=0;
+
+            try {
+
+                sourceRotation=JsonConvert.DeserializeObject<double>(@event["SourceRotation"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourceRotation deserialization failed.");
+
+                return;
+
+            }
+
+            double actualRotation=convertRotation(sourceRotation);
+            
+            if((Math.Abs(actualRotation-Math.PI/4)<Math.PI*0.05)
+               ||
+               (Math.Abs(actualRotation-Math.PI/4*3)<Math.PI*0.05)
+               ||
+               (Math.Abs(actualRotation-Math.PI/4*5)<Math.PI*0.05)
+               ||
+               (Math.Abs(actualRotation-Math.PI/4*7)<Math.PI*0.05)) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            IReadOnlyList<IReadOnlyList<int>> positionsAffected=[[3,0],[0,1],[1,2],[2,3]];
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER_OF_PHASE_1,4);
+            
+            --riskIndexOfIntercardinals[positionsAffected[discretizedPosition][0]];
+            --riskIndexOfIntercardinals[positionsAffected[discretizedPosition][1]];
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            terrestrialTitansSemaphore.Set();
+            
+            accessory.Log.Debug($"riskIndexOfIntercardinals={JsonConvert.SerializeObject(riskIndexOfIntercardinals)}");
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Guidance)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18221"],
+            suppress:2500)]
+    
+        public void Phase_1_Terrestrial_Titans_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            terrestrialTitansSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            int unaffectedPosition=riskIndexOfIntercardinals.IndexOf(0);
+
+            if(unaffectedPosition<0||unaffectedPosition>3) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myPosition=rotatePosition(new Vector3(100,0,89),ARENA_CENTER_OF_PHASE_1,Math.PI/4*(2*unaffectedPosition+1));
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=6000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Sub-phase 3 Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:41943"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Terrestrial_Titans_SubPhase_3_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=4;
+            
+            accessory.Log.Debug("Now moving to Sub-phase 4.");
+
+            terrestrialTitansSemaphore.Reset();
+        
         }
 
         #endregion
