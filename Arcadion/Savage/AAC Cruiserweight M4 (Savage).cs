@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.9",
+        version:"0.0.0.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -90,6 +90,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          Sub-phase 1: The first half of Millennial Decay
          Sub-phase 2: The second half of Millennial Decay
          Sub-phase 3: Terrestrial Titans
+         Sub-phase 4: intermission regins
+         Sub-phase 5: Tactical Pack
          
         */
         
@@ -114,6 +116,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         private volatile List<int> riskIndexOfIntercardinals=[0,0,0,0]; // Northeast, southeast, southwest, northwest accordingly.
         private System.Threading.AutoResetEvent terrestrialTitansSemaphore=new System.Threading.AutoResetEvent(false);
+
+        private Vector3 positionOfTheWindWolfAdd=ARENA_CENTER_OF_PHASE_1;
+        private volatile bool addsRotateClockwise=false;
+        private System.Threading.AutoResetEvent addRotationSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile bool addRotationHasBeenDrawn=false;
+        private ulong? idOfTheWindWolfAdd=null,idOfTheStoneWolfAdd=null,idOfTheWindFont=null,idOfTheEarthFont=null;
+        private volatile List<bool> windpackWasApplied=[false,false,false,false,false,false,false,false];
+        private volatile List<bool> windborneEndWasApplied=[false,false,false,false,false,false,false,false];
+        private volatile List<int> roundForCleanse=[-1,-1,-1,-1,-1,-1,-1,-1];
+        private volatile int currentAddRound=0;
+        private volatile bool windGuidanceHasBeenDrawn=false,earthGuidanceHasBeenDrawn=false;
 
         #endregion
 
@@ -166,6 +179,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         public void Init(ScriptAccessory accessory) {
             
+            accessory.Method.RemoveDraw(".*");
+            
             currentPhase=1;
             currentSubPhase=1;
             
@@ -191,6 +206,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             riskIndexOfIntercardinals=[0,0,0,0];
             terrestrialTitansSemaphore.Reset();
             
+            positionOfTheWindWolfAdd=ARENA_CENTER_OF_PHASE_1;
+            addsRotateClockwise=false;
+            addRotationSemaphore.Reset();
+            addRotationHasBeenDrawn=false;
+            idOfTheWindWolfAdd=null; idOfTheStoneWolfAdd=null; idOfTheWindFont = null; idOfTheEarthFont=null;
+            windpackWasApplied=[false,false,false,false,false,false,false,false];
+            windborneEndWasApplied=[false,false,false,false,false,false,false,false]; 
+            roundForCleanse=[-1,-1,-1,-1,-1,-1,-1,-1];
+            currentAddRound=0;
+            windGuidanceHasBeenDrawn=false; earthGuidanceHasBeenDrawn=false;
+
             shenaniganSemaphore.Set();
             
             baseIdOfTargetIcon=null;
@@ -1205,9 +1231,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
                     
-                    currentProperties.Scale=new(2,5.657f);
+                    currentProperties.Scale=new(2);
                     currentProperties.Position=point[i];
                     currentProperties.TargetPosition=point[(i+1)%4];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                     currentProperties.DestoryAt=16000;
         
@@ -1225,9 +1252,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
                     
-                    currentProperties.Scale=new(2,5.657f);
+                    currentProperties.Scale=new(2);
                     currentProperties.Position=point[i%4];
                     currentProperties.TargetPosition=point[i-1];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                     currentProperties.DestoryAt=18000;
         
@@ -1730,12 +1758,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             if(roundOfGustApplied>=2) {
 
                 currentSubPhase=2;
-                
-                accessory.Log.Debug("Now moving to Sub-phase 2.");
 
                 windWolfRotationSemaphore.Reset();
                 gustFirstSetSemaphore.Reset();
                 gustSecondSetSemaphore.Reset();
+                
+                accessory.Log.Debug("Now moving to Sub-phase 2.");
 
             }
 
@@ -2133,10 +2161,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             System.Threading.Thread.MemoryBarrier();
 
             currentSubPhase=3;
-            
-            accessory.Log.Debug("Now moving to Sub-phase 3.");
 
             windWolfTetherSemaphore.Reset();
+            
+            accessory.Log.Debug("Now moving to Sub-phase 3.");
 
         }
         
@@ -2423,10 +2451,1294 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             System.Threading.Thread.MemoryBarrier();
 
             currentSubPhase=4;
+
+            terrestrialTitansSemaphore.Reset();
             
             accessory.Log.Debug("Now moving to Sub-phase 4.");
 
-            terrestrialTitansSemaphore.Reset();
+        }
+        
+        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 4 Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41928"],
+            userControl:false)]
+    
+        public void Phase_1_Intermission_Regins_SubPhase_4_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=4) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=5;
+            
+            accessory.Log.Debug("Now moving to Sub-phase 5.");
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Add Position Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18219"],
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Add_Position_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+
+            if(addRotationHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(sourcePosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                return;
+
+            }
+                
+            positionOfTheWindWolfAdd=sourcePosition;
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Direction Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18262"],
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Direction_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(addRotationHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            if(sourcePosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                return;
+
+            }
+            
+            if((sourcePosition.X>positionOfTheWindWolfAdd.X&&sourcePosition.Z<positionOfTheWindWolfAdd.Z)
+               ||
+               (sourcePosition.X<positionOfTheWindWolfAdd.X&&sourcePosition.Z>positionOfTheWindWolfAdd.Z)) {
+
+                addsRotateClockwise=true;
+
+            }
+
+            else {
+
+                addsRotateClockwise=false;
+
+            }
+                
+            System.Threading.Thread.MemoryBarrier();
+
+            addRotationSemaphore.Set();
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Direction)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18262"])]
+    
+        public void Phase_1_Tactical_Pack_Direction(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(addRotationHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            addRotationSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            IReadOnlyList<Vector3> point=[new Vector3(100,0,96),new Vector3(104,0,100),new Vector3(100,0,104),new Vector3(96,0,100)];
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            string prompt=string.Empty;
+
+            if(addsRotateClockwise) {
+
+                for(int i=0;i<=3;++i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Name=$"Phase_1_Tactical_Pack_Direction_{i}";
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=point[i];
+                    currentProperties.TargetPosition=point[(i+1)%4];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                    currentProperties.DestoryAt=90000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+
+                prompt="Clockwise.";
+
+            }
+
+            else {
+                
+                for(int i=4;i>=1;--i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    
+                    currentProperties.Name=$"Phase_1_Tactical_Pack_Direction_{4-i}";
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=point[i%4];
+                    currentProperties.TargetPosition=point[i-1];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                    currentProperties.DestoryAt=90000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+                
+                prompt="Counterclockwise.";
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            addRotationHasBeenDrawn=true;
+            
+            if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Direction Destruction)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:regex:^(18225|18219)$"],
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Direction_Destruction(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!addRotationHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            addRotationSemaphore.Reset();
+            
+            for(int i=0;i<=3;++i) {
+                
+                accessory.Method.RemoveDraw($"Phase_1_Tactical_Pack_Direction_{i}");
+                    
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Initial Add Guidance)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(0150|014F)$"])]
+    
+        public void Phase_1_Tactical_Pack_Initial_Add_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+
+            if(sourceId!=accessory.Data.Me&&targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
+            String prompt=string.Empty;
+
+            if(sourceId==accessory.Data.Me) {
+                
+                try {
+
+                    myPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+                } catch(Exception e) {
+                
+                    accessory.Log.Error("TargetPosition deserialization failed.");
+
+                    return;
+
+                }
+
+                if(targetId==idOfTheWindWolfAdd) {
+
+                    prompt="Go to Wolf of Stone.";
+
+                }
+                
+                if(targetId==idOfTheStoneWolfAdd) {
+                    
+                    prompt="Go to Wolf of Wind.";
+                    
+                }
+                
+            }
+
+            if(targetId==accessory.Data.Me) {
+                
+                try {
+
+                    myPosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+                } catch(Exception e) {
+                
+                    accessory.Log.Error("SourcePosition deserialization failed.");
+
+                    return;
+
+                }
+                
+                if(sourceId==idOfTheWindWolfAdd) {
+
+                    prompt="Go to Wolf of Stone.";
+
+                }
+                
+                if(sourceId==idOfTheStoneWolfAdd) {
+                    
+                    prompt="Go to Wolf of Wind.";
+                    
+                }
+                
+            }
+
+            if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                return;
+
+            }
+
+            else {
+
+                myPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_1,Math.PI);
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=6000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            if(!string.IsNullOrWhiteSpace(prompt)) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo(prompt,6000);
+                    
+                }
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Add Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:regex:^(18225|18219|18262|18261)$"],
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Add_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+
+            if(string.Equals(@event["SourceDataId"],"18225")) {
+
+                idOfTheStoneWolfAdd??=sourceId;
+
+            }
+            
+            if(string.Equals(@event["SourceDataId"],"18219")) {
+
+                idOfTheWindWolfAdd??=sourceId;
+
+            }
+            
+            if(string.Equals(@event["SourceDataId"],"18262")) {
+
+                idOfTheEarthFont??=sourceId;
+
+            }
+            
+            if(string.Equals(@event["SourceDataId"],"18261")) {
+
+                idOfTheWindFont??=sourceId;
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Firewall Status Maintenance)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4389|4390)$"],
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Firewall_Status_Maintenance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            bool targetHoldsWindpack=false;
+
+            if(string.Equals(@event["StatusID"],"4389")) {
+
+                targetHoldsWindpack=true;
+
+            }
+            
+            if(string.Equals(@event["StatusID"],"4390")) {
+
+                targetHoldsWindpack=false;
+
+            }
+            
+            lock(windpackWasApplied) {
+
+                windpackWasApplied[targetIndex]=targetHoldsWindpack;
+
+            }
+            
+            accessory.Log.Debug($"targetIndex={targetIndex},targetHoldsWindpack={targetHoldsWindpack}");
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Doom Status Acquisition)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4391|4392)$"],
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Doom_Status_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            bool targetHoldsWindborneEnd=false;
+
+            if(string.Equals(@event["StatusID"],"4392")) {
+
+                targetHoldsWindborneEnd=true;
+
+            }
+            
+            if(string.Equals(@event["StatusID"],"4391")) {
+
+                targetHoldsWindborneEnd=false;
+
+            }
+            
+            lock(windborneEndWasApplied) {
+
+                windborneEndWasApplied[targetIndex]=targetHoldsWindborneEnd;
+
+            }
+
+            double targetDuration=0;
+            int targetRound=-1;
+            
+            try {
+
+                targetDuration=JsonConvert.DeserializeObject<double>(@event["Duration"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("Duration deserialization failed.");
+
+                return;
+
+            }
+
+            if(Math.Abs(targetDuration)<1||Math.Abs(targetDuration)>9998) {
+                
+                return;
+
+            }
+
+            if(Math.Abs(targetDuration-21)<1) {
+
+                targetRound=1;
+
+            }
+
+            else {
+                
+                if(Math.Abs(targetDuration-37)<1) {
+
+                    targetRound=2;
+
+                }
+
+                else {
+                    
+                    if(Math.Abs(targetDuration-54)<1) {
+
+                        targetRound=3;
+
+                    }
+                    
+                }
+                
+            }
+
+            if(targetRound==-1) {
+
+                return;
+
+            }
+
+            lock(roundForCleanse) {
+                
+                roundForCleanse[targetIndex]=targetRound;
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Log.Debug($"targetIndex={targetIndex},targetHoldsWindborneEnd={targetHoldsWindborneEnd},targetDuration={targetDuration},targetRound={targetRound}");
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Round Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41932"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Round_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            ++currentAddRound;
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Log.Debug($"currentAddRound={currentAddRound}");
+            
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Tank Buster)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41932"])]
+    
+        public void Phase_1_Tactical_Pack_Tank_Buster(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            /*
+            
+            if(!accessory.Data.EnmityList.TryGetValue(sourceId, out var currentEnmityList)) {
+
+                return;
+
+            }
+
+            if(currentEnmityList==null||currentEnmityList.Count<1) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=currentEnmityList[0];
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            // Above code is deprecated, due to a totally unexpected reason, that is...
+            // One of the add doesn't own an enmity list!
+            // Yes, a selectable add doesn't own an enmity list, you read that right.
+            // What spaghetti code, Square Enix?
+            
+            */
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=0;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+
+            if(sourceId==idOfTheWindWolfAdd) {
+
+                currentProperties.TargetObject=accessory.Data.PartyList[windpackWasApplied.IndexOf(false)];
+
+            }
+
+            if(sourceId==idOfTheStoneWolfAdd) {
+                
+                currentProperties.TargetObject=accessory.Data.PartyList[windpackWasApplied.IndexOf(true)];
+                
+            }
+
+            if(currentProperties.TargetObject==0) {
+                
+                return;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Line)",
+            eventType:EventTypeEnum.TargetIcon)]
+    
+        public void Phase_1_Tactical_Pack_Line(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            accessory.Log.Debug($"iconId={iconId}");
+
+            if(iconId!=-353) { // 0x17-0x178=-353
+
+                return;
+                
+            }
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            ulong? addId=null;
+
+            if(windpackWasApplied[targetIndex]) {
+
+                addId=idOfTheStoneWolfAdd;
+
+            }
+
+            else {
+
+                addId=idOfTheWindWolfAdd;
+
+            }
+
+            if(addId==null) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,40);
+            currentProperties.Owner=((ulong)addId);
+            currentProperties.TargetObject=targetId;
+            currentProperties.DestoryAt=5000;
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(windpackWasApplied[targetIndex]==windpackWasApplied[myIndex]) {
+                
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                
+            }
+
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Earthborne End Guidance)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:41956"],
+            suppress:2500)]
+    
+        public void Phase_1_Tactical_Pack_Earthborne_End_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            // 41935 Stalking Wind from Wolf of Wind.
+            // 41956 Stalking Stone from Wolf of Stone.
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(myIndex==0||myIndex==1) {
+
+                return;
+
+            }
+
+            if(currentAddRound!=roundForCleanse[myIndex]) {
+
+                return;
+
+            }
+
+            if(windborneEndWasApplied[myIndex]) {
+
+                return;
+
+            }
+
+            if(idOfTheEarthFont==null||idOfTheWindWolfAdd==null) {
+
+                return;
+
+            }
+            
+            // From 0s to 1s:
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheEarthFont);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=1000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=1000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(1.5f);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=1000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            // From 1s:
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_1";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheEarthFont);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=1000;
+            currentProperties.DestoryAt=15500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_2";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=1000;
+            currentProperties.DestoryAt=15500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_3";
+            currentProperties.Scale=new(1.5f);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=1000;
+            currentProperties.DestoryAt=15500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            earthGuidanceHasBeenDrawn=true;
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Earthborne End Guidance 2)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(41966|43138|43520)$"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Earthborne_End_Guidance_2(Event @event,ScriptAccessory accessory) {
+            
+            if(!earthGuidanceHasBeenDrawn) {
+
+                return;
+
+            }
+
+            else {
+
+                earthGuidanceHasBeenDrawn=false;
+
+            }
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(currentAddRound!=roundForCleanse[myIndex]) {
+
+                return;
+
+            }
+
+            if(windborneEndWasApplied[myIndex]) {
+
+                return;
+
+            }
+
+            if(idOfTheEarthFont==null||idOfTheWindWolfAdd==null) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_1");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_2");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_3");
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(!string.Equals(@event["ActionId"],"43520")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(1.5f);
+                currentProperties.Owner=((ulong)idOfTheEarthFont);
+                currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Windborne End Guidance)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(41966|43138|43520)$"],
+            suppress:2500)]
+    
+        public void Phase_1_Tactical_Pack_Windborne_End_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(myIndex==0||myIndex==1) {
+
+                return;
+
+            }
+
+            if(currentAddRound!=roundForCleanse[myIndex]) {
+
+                return;
+
+            }
+
+            if(!windborneEndWasApplied[myIndex]) {
+
+                return;
+
+            }
+
+            if(idOfTheWindFont==null||idOfTheStoneWolfAdd==null) {
+
+                return;
+
+            }
+            
+            // From 0s to 4s:
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheWindFont);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=((ulong)idOfTheWindFont);
+            currentProperties.TargetObject=((ulong)idOfTheStoneWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(1.5f);
+            currentProperties.Owner=((ulong)idOfTheWindFont);
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=4000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            // From 4s:
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Windborne_End_Guidance_1";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheWindFont);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=15500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Windborne_End_Guidance_2";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=((ulong)idOfTheWindFont);
+            currentProperties.TargetObject=((ulong)idOfTheStoneWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=15500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Windborne_End_Guidance_3";
+            currentProperties.Scale=new(1.5f);
+            currentProperties.Owner=((ulong)idOfTheWindFont);
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=15500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            windGuidanceHasBeenDrawn=true;
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Windborne End Guidance 2)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(41965|43137|43519)$"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Windborne_End_Guidance_2(Event @event,ScriptAccessory accessory) {
+            
+            if(!windGuidanceHasBeenDrawn) {
+
+                return;
+
+            }
+
+            else {
+
+                windGuidanceHasBeenDrawn=false;
+
+            }
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(currentAddRound!=roundForCleanse[myIndex]) {
+
+                return;
+
+            }
+
+            if(!windborneEndWasApplied[myIndex]) {
+
+                return;
+
+            }
+
+            if(idOfTheWindFont==null||idOfTheStoneWolfAdd==null) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_1");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_2");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_3");
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheStoneWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(!string.Equals(@event["ActionId"],"43519")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(1.5f);
+                currentProperties.Owner=((ulong)idOfTheWindFont);
+                currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=2500;
+                            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 5 Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42825"],
+            userControl:false)]
+    
+        public void Phase_1_Intermission_Regins_SubPhase_5_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=6;
+            
+            accessory.Log.Debug("Now moving to Sub-phase 6.");
+            
+            for(int i=0;i<=3;++i) {
+                
+                accessory.Method.RemoveDraw($"Phase_1_Tactical_Pack_Direction_{i}");
+                    
+            }
+            
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_1");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_2");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_3");
+            
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_1");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_2");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_3");
+
         
         }
 
