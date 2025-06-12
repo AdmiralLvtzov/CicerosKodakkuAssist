@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.10",
+        version:"0.0.0.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -92,6 +92,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          Sub-phase 3: Terrestrial Titans
          Sub-phase 4: intermission regins
          Sub-phase 5: Tactical Pack
+         Sub-phase 6: Terrestrial Rage
+         Sub-phase 7: intermission regins
          
         */
         
@@ -128,11 +130,25 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile int currentAddRound=0;
         private volatile bool windGuidanceHasBeenDrawn=false,earthGuidanceHasBeenDrawn=false;
 
+        private double rotationOfTheOuterFang=0;
+        private volatile bool outerFangHasBeenCaptured=false;
+        private System.Threading.AutoResetEvent newNorthArrowSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent newNorthGuidanceSemaphore=new System.Threading.AutoResetEvent(false);
+        private bool? dpsStackFirst=null;
+        private System.Threading.AutoResetEvent roleStackSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile bool firstSetGuidanceHasBeenDrawn=false;
+        private volatile bool shadowsAreOnTheCardinals=false; // Its read-write lock is lockOfShadowNumber.
+        private volatile int numberOfShadows=0; // Its read-write lock is lockOfShadowNumber.
+        private double refinedRotationForFullRinon=double.PositiveInfinity;
+        private System.Threading.AutoResetEvent shadowSemaphore=new System.Threading.AutoResetEvent(false);
+
         #endregion
 
         #region Constants
 
         private static readonly Vector3 ARENA_CENTER_OF_PHASE_1=new Vector3(100,0,100);
+        
+        private readonly Object lockOfShadowNumber=new Object();
 
         #endregion
         
@@ -182,7 +198,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             accessory.Method.RemoveDraw(".*");
             
             currentPhase=1;
-            currentSubPhase=1;
+            currentSubPhase=6;
             
             reignId=string.Empty;
             
@@ -216,6 +232,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             roundForCleanse=[-1,-1,-1,-1,-1,-1,-1,-1];
             currentAddRound=0;
             windGuidanceHasBeenDrawn=false; earthGuidanceHasBeenDrawn=false;
+
+            rotationOfTheOuterFang=0;
+            outerFangHasBeenCaptured=false;
+            newNorthArrowSemaphore.Reset();
+            newNorthGuidanceSemaphore.Reset();
+            dpsStackFirst=null;
+            roleStackSemaphore.Reset();
+            firstSetGuidanceHasBeenDrawn=false;
+            shadowsAreOnTheCardinals=false;
+            numberOfShadows=0;
+            refinedRotationForFullRinon=double.PositiveInfinity;
+            shadowSemaphore.Reset();
 
             shenaniganSemaphore.Set();
             
@@ -366,6 +394,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
                 
                 for(int i=0;i<8;++i) {
                     
@@ -507,6 +541,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             Vector3 innerPosition=new Vector3(100,0,93.5f);
             Vector3 outerPosition=new Vector3(100,0,89.5f);
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
         
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             
@@ -773,6 +813,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
+            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             
             // 43312: Fan
@@ -918,6 +964,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             Vector3 approximateDestination=rotatePosition(targetPosition,ARENA_CENTER_OF_PHASE_1,Math.PI);
             double rotation=getRotation(approximateDestination,ARENA_CENTER_OF_PHASE_1);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
@@ -1334,13 +1386,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
             }
 
-            accessory.Log.Debug($"iconId={iconId}");
-
             if(iconId!=0) { // 0x178-0x178=0
 
                 return;
                 
             }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
 
             if(currentPhase!=1) {
 
@@ -1371,6 +1423,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
 
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
 
             gustMarksSupporters=isSupporter(targetIndex);
             
@@ -1407,14 +1465,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 return;
                 
             }
-            
-            accessory.Log.Debug($"iconId={iconId}");
 
             if(iconId!=0) { // 0x178-0x178=0
 
                 return;
                 
             }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
 
             if(currentPhase!=1) {
 
@@ -1442,6 +1500,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 Vector3 southeast=new Vector3(104.583f,0,110);
                 // Initial positions: https://www.geogebra.org/calculator/kt3brffu
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+                
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
 
                 if((isSupporter(myIndex)&&!gustMarksSupporters)
                    ||
@@ -1505,14 +1569,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 return;
                 
             }
-            
-            accessory.Log.Debug($"iconId={iconId}");
 
             if(iconId!=0) { // 0x178-0x178=0
 
                 return;
                 
             }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
 
             if(currentPhase!=1) {
 
@@ -1540,6 +1604,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 Vector3 southeast=new Vector3(104.583f,0,110);
                 // Initial positions: https://www.geogebra.org/calculator/kt3brffu
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+                
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
 
                 if((isSupporter(myIndex)&&!gustMarksSupporters)
                    ||
@@ -1948,6 +2018,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER_OF_PHASE_1,8);
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
 
             lock(getWindWolfTethers) {
 
@@ -2017,6 +2093,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 Vector3 standbyPositionForTethers=new Vector3(100,0,97);
                 Vector3 finalPositionForTethers=new Vector3(100,0,89);
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+                
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
                 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
                 Vector3 myStandbyPosition=ARENA_CENTER_OF_PHASE_1;
@@ -2938,6 +3020,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
+            
             bool targetHoldsWindpack=false;
 
             if(string.Equals(@event["StatusID"],"4389")) {
@@ -2988,6 +3076,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
             
             bool targetHoldsWindborneEnd=false;
 
@@ -3202,13 +3296,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
             }
 
-            accessory.Log.Debug($"iconId={iconId}");
-
             if(iconId!=-353) { // 0x17-0x178=-353
 
                 return;
                 
             }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
             
             if(currentPhase!=1) {
 
@@ -3230,6 +3324,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             ulong? addId=null;
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
 
             if(windpackWasApplied[targetIndex]) {
 
@@ -3257,6 +3357,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentProperties.DestoryAt=5000;
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
 
             if(windpackWasApplied[targetIndex]==windpackWasApplied[myIndex]) {
                 
@@ -3297,6 +3403,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             // 41956 Stalking Stone from Wolf of Stone.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
 
             if(myIndex==0||myIndex==1) {
 
@@ -3436,6 +3548,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
 
             if(currentAddRound!=roundForCleanse[myIndex]) {
 
@@ -3510,6 +3628,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
             
             if(myIndex==0||myIndex==1) {
 
@@ -3649,6 +3773,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
 
             if(currentAddRound!=roundForCleanse[myIndex]) {
 
@@ -3739,6 +3869,831 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_2");
             accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_3");
 
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Fang Line)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41942"])]
+    
+        public void Phase_1_Terrestrial_Rage_Fang_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,30);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,30);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=2000;
+            currentProperties.DestoryAt=2000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Outer Fang Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18220"],
+            userControl:false)]
+    
+        public void Phase_1_Terrestrial_Rage_Outer_Fang_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(outerFangHasBeenCaptured) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(sourcePosition,ARENA_CENTER_OF_PHASE_1)<3.3) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            rotationOfTheOuterFang=getRotation(sourcePosition,ARENA_CENTER_OF_PHASE_1);
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            outerFangHasBeenCaptured=true;
+
+            newNorthArrowSemaphore.Set();
+            newNorthGuidanceSemaphore.Set();
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Stack Acquisition)",
+            eventType:EventTypeEnum.TargetIcon,
+            userControl:false)]
+    
+        public void Phase_1_Terrestrial_Rage_Stack_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-283) { // 0x5D-0x178=-283
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(isDps(targetIndex)) {
+
+                dpsStackFirst??=true;
+
+            }
+
+            else {
+                
+                dpsStackFirst??=false;
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            roleStackSemaphore.Set();
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (New North Arrow)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18220"],
+            suppress:5000)]
+    
+        public void Phase_1_Terrestrial_Rage_New_North_Arrow(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            newNorthArrowSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    
+            currentProperties.Scale=new(2);
+            currentProperties.Position=rotatePosition(new Vector3(100,0,97),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,91),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            
+            currentProperties.DestoryAt=stratOfTerrestrialRage switch {
+                
+                StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d => 14250,
+                StratsOfTerrestrialRage.Half_Rinon => 8500,
+                _ => 0
+                
+            };
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+
+            if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Half_Rinon) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    
+                currentProperties.Scale=new(2);
+                currentProperties.Position=new Vector3(100,0,97);
+                currentProperties.TargetPosition=new Vector3(100,0,91);
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=8500;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (First Set Guidance)",
+            eventType:EventTypeEnum.TargetIcon)]
+    
+        public void Phase_1_Terrestrial_Rage_First_Set_Guidance(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-283) { // 0x5D-0x178=-283
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(firstSetGuidanceHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            newNorthGuidanceSemaphore.WaitOne();
+            roleStackSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d
+               ||
+               stratOfTerrestrialRage==StratsOfTerrestrialRage.Half_Rinon) {
+                
+                Vector3 leftRangePosition1=new Vector3(90,0,99);
+                Vector3 leftRangePosition2=new Vector3(90,0,101);
+                Vector3 leftMeleePosition1=new Vector3(96,0,95);
+                Vector3 leftMeleePosition2=new Vector3(95,0,93);
+                Vector3 rightMeleePosition1=new Vector3(104,0,95);
+                Vector3 rightMeleePosition2=new Vector3(105,0,93);
+                Vector3 rightRangePosition1=new Vector3(110,0,99);
+                Vector3 rightRangePosition2=new Vector3(110,0,101);
+                Vector3 stackPosition1=new Vector3(100,0,107);
+                Vector3 stackPosition2=new Vector3(100,0,105);
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
+
+                Vector3 myPosition1=ARENA_CENTER_OF_PHASE_1,myPosition2=ARENA_CENTER_OF_PHASE_1;
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                string prompt=string.Empty;
+                
+                if(dpsStackFirst==null) {
+
+                    return;
+
+                }
+
+                if((bool)dpsStackFirst) {
+
+                    if(isDps(myIndex)) {
+
+                        myPosition1=stackPosition1;
+                        myPosition2=stackPosition2;
+
+                        prompt="Stack.";
+
+                    }
+
+                    else {
+
+                        myPosition1=myIndex switch {
+                            
+                            0 => leftMeleePosition1,
+                            1 => rightMeleePosition1,
+                            2 => leftRangePosition1,
+                            3 => rightRangePosition1,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        myPosition2=myIndex switch {
+                            
+                            0 => leftMeleePosition2,
+                            1 => rightMeleePosition2,
+                            2 => leftRangePosition2,
+                            3 => rightRangePosition2,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        prompt="Spread.";
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(isDps(myIndex)) {
+                        
+                        myPosition1=myIndex switch {
+                            
+                            4 => leftMeleePosition1,
+                            5 => rightMeleePosition1,
+                            6 => leftRangePosition1,
+                            7 => rightRangePosition1,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        myPosition2=myIndex switch {
+                            
+                            4 => leftMeleePosition2,
+                            5 => rightMeleePosition2,
+                            6 => leftRangePosition2,
+                            7 => rightRangePosition2,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        prompt="Spread.";
+
+                    }
+
+                    else {
+                        
+                        myPosition1=stackPosition1;
+                        myPosition2=stackPosition2;
+                        
+                        prompt="Stack.";
+                        
+                    }
+                    
+                }
+
+                if(Vector3.Equals(myPosition1,ARENA_CENTER_OF_PHASE_1)||Vector3.Equals(myPosition2,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                myPosition1=rotatePosition(myPosition1,ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+                myPosition2=rotatePosition(myPosition2,ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+                
+                // From 0s to 3.75s:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition1;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=3750;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=myPosition1;
+                currentProperties.TargetPosition=myPosition2;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=3750;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                // From 3.75s:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition2;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=3750;
+                currentProperties.DestoryAt=1250;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                firstSetGuidanceHasBeenDrawn=true;
+                
+                if(enablePrompts) {
+                        
+                    accessory.Method.TextInfo(prompt,5000);
+                        
+                }
+                        
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Shadow Line)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18216"])]
+    
+        public void Phase_1_Terrestrial_Rage_Shadow_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=1500;
+            currentProperties.DestoryAt=1500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Wind Wolf Line)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42890"])]
+    
+        public void Phase_1_Terrestrial_Rage_Wind_Wolf_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=1500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=1000;
+            currentProperties.DestoryAt=1500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Shadow Acquisition)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18216"],
+            userControl:false)]
+    
+        public void Phase_1_Terrestrial_Rage_Shadow_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(numberOfShadows>=5) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            lock(lockOfShadowNumber) {
+                
+                ++numberOfShadows;
+            
+                System.Threading.Thread.MemoryBarrier();
+            
+                Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+                try {
+
+                    sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+                } catch(Exception e) {
+                
+                    accessory.Log.Error("SourcePosition deserialization failed.");
+
+                    return;
+
+                }
+
+                if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
+                    
+                    if(Math.Abs(getRotation(sourcePosition,ARENA_CENTER_OF_PHASE_1)-rotationOfTheOuterFang)<Math.Abs(refinedRotationForFullRinon-rotationOfTheOuterFang)) {
+                    
+                        refinedRotationForFullRinon=getRotation(sourcePosition,ARENA_CENTER_OF_PHASE_1);
+
+                        shadowsAreOnTheCardinals=true;
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(Vector3.Distance(sourcePosition,new Vector3(100,0,92.5f))<0.375) {
+                    
+                        shadowsAreOnTheCardinals=true;
+                    
+                    }
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                if(numberOfShadows>=5) {
+
+                    shadowSemaphore.Set();
+                    
+                    accessory.Log.Debug($"shadowsAreOnTheCardinals={shadowsAreOnTheCardinals}");
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Second Set Guidance)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:18216"],
+            suppress:2500)]
+    
+        public void Phase_1_Terrestrial_Rage_Second_Set_Guidance(Event @event,ScriptAccessory accessory) {
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            shadowSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d
+               ||
+               stratOfTerrestrialRage==StratsOfTerrestrialRage.Half_Rinon) {
+                
+                double topRotation=0;
+                
+                if(!shadowsAreOnTheCardinals) {
+
+                    topRotation+=Math.PI/5;
+
+                }
+
+                if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
+
+                    topRotation=refinedRotationForFullRinon;
+
+                }
+
+                double rightmostRotation=topRotation+Math.PI*2/5;
+                double lowerRightRotation=topRotation+Math.PI*2/5*2;
+                double lowerLeftRotation=topRotation+Math.PI*2/5*3;
+                double leftmostRotation=topRotation+Math.PI*2/5*4;
+            
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
+
+                double myRotation=0;
+                Vector3 myPosition1=new Vector3(100,0,90),myPosition2=new Vector3(100,0,90);
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                string prompt=string.Empty;
+                
+                if(dpsStackFirst==null) {
+
+                    return;
+
+                }
+
+                if((bool)dpsStackFirst) {
+
+                    if(isDps(myIndex)) {
+
+                        myRotation=myIndex switch {
+                            
+                            4 => lowerLeftRotation,
+                            5 => lowerRightRotation,
+                            6 => leftmostRotation,
+                            7 => rightmostRotation,
+                            _ => 0
+                            
+                        };
+
+                        prompt="Spread.";
+
+                    }
+
+                    else {
+
+                        myRotation=topRotation;
+                        
+                        prompt="Stack.";
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(isDps(myIndex)) {
+                        
+                        myRotation=topRotation;
+                        
+                        prompt="Stack.";
+
+                    }
+
+                    else {
+                        
+                        myRotation=myIndex switch {
+                            
+                            2 => lowerLeftRotation,
+                            3 => lowerRightRotation,
+                            0 => leftmostRotation,
+                            1 => rightmostRotation,
+                            _ => 0
+                            
+                        };
+
+                        prompt="Spread.";
+                        
+                    }
+                    
+                }
+
+                myPosition1=rotatePosition(myPosition1,ARENA_CENTER_OF_PHASE_1,myRotation);
+                myPosition2=rotatePosition(myPosition1,ARENA_CENTER_OF_PHASE_1,Math.PI/5);
+                
+                // From 0s to 3s:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition1;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=3000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=myPosition1;
+                currentProperties.TargetPosition=myPosition2;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=3000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                // From 3s:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition2;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=3000;
+                currentProperties.DestoryAt=4500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                if(enablePrompts) {
+                        
+                    accessory.Method.TextInfo(prompt,3000);
+                        
+                }
+                        
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 6 Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42890"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Intermission_Regins_SubPhase_6_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=7;
+            
+            accessory.Log.Debug("Now moving to Sub-phase 7.");
         
         }
 
@@ -3853,6 +4808,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             return Math.PI-rawRotation;
             
+        }
+
+        public static bool isALegalIndex(int partyIndex) {
+
+            return (0<=partyIndex&&partyIndex<=7);
+
         }
         
         public static bool isSupporter(int partyIndex) {
