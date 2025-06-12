@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.11",
+        version:"0.0.0.12",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -94,6 +94,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          Sub-phase 5: Tactical Pack
          Sub-phase 6: Terrestrial Rage
          Sub-phase 7: intermission regins
+         Sub-phase 8: Beckon Moonlight
+         Sub-phase 9: intermission fangs
          
         */
         
@@ -139,7 +141,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile bool firstSetGuidanceHasBeenDrawn=false;
         private volatile bool shadowsAreOnTheCardinals=false; // Its read-write lock is lockOfShadowNumber.
         private volatile int numberOfShadows=0; // Its read-write lock is lockOfShadowNumber.
-        private double refinedRotationForFullRinon=double.PositiveInfinity;
+        private double refinedRotationForFullRinon=double.PositiveInfinity; // Its read-write lock is lockOfShadowNumber.
         private System.Threading.AutoResetEvent shadowSemaphore=new System.Threading.AutoResetEvent(false);
 
         #endregion
@@ -198,7 +200,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             accessory.Method.RemoveDraw(".*");
             
             currentPhase=1;
-            currentSubPhase=6;
+            currentSubPhase=1;
             
             reignId=string.Empty;
             
