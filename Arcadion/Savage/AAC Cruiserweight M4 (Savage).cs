@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.13",
+        version:"0.0.0.14",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -5481,7 +5481,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.Radian=float.Pi/2;
                 currentProperties.Rotation=-float.Pi/4-(float.Pi/2*safeQuarter);
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
-                currentProperties.DestoryAt=1500+2000*theLastCleaveOfTheSafeQuarter;
+                currentProperties.DestoryAt=Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
+                // The variable theLastCleaveOfTheSafeQuarter could be -1 if the safe quarter remains. The expression result may be negative.
         
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
                 
@@ -5493,8 +5494,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.Radian=float.Pi/2;
                 currentProperties.Rotation=-float.Pi/4-(float.Pi/2*safeQuarter);
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
-                currentProperties.Delay=1500+2000*theLastCleaveOfTheSafeQuarter;
-                currentProperties.DestoryAt=8500-(1500+2000*theLastCleaveOfTheSafeQuarter);
+                currentProperties.Delay=Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
+                currentProperties.DestoryAt=8500-Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
         
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
                 
@@ -5594,7 +5595,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.TargetPosition=myPosition;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
-                currentProperties.DestoryAt=1500+2000*theLastCleaveOfTheSafeQuarter;
+                currentProperties.DestoryAt=Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
@@ -5605,8 +5606,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.TargetPosition=myPosition;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
-                currentProperties.Delay=1500+2000*theLastCleaveOfTheSafeQuarter;
-                currentProperties.DestoryAt=8500-(1500+2000*theLastCleaveOfTheSafeQuarter);
+                currentProperties.Delay=Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
+                currentProperties.DestoryAt=8500-Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                         
