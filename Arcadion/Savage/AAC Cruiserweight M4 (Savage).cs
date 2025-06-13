@@ -19,7 +19,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.12",
+        version:"0.0.0.13",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -144,6 +144,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private double refinedRotationForFullRinon=double.PositiveInfinity; // Its read-write lock is lockOfShadowNumber.
         private System.Threading.AutoResetEvent shadowSemaphore=new System.Threading.AutoResetEvent(false);
 
+        private volatile List<List<int>> moonbeamsBite=[]; // 0=Northeast, 1=southeast, 2=southwest, 3=northwest.
+        private System.Threading.AutoResetEvent secondMoonbeamsBiteSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent fourthMoonbeamsBiteSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile bool secondSetGuidanceHasBeenDrawn=false;
+        private volatile bool stoneWolvesAreOnTheCardinals=false;
+
         #endregion
 
         #region Constants
@@ -246,6 +252,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             numberOfShadows=0;
             refinedRotationForFullRinon=double.PositiveInfinity;
             shadowSemaphore.Reset();
+            
+            moonbeamsBite=[];
+            secondMoonbeamsBiteSemaphore.Reset();
+            fourthMoonbeamsBiteSemaphore.Reset();
+            secondSetGuidanceHasBeenDrawn=false;
+            stoneWolvesAreOnTheCardinals=false;
 
             shenaniganSemaphore.Set();
             
@@ -3919,6 +3931,80 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         }
         
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Stack)",
+            eventType:EventTypeEnum.TargetIcon)]
+    
+        public void Phase_1_Terrestrial_Rage_Stack(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-283) { // 0x5D-0x178=-283
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=6) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=targetId;
+            currentProperties.DestoryAt=5125;
+
+            if(isDps(myIndex)==isDps(targetIndex)) {
+                
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                
+            }
+            
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
         [ScriptMethod(name:"Phase 1 Terrestrial Rage (Outer Fang Acquisition)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18220"],
@@ -4004,6 +4090,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
 
             if(currentSubPhase!=6) {
+
+                return;
+
+            }
+
+            if(dpsStackFirst!=null) {
 
                 return;
 
@@ -4300,23 +4392,23 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.Delay=3750;
-                currentProperties.DestoryAt=1250;
+                currentProperties.DestoryAt=1375;
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
-                System.Threading.Thread.MemoryBarrier();
-
-                firstSetGuidanceHasBeenDrawn=true;
-                
                 if(enablePrompts) {
                         
-                    accessory.Method.TextInfo(prompt,5000);
+                    accessory.Method.TextInfo(prompt,5125);
                         
                 }
                         
                 accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            firstSetGuidanceHasBeenDrawn=true;
             
         }
         
@@ -4671,13 +4763,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
         }
         
-        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 6 Control)",
+        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Sub-phase 6 Control)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42890"],
             suppress:2500,
             userControl:false)]
     
-        public void Phase_1_Intermission_Regins_SubPhase_6_Control(Event @event,ScriptAccessory accessory) {
+        public void Phase_1_Terrestrial_Rage_SubPhase_6_Control(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=1) {
 
@@ -4695,7 +4787,910 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             currentSubPhase=7;
             
+            newNorthArrowSemaphore.Reset();
+            newNorthGuidanceSemaphore.Reset();
+            roleStackSemaphore.Reset();
+            shadowSemaphore.Reset();
+            
             accessory.Log.Debug("Now moving to Sub-phase 7.");
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 7 Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:41921"],
+            userControl:false)]
+    
+        public void Phase_1_Intermission_Regins_SubPhase_7_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=7) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=8;
+
+            dpsStackFirst=null;
+            firstSetGuidanceHasBeenDrawn=false;
+
+            roleStackSemaphore.Reset();
+            
+            accessory.Log.Debug("Now moving to Sub-phase 8.");
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Cleave)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(41922|41923)$"])]
+    
+        public void Phase_1_Beckon_Moonlight_Cleave(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // 41922: Right
+            // 41923: Left
+
+            currentProperties.Scale=new(15);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+            currentProperties.Offset=new Vector3(0,0,-12);
+            currentProperties.DestoryAt=7500;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(string.Equals(@event["ActionId"],"41923")) {
+                        
+                currentProperties.Rotation=float.Pi/2;
+                        
+            }
+
+            if(string.Equals(@event["ActionId"],"41922")) {
+                        
+                currentProperties.Rotation=-float.Pi/2;
+                        
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(15);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+            currentProperties.Offset=new Vector3(0,0,-12);
+            currentProperties.Delay=7500;
+            currentProperties.DestoryAt=1500;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+
+            if(string.Equals(@event["ActionId"],"41923")) {
+                        
+                currentProperties.Rotation=float.Pi/2;
+                        
+            }
+
+            if(string.Equals(@event["ActionId"],"41922")) {
+                        
+                currentProperties.Rotation=-float.Pi/2;
+                        
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Stack)",
+            eventType:EventTypeEnum.TargetIcon)]
+    
+        public void Phase_1_Beckon_Moonlight_Stack(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-283) { // 0x5D-0x178=-283
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=targetId;
+            currentProperties.DestoryAt=5125;
+
+            if(isDps(myIndex)==isDps(targetIndex)) {
+                
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                
+            }
+            
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Cleave Acquisition)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(41922|41923)$"],
+            userControl:false)]
+    
+        public void Phase_1_Beckon_Moonlight_Cleave_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+
+            if(moonbeamsBite.Count>=4) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            Vector3 sourcePosition=ARENA_CENTER_OF_PHASE_1;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(sourcePosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                return;
+
+            }
+            
+            // 0=Northeast, 1=southeast, 2=southwest, 3=northwest.
+
+            List<int> leftHalf=[2,3];
+            List<int> rightHalf=[0,1];
+            List<int> topHalf=[3,0];
+            List<int> bottomHalf=[1,2];
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER_OF_PHASE_1,4);
+            
+            // 41922: Right
+            // 41923: Left
+
+            switch(discretizedPosition) {
+
+                case 0: {
+                    
+                    if(string.Equals(@event["ActionId"],"41923")) {
+                        
+                        moonbeamsBite.Add(rightHalf);
+                        
+                    }
+
+                    if(string.Equals(@event["ActionId"],"41922")) {
+                        
+                        moonbeamsBite.Add(leftHalf);
+                        
+                    }
+
+                    break;
+
+                }
+                
+                case 1: {
+                    
+                    if(string.Equals(@event["ActionId"],"41923")) {
+                        
+                        moonbeamsBite.Add(bottomHalf);
+                        
+                    }
+
+                    if(string.Equals(@event["ActionId"],"41922")) {
+                        
+                        moonbeamsBite.Add(topHalf);
+                        
+                    }
+
+                    break;
+
+                }
+                
+                case 2: {
+                    
+                    if(string.Equals(@event["ActionId"],"41923")) {
+                        
+                        moonbeamsBite.Add(leftHalf);
+                        
+                    }
+
+                    if(string.Equals(@event["ActionId"],"41922")) {
+                        
+                        moonbeamsBite.Add(rightHalf);
+                        
+                    }
+
+                    break;
+
+                }
+                
+                case 3: {
+                    
+                    if(string.Equals(@event["ActionId"],"41923")) {
+                        
+                        moonbeamsBite.Add(topHalf);
+                        
+                    }
+
+                    if(string.Equals(@event["ActionId"],"41922")) {
+                        
+                        moonbeamsBite.Add(bottomHalf);
+                        
+                    }
+
+                    break;
+
+                }
+
+                default: {
+
+                    return;
+
+                }
+                
+            }
+                
+            System.Threading.Thread.MemoryBarrier();
+
+            if(moonbeamsBite.Count==2) {
+
+                secondMoonbeamsBiteSemaphore.Set();
+
+            }
+            
+            if(moonbeamsBite.Count>=4) {
+
+                fourthMoonbeamsBiteSemaphore.Set();
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Stack Acquisition)",
+            eventType:EventTypeEnum.TargetIcon,
+            userControl:false)]
+    
+        public void Phase_1_Beckon_Moonlight_Stack_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-283) { // 0x5D-0x178=-283
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+            
+            if(dpsStackFirst!=null) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            if(!isALegalIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            accessory.Log.Debug($"targetindex={targetIndex}");
+
+            if(isDps(targetIndex)) {
+
+                dpsStackFirst??=true;
+
+            }
+
+            else {
+                
+                dpsStackFirst??=false;
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            roleStackSemaphore.Set();
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (First Set Guidance)",
+            eventType:EventTypeEnum.TargetIcon)]
+    
+        public void Phase_1_Beckon_Moonlight_First_Set_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-283) { // 0x5D-0x178=-283
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+            
+            if(firstSetGuidanceHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            secondMoonbeamsBiteSemaphore.WaitOne();
+            roleStackSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            if(stratOfBeckonMoonlight==StratsOfBeckonMoonlight.Quad_Or_RaidPlan_84d) {
+                
+                List<int> riskIndexAfterTheSecondCleave=[0,0,0,0]; // Northeast, southeast, southwest, northwest accordingly.
+
+                if(moonbeamsBite.Count<2) {
+
+                    return;
+
+                }
+
+                ++riskIndexAfterTheSecondCleave[moonbeamsBite[0][0]];
+                ++riskIndexAfterTheSecondCleave[moonbeamsBite[0][1]];
+            
+                ++riskIndexAfterTheSecondCleave[moonbeamsBite[1][0]];
+                ++riskIndexAfterTheSecondCleave[moonbeamsBite[1][1]];
+
+                int safeQuarter=riskIndexAfterTheSecondCleave.IndexOf(0);
+
+                if(safeQuarter<0||safeQuarter>3) {
+
+                    return;
+
+                }
+                
+                accessory.Log.Debug($"Moonbean's Bite 2. safeQuarter={safeQuarter}");
+                
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(12);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.TargetPosition=new Vector3(100,0,88);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Rotation=-float.Pi/4-(float.Pi/2*safeQuarter);
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=5125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                
+                Vector3 leftRangePosition=new Vector3(107.641f,0,91.661f);
+                Vector3 leftMeleePosition=new Vector3(103.250f,0,96.453f);
+                Vector3 rightMeleePosition=new Vector3(96.750f,0,96.453f);
+                Vector3 rightRangePosition=new Vector3(92.359f,0,91.661f);
+                Vector3 stackPosition=new Vector3(100,0,88.689f);
+                // Initial positions: https://www.geogebra.org/calculator/eanrxfaa
+                // Mirror images need to be considered here. Therefore, the left and right sides on the Geogebra graph should be reversed.
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
+
+                Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
+                string prompt=string.Empty;
+                
+                if(dpsStackFirst==null) {
+
+                    return;
+
+                }
+
+                if((bool)dpsStackFirst) {
+
+                    if(isDps(myIndex)) {
+
+                        myPosition=stackPosition;
+
+                        prompt="Stack.";
+
+                    }
+
+                    else {
+
+                        myPosition=myIndex switch {
+                            
+                            0 => leftMeleePosition,
+                            1 => rightMeleePosition,
+                            2 => leftRangePosition,
+                            3 => rightRangePosition,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        prompt="Spread.";
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(isDps(myIndex)) {
+                        
+                        myPosition=myIndex switch {
+                            
+                            4 => leftMeleePosition,
+                            5 => rightMeleePosition,
+                            6 => leftRangePosition,
+                            7 => rightRangePosition,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        prompt="Spread.";
+
+                    }
+
+                    else {
+                        
+                        myPosition=stackPosition;
+                        
+                        prompt="Stack.";
+                        
+                    }
+                    
+                }
+
+                if(Vector3.Equals(myPosition,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                myPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_1,float.Pi/4+(float.Pi/2*safeQuarter));
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=5125;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                if(enablePrompts) {
+                        
+                    accessory.Method.TextInfo(prompt,5125);
+                        
+                }
+                        
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            firstSetGuidanceHasBeenDrawn=true;
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Second Set Guidance)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:41920"],
+            suppress:2500)]
+    
+        public void Phase_1_Beckon_Moonlight_Second_Set_Guidance(Event @event,ScriptAccessory accessory) {
+            
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+            
+            if(secondSetGuidanceHasBeenDrawn) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            fourthMoonbeamsBiteSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            if(stratOfBeckonMoonlight==StratsOfBeckonMoonlight.Quad_Or_RaidPlan_84d) {
+                
+                List<int> riskIndexAfterTheFourthCleave=[0,0,0,0]; // Northeast, southeast, southwest, northwest accordingly.
+
+                if(moonbeamsBite.Count<4) {
+
+                    return;
+
+                }
+
+                ++riskIndexAfterTheFourthCleave[moonbeamsBite[2][0]];
+                ++riskIndexAfterTheFourthCleave[moonbeamsBite[2][1]];
+            
+                ++riskIndexAfterTheFourthCleave[moonbeamsBite[3][0]];
+                ++riskIndexAfterTheFourthCleave[moonbeamsBite[3][1]];
+
+                int safeQuarter=riskIndexAfterTheFourthCleave.IndexOf(0);
+
+                if(safeQuarter<0||safeQuarter>3) {
+
+                    return;
+
+                }
+                
+                List<int> theLastCleave=[-1,-1,-1,-1]; // Northeast, southeast, southwest, northwest accordingly.
+
+                for(int i=0;i<4;++i) {
+
+                    theLastCleave[moonbeamsBite[i][0]]=i;
+                    theLastCleave[moonbeamsBite[i][1]]=i;
+
+                }
+                
+                int theLastCleaveOfTheSafeQuarter=theLastCleave[safeQuarter];
+                
+                accessory.Log.Debug($"Moonbean's Bite 4. safeQuarter={safeQuarter}, theLastCleaveOfTheSafeQuarter={theLastCleaveOfTheSafeQuarter}");
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(12);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.TargetPosition=new Vector3(100,0,88);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Rotation=-float.Pi/4-(float.Pi/2*safeQuarter);
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=1500+2000*theLastCleaveOfTheSafeQuarter;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(12);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_1;
+                currentProperties.TargetPosition=new Vector3(100,0,88);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Rotation=-float.Pi/4-(float.Pi/2*safeQuarter);
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=1500+2000*theLastCleaveOfTheSafeQuarter;
+                currentProperties.DestoryAt=8500-(1500+2000*theLastCleaveOfTheSafeQuarter);
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                
+                Vector3 leftRangePosition=new Vector3(107.641f,0,91.661f);
+                Vector3 leftMeleePosition=new Vector3(103.250f,0,96.453f);
+                Vector3 rightMeleePosition=new Vector3(96.750f,0,96.453f);
+                Vector3 rightRangePosition=new Vector3(92.359f,0,91.661f);
+                Vector3 stackPosition=new Vector3(100,0,88.689f);
+                // Initial positions: https://www.geogebra.org/calculator/eanrxfaa
+                // Mirror images need to be considered here. Therefore, the left and right sides on the Geogebra graph should be reversed.
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+                if(!isALegalIndex(myIndex)) {
+
+                    return;
+
+                }
+
+                Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
+                string prompt=string.Empty;
+                
+                if(dpsStackFirst==null) {
+
+                    return;
+
+                }
+
+                if((bool)dpsStackFirst) {
+
+                    if(isDps(myIndex)) {
+                        
+                        myPosition=myIndex switch {
+                            
+                            4 => leftMeleePosition,
+                            5 => rightMeleePosition,
+                            6 => leftRangePosition,
+                            7 => rightRangePosition,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+
+                        prompt="Spread.";
+
+                    }
+
+                    else {
+                        
+                        myPosition=stackPosition;
+
+                        prompt="Stack.";
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(isDps(myIndex)) {
+                        
+                        myPosition=stackPosition;
+                        
+                        prompt="Stack.";
+
+                    }
+
+                    else {
+                        
+                        myPosition=myIndex switch {
+                            
+                            0 => leftMeleePosition,
+                            1 => rightMeleePosition,
+                            2 => leftRangePosition,
+                            3 => rightRangePosition,
+                            _ => ARENA_CENTER_OF_PHASE_1
+                            
+                        };
+                        
+                        prompt="Spread.";
+                        
+                    }
+                    
+                }
+
+                if(Vector3.Equals(myPosition,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                myPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_1,float.Pi/4+(float.Pi/2*safeQuarter));
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=1500+2000*theLastCleaveOfTheSafeQuarter;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=1500+2000*theLastCleaveOfTheSafeQuarter;
+                currentProperties.DestoryAt=8500-(1500+2000*theLastCleaveOfTheSafeQuarter);
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                        
+                System.Threading.Thread.Sleep(2500);
+                
+                if(enablePrompts) {
+                        
+                    accessory.Method.TextInfo(prompt,6000);
+                        
+                }
+                
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            secondSetGuidanceHasBeenDrawn=true;
+
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Line)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42897"])]
+    
+        public void Phase_1_Beckon_Moonlight_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,25);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Sub-phase 8 Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42897"],
+            suppress:2500)]
+    
+        public void Phase_1_Beckon_Moonlight_SubPhase_8_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=8) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=9;
+
+            roleStackSemaphore.Reset();
+            secondMoonbeamsBiteSemaphore.Reset();
+            fourthMoonbeamsBiteSemaphore.Reset();
+            
+            accessory.Log.Debug("Now moving to Sub-phase 9.");
         
         }
 
