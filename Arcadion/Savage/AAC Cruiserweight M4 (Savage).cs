@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.15",
+        version:"0.0.0.16",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -247,7 +247,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             accessory.Method.RemoveDraw(".*");
             
-            currentPhase=1;
+            currentPhase=2;
             currentSubPhase=1;
             
             reignId=string.Empty;
@@ -450,7 +450,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.InnerScale=new(8);
                 currentProperties.Radian=float.Pi*2;
                 currentProperties.Owner=sourceId;
-                currentProperties.Scale=new(19);
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
                 currentProperties.DestoryAt=6000;
         
@@ -6593,6 +6592,235 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
             }
         
+        }
+        
+        [ScriptMethod(name:"Phase 2 Hero's Blow (Left Or Right)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(42080|42082)$"])]
+    
+        public void Phase_2_Heros_Blow_Left_Or_Right(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // 42082: Left
+            // 42080: Right
+
+            currentProperties.Scale=new(32);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+            currentProperties.DestoryAt=6875;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(string.Equals(@event["ActionId"],"42082")) {
+                        
+                currentProperties.Rotation=float.Pi/2;
+                        
+            }
+
+            if(string.Equals(@event["ActionId"],"42080")) {
+                        
+                currentProperties.Rotation=-float.Pi/2;
+                        
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Hero's Blow (Circle Or Donut)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(42083|42084)$"])]
+    
+        public void Phase_2_Heros_Blow_Circle_Or_Donut(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+        
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            string prompt=string.Empty;
+            
+            // 42083: Circle
+            // 42084: Donut
+            
+            if(string.Equals(@event["ActionId"],"42083")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(22);
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6875;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                prompt="Get out once in position.";
+
+            }
+
+            if(string.Equals(@event["ActionId"],"42084")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(25);
+                currentProperties.InnerScale=new(15);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=6875;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+                prompt="Get in once in position.";
+                        
+            }
+            
+            if(!string.IsNullOrWhiteSpace(prompt)) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo(prompt,6875);
+                    
+                }
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Hero's Blow (Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(42080|42082)$"])]
+    
+        public void Phase_2_Heros_Blow_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            double sourceRotation=0;
+
+            try {
+
+                sourceRotation=JsonConvert.DeserializeObject<double>(@event["SourceRotation"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourceRotation deserialization failed.");
+
+                return;
+
+            }
+
+            double actualRotation=convertRotation(sourceRotation);
+            int targetPlatform=-1;
+
+            for(int i=0;i<=4;++i) {
+
+                if(Math.Abs((Math.PI/5+Math.PI*2/5*i)-actualRotation)<Math.PI*0.05) {
+
+                    targetPlatform=i;
+
+                    break;
+
+                }
+                
+            }
+
+            if(targetPlatform<0||targetPlatform>4) {
+
+                return;
+
+            }
+            
+            accessory.Log.Debug($"targetPlatform={getPlatformDescription(((PlatformsOfPhase2)targetPlatform))}");
+
+            List<bool> platformIsSafe=[true,true,true,true,true];
+            
+            // 42082: Left
+            // 42080: Right
+            
+            if(string.Equals(@event["ActionId"],"42082")) {
+
+                platformIsSafe[(targetPlatform-1+5)%5]=false;
+                platformIsSafe[(targetPlatform-2+5)%5]=false;
+
+            }
+
+            if(string.Equals(@event["ActionId"],"42080")) {
+                        
+                platformIsSafe[(targetPlatform+1)%5]=false;
+                platformIsSafe[(targetPlatform+2)%5]=false;
+                        
+            }
+            
+            var myObject=accessory.Data.Objects.SearchById(accessory.Data.Me);
+
+            if(myObject==null) {
+
+                return;
+
+            }
+
+            Vector3 closestPlatformCenter=ARENA_CENTER_OF_PHASE_2;
+            double closestDistance=double.PositiveInfinity;
+            
+            for(int i=0;i<=4;++i) {
+
+                if(platformIsSafe[i]) {
+                    
+                    if(Vector3.Distance(myObject.Position,getPlatformCenter(((PlatformsOfPhase2)i)))<closestDistance) {
+                        
+                        closestDistance=Vector3.Distance(myObject.Position,getPlatformCenter(((PlatformsOfPhase2)i)));
+                        
+                        closestPlatformCenter=getPlatformCenter(((PlatformsOfPhase2)i));
+
+                    }
+
+                }
+                
+            }
+
+            if(closestPlatformCenter.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=closestPlatformCenter;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=6875;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
         }
         
         #endregion
