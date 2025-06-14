@@ -4,6 +4,7 @@ using KodakkuAssist.Module.GameEvent;
 using KodakkuAssist.Script;
 using KodakkuAssist.Module.Draw;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ECommons;
 using System.Numerics;
 using Newtonsoft.Json;
@@ -19,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.14",
+        version:"0.0.0.15",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -32,12 +33,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             The script will adapt to the popular strats among EU Party Finder with priority.
             
-            The script is still work in progress.
+            The Phase 1 part is completed. The Phase 2 part is still work in progress.
+            Although the work on Ultraviolent Ray is finished, the guidance of the northwest-south strat during Ultraviolent Ray 4 is not available yet.
             
             Link to RaidPlan 84d (Rinon combined with Quad) for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
             Link to Toxic Friends RaidPlan DOG for Phase 2: https://raidplan.io/plan/9M-1G-mmOaaroDOG
             
-            "Half Rinon" during Terrestrial Rage is the one combines the first half of Rinon with the second half of Clock.
+            "Half Rinon" during Terrestrial Rage is the one combines the first half of Rinon with the second half of the clock strat.
+            You could check Hector's M8S video guide for more details about "Half Rinon".
             """;
 
         #region User_Settings
@@ -75,6 +78,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         [UserSetting("Strats Of Phase 2")]
         public StratsOfPhase2 stratOfPhase2 { get; set; }
+        [UserSetting("Colour Of The North-south Axis And Two Combined Arrows")]
+        public ScriptColor colourOfTheNorthSouthAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
+        [UserSetting("Arrows Of The North-south Axis Point South Instead Of North.")]
+        public bool arrowsPointSouth { get; set; } = false;
+        [UserSetting("Strats Of Ultraviolent Ray 4")]
+        public StratsOfUltraviolentRay4 stratOfUltraviolentRay4 { get; set; }
 
         #endregion
         
@@ -96,6 +105,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          Sub-phase 7: intermission regins
          Sub-phase 8: Beckon Moonlight
          Sub-phase 9: intermission fangs
+         
+         Phase 2:
+         
+         Sub-phase 1: 
          
         */
         
@@ -149,6 +162,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private System.Threading.AutoResetEvent fourthMoonbeamsBiteSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile bool secondSetGuidanceHasBeenDrawn=false;
         private volatile bool stoneWolvesAreOnTheCardinals=false;
+        
+        private volatile bool axisAndArrowsHaveBeenDrawn=false;
+
+        private volatile int numberOfUltraviolentRay=0;
+        private volatile List<bool> playerWasMarkedByAUltraviolentRay=[false,false,false,false,false,false,false,false];
+        private System.Threading.AutoResetEvent ultraviolentRaySemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int roundOfUltraviolentRay=0;
 
         #endregion
 
@@ -157,6 +177,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private static readonly Vector3 ARENA_CENTER_OF_PHASE_1=new Vector3(100,0,100);
         
         private readonly Object lockOfShadowNumber=new Object();
+        
+        private static readonly Vector3 ARENA_CENTER_OF_PHASE_2=new Vector3(100,-150,100);
+        private static readonly Vector3 RAW_PLATFORM_CENTER=rotatePosition(new Vector3(100,-150,82.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5);
+        // The center of the south platform is 100,-150,117.5.
+        // The radius of a platform is 8.
 
         #endregion
         
@@ -195,6 +220,23 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             // Rinon
             Other_Strats_Are_Work_In_Progress
 
+        }
+
+        public enum StratsOfUltraviolentRay4 {
+            
+            Same_As_Usual,
+            Northwest_And_South
+            
+        }
+
+        public enum PlatformsOfPhase2 {
+            
+            NORTHEAST=0,
+            SOUTHEAST=1,
+            SOUTH=2,
+            SOUTHWEST=3,
+            NORTHWEST=4
+            
         }
 
         #endregion
@@ -258,6 +300,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             fourthMoonbeamsBiteSemaphore.Reset();
             secondSetGuidanceHasBeenDrawn=false;
             stoneWolvesAreOnTheCardinals=false;
+            
+            axisAndArrowsHaveBeenDrawn=false;
+            
+            numberOfUltraviolentRay=0;
+            playerWasMarkedByAUltraviolentRay=[false,false,false,false,false,false,false,false];
+            ultraviolentRaySemaphore.Reset();
+            roundOfUltraviolentRay=0;
 
             shenaniganSemaphore.Set();
             
@@ -1847,7 +1896,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 gustFirstSetSemaphore.Reset();
                 gustSecondSetSemaphore.Reset();
                 
-                accessory.Log.Debug("Now moving to Sub-phase 2.");
+                accessory.Log.Debug("Now moving to Phase 1 Sub-phase 2.");
 
             }
 
@@ -2260,7 +2309,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             windWolfTetherSemaphore.Reset();
             
-            accessory.Log.Debug("Now moving to Sub-phase 3.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 3.");
 
         }
         
@@ -2550,7 +2599,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             terrestrialTitansSemaphore.Reset();
             
-            accessory.Log.Debug("Now moving to Sub-phase 4.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 4.");
 
         }
         
@@ -2577,7 +2626,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             currentSubPhase=5;
             
-            accessory.Log.Debug("Now moving to Sub-phase 5.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 5.");
         
         }
         
@@ -3867,7 +3916,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             currentSubPhase=6;
             
-            accessory.Log.Debug("Now moving to Sub-phase 6.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 6.");
             
             for(int i=0;i<=3;++i) {
                 
@@ -3882,7 +3931,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_1");
             accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_2");
             accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Windborne_End_Guidance_3");
-
         
         }
         
@@ -4396,13 +4444,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
-                if(enablePrompts) {
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    if(enablePrompts) {
                         
-                    accessory.Method.TextInfo(prompt,5125);
+                        accessory.Method.TextInfo(prompt,5125);
                         
+                    }
+                        
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
                 }
-                        
-                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
             
@@ -4751,13 +4803,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 System.Threading.Thread.MemoryBarrier();
                 
-                if(enablePrompts) {
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    if(enablePrompts) {
                         
-                    accessory.Method.TextInfo(prompt,3000);
+                        accessory.Method.TextInfo(prompt,3000);
                         
+                    }
+                        
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
                 }
-                        
-                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
             
@@ -4792,7 +4848,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             roleStackSemaphore.Reset();
             shadowSemaphore.Reset();
             
-            accessory.Log.Debug("Now moving to Sub-phase 7.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 7.");
         
         }
         
@@ -4824,7 +4880,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             roleStackSemaphore.Reset();
             
-            accessory.Log.Debug("Now moving to Sub-phase 8.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 8.");
         
         }
         
@@ -5389,13 +5445,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
-                if(enablePrompts) {
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    if(enablePrompts) {
                         
-                    accessory.Method.TextInfo(prompt,5125);
+                        accessory.Method.TextInfo(prompt,5125);
                         
+                    }
+                        
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
                 }
-                        
-                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
             
@@ -5610,16 +5670,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 currentProperties.DestoryAt=8500-Math.Max(1500+2000*theLastCleaveOfTheSafeQuarter,0);
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-                        
-                System.Threading.Thread.Sleep(2500);
                 
-                if(enablePrompts) {
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    System.Threading.Thread.Sleep(2500);
+                    
+                    if(enablePrompts) {
                         
-                    accessory.Method.TextInfo(prompt,6000);
+                        accessory.Method.TextInfo(prompt,6000);
                         
+                    }
+                
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
                 }
-                
-                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
             
@@ -5691,10 +5755,846 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             secondMoonbeamsBiteSemaphore.Reset();
             fourthMoonbeamsBiteSemaphore.Reset();
             
-            accessory.Log.Debug("Now moving to Sub-phase 9.");
+            accessory.Log.Debug("Now moving to Phase 1 Sub-phase 9.");
         
         }
+        
+        [ScriptMethod(name:"Phase 1 Cutscenes (Phase 1 Control)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:18227"],
+            suppress:2500,
+            userControl:false)]
 
+        public void Phase_1_Cutscenes_Phase_1_Control(Event @event, ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=9) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentPhase=2;
+
+            currentSubPhase=1;
+            
+            accessory.Log.Debug("Now moving to Phase 2 Sub-phase 1.");
+            
+            accessory.Method.RemoveDraw(".*");
+
+        }
+
+        #endregion
+        
+        #region Phase_2
+        
+        [ScriptMethod(name:"Phase 2 North-south Axis And Arrows",
+            eventType:EventTypeEnum.Targetable)]
+
+        public void Phase_2_NorthSouth_Axis_And_Arrows(Event @event, ScriptAccessory accessory) {
+
+            if(axisAndArrowsHaveBeenDrawn) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=18222) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_1";
+            currentProperties.Scale=new(0.5f,51);
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Color=colourOfTheNorthSouthAxis.V4.WithW(1);
+            currentProperties.DestoryAt=420000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_2";
+            currentProperties.Scale=new(2,9);
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Color=colourOfTheNorthSouthAxis.V4.WithW(1);
+            currentProperties.DestoryAt=420000;
+
+            if(arrowsPointSouth) {
+
+                currentProperties.Rotation=0;
+                currentProperties.Offset=new Vector3(5.562f,0,4.5f);
+
+            }
+
+            else {
+                
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Offset=new Vector3(5.562f,0,-4.5f);
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_3";
+            currentProperties.Scale=new(2,9);
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Color=colourOfTheNorthSouthAxis.V4.WithW(1);
+            currentProperties.DestoryAt=420000;
+            
+            if(arrowsPointSouth) {
+
+                currentProperties.Rotation=0;
+                currentProperties.Offset=new Vector3(-5.562f,0,4.5f);
+
+            }
+
+            else {
+                
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Offset=new Vector3(-5.562f,0,-4.5f);
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            axisAndArrowsHaveBeenDrawn=true;
+
+        }
+
+        private static Vector3 getPlatformCenter(PlatformsOfPhase2 targetPlatform) {
+
+            if(((int)targetPlatform)<0||((int)targetPlatform)>4) {
+
+                return ARENA_CENTER_OF_PHASE_2;
+
+            }
+            
+            return rotatePosition(RAW_PLATFORM_CENTER,ARENA_CENTER_OF_PHASE_2,Math.PI*2/5*((int)targetPlatform));
+            
+        }
+        
+        [ScriptMethod(name:"Phase 2 Quake III (Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42074"])]
+    
+        public void Phase_2_Quake_III_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                string prompt=string.Empty;
+
+                if(isInGroup1(myIndex)) {
+
+                    // The correct platform:
+                        
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
+                        
+                    // The another group:
+                        
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=5125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                }
+
+                if(isInGroup2(myIndex)) {
+                    
+                    // The correct platform:
+                        
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHEAST);
+                        
+                    // The another group:
+                        
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=5125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    if(enablePrompts) {
+                    
+                        accessory.Method.TextInfo(prompt,5125);
+                    
+                    }
+                    
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Gleaming Barrage (Normal)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42078"])]
+    
+        public void Phase_2_Gleaming_Barrage_Normal(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,31);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Acquisition)",
+            eventType:EventTypeEnum.TargetIcon,
+            userControl:false)]
+    
+        public void Phase_2_Ultraviolent_Ray_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-362) { // 0xE-0x178=-362
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(numberOfUltraviolentRay>=5) {
+
+                return;
+                
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            lock(playerWasMarkedByAUltraviolentRay) {
+                
+                ++numberOfUltraviolentRay;
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                if(!convertObjectId(@event["TargetId"], out var targetId)) {
+                
+                    return;
+                
+                }
+
+                int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+                if(!isALegalIndex(targetIndex)) {
+
+                    return;
+
+                }
+
+                playerWasMarkedByAUltraviolentRay[targetIndex]=true;
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                if(numberOfUltraviolentRay>=5) {
+
+                    ++roundOfUltraviolentRay;
+                    
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ultraviolentRaySemaphore.Set();
+
+                }
+
+            }
+        
+        }
+        
+        private static string getPlatformDescription(PlatformsOfPhase2 targetPlatform) {
+
+            return targetPlatform switch {
+                
+                PlatformsOfPhase2.NORTHEAST => "Northeast.",
+                PlatformsOfPhase2.SOUTHEAST => "Southeast.",
+                PlatformsOfPhase2.SOUTH => "South.",
+                PlatformsOfPhase2.SOUTHWEST => "Southwest.",
+                PlatformsOfPhase2.NORTHWEST => "Northwest.",
+                _ => string.Empty
+                
+            };
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Guidance)",
+            eventType:EventTypeEnum.TargetIcon,
+            suppress:2500)]
+    
+        public void Phase_2_Ultraviolent_Ray_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(!convertTargetIconId(@event["Id"], out var iconId)) {
+                
+                return;
+                
+            }
+
+            if(iconId!=-362) { // 0xE-0x178=-362
+
+                return;
+                
+            }
+            
+            accessory.Log.Debug($"An expected icon ID was captured. iconId={iconId}");
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            ultraviolentRaySemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
+                string prompt=string.Empty;
+                
+                if((roundOfUltraviolentRay!=4)
+                   ||
+                   (roundOfUltraviolentRay==4&&stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Same_As_Usual)) {
+
+                    if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
+
+                        if(isInGroup1(myIndex)) {
+
+                            myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+
+                        }
+
+                        if(isInGroup2(myIndex)) {
+                    
+                            myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    
+                        }
+
+                        if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                            return;
+
+                        }
+
+                        prompt="Stay.";
+
+                    }
+
+                    else {
+                        
+                        List<int> marksOnTheLeft=[],marksOnTheRight=[];
+
+                        if(playerWasMarkedByAUltraviolentRay[0])marksOnTheLeft.Add(0);
+                        if(playerWasMarkedByAUltraviolentRay[1])marksOnTheRight.Add(1);
+                        
+                        if(playerWasMarkedByAUltraviolentRay[2])marksOnTheLeft.Add(2);
+                        if(playerWasMarkedByAUltraviolentRay[3])marksOnTheRight.Add(3);
+                        
+                        if(playerWasMarkedByAUltraviolentRay[6])marksOnTheLeft.Add(6);
+                        if(playerWasMarkedByAUltraviolentRay[7])marksOnTheRight.Add(7);
+                        
+                        if(playerWasMarkedByAUltraviolentRay[4])marksOnTheLeft.Add(4);
+                        if(playerWasMarkedByAUltraviolentRay[5])marksOnTheRight.Add(5);
+
+                        int temporaryOrder=-1;
+
+                        if(isInGroup1(myIndex)) {
+                        
+                            temporaryOrder=marksOnTheLeft.IndexOf(myIndex);
+                        
+                        }
+                    
+                        if(isInGroup2(myIndex)) {
+                        
+                            temporaryOrder=marksOnTheRight.IndexOf(myIndex);
+                        
+                        }
+
+                        ++temporaryOrder;
+
+                        if(temporaryOrder<1||temporaryOrder>3) {
+                            
+                            return;
+                            
+                        }
+                        
+                        accessory.Log.Debug($"marksOnTheLeft={string.Join(",",marksOnTheLeft)}, marksOnTheRight={string.Join(",",marksOnTheRight)}, temporaryOrder={temporaryOrder}");
+
+                        if(isInGroup1(myIndex)) {
+
+                            switch(temporaryOrder) {
+
+                                case 1: {
+
+                                    myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+                                    prompt=getPlatformDescription(PlatformsOfPhase2.NORTHWEST);
+
+                                    break;
+
+                                }
+                                
+                                case 2: {
+                                    
+                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                                    prompt="Stay.";
+
+                                    break;
+
+                                }
+                                
+                                case 3: {
+                                    
+                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+
+                                    break;
+
+                                }
+                                
+                                default: {
+
+                                    return;
+
+                                }
+                                
+                            }
+
+                        }
+
+                        if(isInGroup2(myIndex)) {
+                    
+                            switch(temporaryOrder) {
+
+                                case 1: {
+
+                                    myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
+                                    prompt=getPlatformDescription(PlatformsOfPhase2.NORTHEAST);
+
+                                    break;
+
+                                }
+                                
+                                case 2: {
+                                    
+                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                                    prompt="Stay.";
+
+                                    break;
+
+                                }
+                                
+                                case 3: {
+                                    
+                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+
+                                    break;
+
+                                }
+                                
+                                default: {
+
+                                    return;
+
+                                }
+                                
+                            }
+                    
+                        }
+
+                        if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                            return;
+
+                        }
+                        
+                    }
+
+                }
+
+                else {
+
+                    if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Northwest_And_South) {
+                        
+                        // To be done...
+                        
+                    }
+                
+                }
+                
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    if(enablePrompts) {
+                    
+                        accessory.Method.TextInfo(prompt,6125);
+                    
+                    }
+                    
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Destruction)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42077"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_2_Ultraviolent_Ray_Destruction(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            numberOfUltraviolentRay=0;
+            playerWasMarkedByAUltraviolentRay=[false,false,false,false,false,false,false,false];
+            ultraviolentRaySemaphore.Reset();
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twinbite (Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42189"])]
+    
+        public void Phase_2_Twinbite_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isALegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                string prompt=string.Empty;
+
+                if(isTank(myIndex)) {
+
+                    if(myIndex==0) {
+                        
+                        // The correct platform:
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(2);
+                        currentProperties.Owner=accessory.Data.Me;
+                        currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                        currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        currentProperties.DestoryAt=7125;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(8);
+                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        currentProperties.DestoryAt=7125;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
+                        
+                        // The another tank:
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(8);
+                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.DestoryAt=7125;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+
+                    if(myIndex==1) {
+                        
+                        // The correct platform:
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(2);
+                        currentProperties.Owner=accessory.Data.Me;
+                        currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                        currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        currentProperties.DestoryAt=7125;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(8);
+                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        currentProperties.DestoryAt=7125;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHEAST);
+                        
+                        // The another tank:
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(8);
+                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.DestoryAt=7125;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+                    
+                    // Others:
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=7125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                else {
+                    
+                    // The safe platform:
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=7125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=7125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+                    
+                    // Dangerous platforms:
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=7125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(8);
+                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=7125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                }
+                
+                if(!string.IsNullOrWhiteSpace(prompt)) {
+                    
+                    if(enablePrompts) {
+                    
+                        accessory.Method.TextInfo(prompt,7125);
+                    
+                    }
+                    
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
+                }
+                
+            }
+        
+        }
+        
         #endregion
         
         #region Commons
