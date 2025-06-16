@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.17",
+        version:"0.0.0.18",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -176,6 +176,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile bool mtWasMarkerByPatienceOfWind=false;
         private System.Threading.AutoResetEvent elementalPurgeSemaphore=new System.Threading.AutoResetEvent(false);
 
+        private ulong? currentTempestStackTarget=null;  // Its read-write lock is lockOfTempestStackTarget.
+        private volatile PlatformsOfPhase2 beginningPlatform=PlatformsOfPhase2.SOUTH;
+        private volatile bool tetherBeginsFromTheWest=false;
+        private System.Threading.AutoResetEvent tempestLineSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent tempestGuidanceSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int roundOfTwofoldTempest=0;
+        private System.Threading.AutoResetEvent tetherLeavingSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent tetherCapturingSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent round2Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent round3Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent round4Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent tempestEndSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int numberOfSteps=65300;
+
         #endregion
 
         #region Constants
@@ -188,6 +202,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private static readonly Vector3 RAW_PLATFORM_CENTER=rotatePosition(new Vector3(100,-150,82.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5);
         // The center of the south platform is 100,-150,117.5.
         // The radius of a platform is 8.
+        
+        private readonly Object lockOfTempestStackTarget=new Object();
 
         #endregion
         
@@ -253,7 +269,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             accessory.Method.RemoveDraw(".*");
             
-            currentPhase=1;
+            currentPhase=2;
             currentSubPhase=1;
             
             reignId=string.Empty;
@@ -318,6 +334,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             mtWasMarkerByPatienceOfWind=false;
             elementalPurgeSemaphore.Reset();
+            
+            currentTempestStackTarget=null;
+            beginningPlatform=PlatformsOfPhase2.SOUTH;
+            tetherBeginsFromTheWest=false;
+            tempestLineSemaphore.Reset();
+            tempestGuidanceSemaphore.Reset();
+            roundOfTwofoldTempest=0; 
+            tetherLeavingSemaphore.Reset(); 
+            tetherCapturingSemaphore.Reset();
+            round2Semaphore.Reset();
+            round3Semaphore.Reset();
+            round4Semaphore.Reset();
+            tempestEndSemaphore.Reset();
+            numberOfSteps=65300;
             
             shenaniganSemaphore.Set();
             
@@ -468,7 +498,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -615,7 +645,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             Vector3 outerPosition=new Vector3(100,0,89.5f);
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -886,7 +916,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -1038,7 +1068,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             Vector3 approximateDestination=rotatePosition(targetPosition,ARENA_CENTER_OF_PHASE_1,Math.PI);
             double rotation=getRotation(approximateDestination,ARENA_CENTER_OF_PHASE_1);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -1497,7 +1527,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -1574,7 +1604,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 // Initial positions: https://www.geogebra.org/calculator/kt3brffu
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -1678,7 +1708,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 // Initial positions: https://www.geogebra.org/calculator/kt3brffu
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -2092,7 +2122,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER_OF_PHASE_1,8);
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -2167,7 +2197,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 Vector3 finalPositionForTethers=new Vector3(100,0,89);
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -3093,7 +3123,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -3150,7 +3180,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -3398,7 +3428,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             ulong? addId=null;
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -3431,7 +3461,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -3477,7 +3507,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -3622,7 +3652,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -3702,7 +3732,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -3847,7 +3877,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -4029,13 +4059,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
             }
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -4167,7 +4197,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -4313,7 +4343,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -4697,7 +4727,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -5010,13 +5040,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
             }
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -5247,7 +5277,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -5365,7 +5395,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -5579,7 +5609,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -5959,7 +5989,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -6141,7 +6171,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-                if(!isALegalIndex(targetIndex)) {
+                if(!isLegalIndex(targetIndex)) {
 
                     return;
 
@@ -6214,7 +6244,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -6456,7 +6486,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -6882,7 +6912,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-                if(!isALegalIndex(myIndex)) {
+                if(!isLegalIndex(myIndex)) {
 
                     return;
 
@@ -7164,7 +7194,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -7226,7 +7256,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
             
-            if(!isALegalIndex(targetIndex)) {
+            if(!isLegalIndex(targetIndex)) {
 
                 return;
 
@@ -7285,7 +7315,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -7506,7 +7536,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
-            if(!isALegalIndex(myIndex)) {
+            if(!isLegalIndex(myIndex)) {
 
                 return;
 
@@ -7516,7 +7546,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
-                myPosition=myIndex switch{
+                myPosition=myIndex switch {
                 
                     0 => getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),
                     1 => getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),
@@ -7557,6 +7587,1956 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                 
             }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (Line)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42097"])]
+    
+        public void Phase_2_Twofold_Tempest_Line(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+                if(!isLegalIndex(myIndex)) {
+
+                    return;
+
+                }
+                
+                long promptTime=0;
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                tempestLineSemaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                if(beginningPlatform==PlatformsOfPhase2.SOUTH) {
+
+                    return;
+
+                }
+                
+                // First line:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(16,40);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                currentProperties.TargetOrderIndex=1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=7125;
+
+                if((tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==3||myIndex==5)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+                
+                if((!tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==2||myIndex==6)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                // Second line:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(16,40);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                currentProperties.TargetOrderIndex=1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=7125;
+                currentProperties.DestoryAt=7125;
+
+                if((tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==1||myIndex==7)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+                
+                if((!tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==0||myIndex==4)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                // Third line:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(16,40);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                currentProperties.TargetOrderIndex=1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=14250;
+                currentProperties.DestoryAt=7125;
+
+                if((tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==0||myIndex==4)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+                
+                if((!tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==1||myIndex==7)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                // Fourth line:
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(16,40);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                currentProperties.TargetOrderIndex=1;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=21375;
+                currentProperties.DestoryAt=7125;
+
+                if((tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==2||myIndex==6)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+                
+                if((!tetherBeginsFromTheWest)
+                   &&
+                   (myIndex==3||myIndex==5)) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                    promptTime=currentProperties.Delay;
+
+                }
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+                string prompt="Bait the line.";
+                
+                System.Threading.Thread.Sleep((int)promptTime);
+                    
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo(prompt,7125);
+                    
+                }
+                    
+                accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
+                return;
+
+            }
+
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(16,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=28500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (Initialization And Monitor)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0054"],
+            userControl:false)]
+    
+        public void Phase_2_Twofold_Tempest_Initialization_And_Monitor(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+
+            if(currentTempestStackTarget==null) {
+                
+                int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+                if(!isLegalIndex(targetIndex)) {
+
+                    return;
+
+                }
+                
+                lock(lockOfTempestStackTarget) {
+
+                    currentTempestStackTarget=targetId;
+
+                    beginningPlatform=targetIndex switch {
+                    
+                        0 => PlatformsOfPhase2.SOUTHWEST,
+                        1 => PlatformsOfPhase2.SOUTHEAST,
+                        2 => PlatformsOfPhase2.NORTHWEST,
+                        3 => PlatformsOfPhase2.NORTHEAST,
+                        4 => PlatformsOfPhase2.SOUTHWEST,
+                        5 => PlatformsOfPhase2.NORTHEAST,
+                        6 => PlatformsOfPhase2.NORTHWEST,
+                        7 => PlatformsOfPhase2.SOUTHEAST,
+                        _ => PlatformsOfPhase2.SOUTH
+                    
+                    };
+
+                    if(beginningPlatform==PlatformsOfPhase2.SOUTH) {
+
+                        return;
+
+                    }
+
+                    if(beginningPlatform==PlatformsOfPhase2.NORTHWEST||beginningPlatform==PlatformsOfPhase2.SOUTHWEST) {
+
+                        tetherBeginsFromTheWest=true;
+
+                    }
+
+                    else {
+                    
+                        tetherBeginsFromTheWest=false;
+                    
+                    }
+
+                    roundOfTwofoldTempest=1;
+                
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tempestLineSemaphore.Set();
+                    tempestGuidanceSemaphore.Set();
+
+                }
+
+            }
+
+            else {
+                
+                lock(lockOfTempestStackTarget) {
+
+                    if(currentTempestStackTarget==accessory.Data.Me) {
+
+                        tetherCapturingSemaphore.Reset();
+                    
+                        tetherLeavingSemaphore.Set();
+                        
+                        accessory.Log.Debug("The tether left.");
+
+                    }
+                
+                    System.Threading.Thread.MemoryBarrier();
+
+                    currentTempestStackTarget=targetId;
+                
+                    System.Threading.Thread.MemoryBarrier();
+
+                    if(targetId==accessory.Data.Me) {
+                    
+                        tetherLeavingSemaphore.Reset();
+
+                        tetherCapturingSemaphore.Set();
+                        
+                        accessory.Log.Debug("The tether was captured.");
+
+                    }
+
+                }
+            
+                /*
+
+                System.Threading.Thread.Sleep(125);
+
+                tetherLeavingSemaphore.Reset();
+
+                tetherCapturingSemaphore.Reset();
+
+                */
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (Round Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42098"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_2_Twofold_Tempest_Round_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            if(roundOfTwofoldTempest>=5||roundOfTwofoldTempest<1) {
+
+                return;
+
+            }
+            
+            // 42098: Stack
+            // 42099: Line
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            ++roundOfTwofoldTempest;
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            if(roundOfTwofoldTempest==2) {
+
+                round2Semaphore.Set();
+                
+                accessory.Log.Debug("Twofold Tempest Round 2.");
+
+            }
+            
+            if(roundOfTwofoldTempest==3) {
+
+                round3Semaphore.Set();
+                
+                accessory.Log.Debug("Twofold Tempest Round 3.");
+
+            }
+            
+            if(roundOfTwofoldTempest==4) {
+
+                round4Semaphore.Set();
+                
+                accessory.Log.Debug("Twofold Tempest Round 4.");
+
+            }
+
+            if(roundOfTwofoldTempest==5) {
+
+                tempestEndSemaphore.Set();
+                
+                accessory.Log.Debug("Twofold Tempest ended.");
+
+            }
+
+        }
+
+        private void drawGuidanceForSupporters(int partyIndex,Vector3 targetPosition,int round,ScriptAccessory accessory) {
+
+            if(!isLegalIndex(partyIndex)) {
+
+                return;
+
+            }
+
+            if(round<1||round>4) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.PartyList[partyIndex];
+            currentProperties.TargetPosition=targetPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=7125*(round-1);
+            currentProperties.DestoryAt=7125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (Supporter Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42097"])]
+    
+        public void Phase_2_Twofold_Tempest_Supporter_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(!isSupporter(myIndex)) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            tempestGuidanceSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                int myPlatform=(int)(myIndex switch {
+                    
+                    0 => PlatformsOfPhase2.SOUTHWEST,
+                    1 => PlatformsOfPhase2.SOUTHEAST,
+                    2 => PlatformsOfPhase2.NORTHWEST,
+                    3 => PlatformsOfPhase2.NORTHEAST,
+                    _ => PlatformsOfPhase2.SOUTH
+                    
+                });
+
+                if(myPlatform==((int)PlatformsOfPhase2.SOUTH)) {
+
+                    return;
+
+                }
+                
+                Vector3 myStackPosition=rotatePosition(new Vector3(100,-150,75.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myLinePosition=rotatePosition(new Vector3(100,-150,89.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myStandbyPosition=getPlatformCenter((PlatformsOfPhase2)myPlatform);
+
+                if(myIndex==0) {
+
+                    if(tetherBeginsFromTheWest) {
+                        
+                        drawGuidanceForSupporters(myIndex,myStackPosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myLinePosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,4,accessory);
+                        
+                    }
+
+                    else {
+                        
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myLinePosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myStackPosition,4,accessory);
+                        
+                    }
+                    
+                }
+                
+                if(myIndex==1) {
+
+                    if(tetherBeginsFromTheWest) {
+                        
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myLinePosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myStackPosition,4,accessory);
+                        
+                    }
+
+                    else {
+                        
+                        drawGuidanceForSupporters(myIndex,myStackPosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myLinePosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,4,accessory);
+                        
+                    }
+                    
+                }
+                
+                if(myIndex==2) {
+
+                    if(tetherBeginsFromTheWest) {
+                        
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myStackPosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myLinePosition,4,accessory);
+                        
+                    }
+
+                    else {
+                        
+                        drawGuidanceForSupporters(myIndex,myLinePosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myStackPosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,4,accessory);
+                        
+                    }
+                    
+                }
+                
+                if(myIndex==3) {
+
+                    if(tetherBeginsFromTheWest) {
+                        
+                        drawGuidanceForSupporters(myIndex,myLinePosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myStackPosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,4,accessory);
+                        
+                    }
+
+                    else {
+                        
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,1,accessory);
+                        drawGuidanceForSupporters(myIndex,myStackPosition,2,accessory);
+                        drawGuidanceForSupporters(myIndex,myStandbyPosition,3,accessory);
+                        drawGuidanceForSupporters(myIndex,myLinePosition,4,accessory);
+                        
+                    }
+                    
+                }
+
+            }
+
+        }
+        
+        private void drawPositionGuidanceForDPS(int partyIndex,Vector3 targetPosition,ScriptAccessory accessory) {
+
+            if(!isLegalIndex(partyIndex)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=numberOfSteps.ToString();
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.PartyList[partyIndex];
+            currentProperties.TargetPosition=targetPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=30000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+        }
+        
+        private void drawObjectGuidanceForDPS(int sourceIndex,int targetIndex,ScriptAccessory accessory) {
+
+            if(!isLegalIndex(sourceIndex)||!isLegalIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=numberOfSteps.ToString();
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.PartyList[sourceIndex];
+            currentProperties.TargetObject=accessory.Data.PartyList[targetIndex];
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=30000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (M1 Or D1 Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42097"])]
+    
+        public void Phase_2_Twofold_Tempest_M1_Or_D1_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=4) { // Subject to change.
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            tempestGuidanceSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                int myPlatform=(int)(myIndex switch {
+                    
+                    4 => PlatformsOfPhase2.SOUTHWEST,
+                    5 => PlatformsOfPhase2.NORTHEAST,
+                    6 => PlatformsOfPhase2.NORTHWEST,
+                    7 => PlatformsOfPhase2.SOUTHEAST,
+                    _ => PlatformsOfPhase2.SOUTH
+                    
+                });
+
+                if(myPlatform==((int)PlatformsOfPhase2.SOUTH)) {
+
+                    return;
+
+                }
+                
+                int myPartnerIndex=myIndex switch {
+                    
+                    4 => 0,
+                    5 => 3,
+                    6 => 2,
+                    7 => 1,
+                    _ => -1
+                    
+                };
+
+                if(myPartnerIndex==-1) {
+
+                    return;
+
+                }
+                
+                int dpsOnMyLeft=myIndex switch {
+                    
+                    4 => 6,
+                    5 => 7,
+                    6 => 5,
+                    7 => -1,
+                    _ => -1
+                    
+                };
+                
+                int dpsOnMyRight=myIndex switch {
+                    
+                    4 => -1,
+                    5 => 6,
+                    6 => 4,
+                    7 => 5,
+                    _ => -1
+                    
+                };
+                
+                Vector3 myStackPosition=rotatePosition(new Vector3(100,-150,75.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myLinePosition=rotatePosition(new Vector3(100,-150,89.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myStandbyPosition=getPlatformCenter((PlatformsOfPhase2)myPlatform);
+                Vector3 myInterceptionPosition=new Vector3(86.82f,-150,99.72f); // Subject to change.
+                // Sorry for measuring the position by the mouse pointer, I don't know how to calculate it accurately with geometric.
+                // But anyway, I guess it doesn't need to be super accurate and geometrically reproducible.
+                
+                // ----- Round 1 -----
+
+                if(beginningPlatform==PlatformsOfPhase2.SOUTHWEST) { // Subject to change.
+
+                    if(currentTempestStackTarget!=accessory.Data.Me) {
+                        
+                        drawObjectGuidanceForDPS(myIndex,myPartnerIndex,accessory);
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        tetherCapturingSemaphore.WaitOne();
+            
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                        accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        ++numberOfSteps;
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                    }
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(beginningPlatform==PlatformsOfPhase2.NORTHWEST) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myInterceptionPosition,accessory);
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round2Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ----- Round 2 -----
+                
+                if(tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round3Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 3 -----
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round4Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 4 -----
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,myInterceptionPosition,accessory);
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                tempestEndSemaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (R2 Or D4 Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42097"])]
+    
+        public void Phase_2_Twofold_Tempest_R2_Or_D4_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=7) { // Subject to change.
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            tempestGuidanceSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                int myPlatform=(int)(myIndex switch {
+                    
+                    4 => PlatformsOfPhase2.SOUTHWEST,
+                    5 => PlatformsOfPhase2.NORTHEAST,
+                    6 => PlatformsOfPhase2.NORTHWEST,
+                    7 => PlatformsOfPhase2.SOUTHEAST,
+                    _ => PlatformsOfPhase2.SOUTH
+                    
+                });
+
+                if(myPlatform==((int)PlatformsOfPhase2.SOUTH)) {
+
+                    return;
+
+                }
+                
+                int myPartnerIndex=myIndex switch {
+                    
+                    4 => 0,
+                    5 => 3,
+                    6 => 2,
+                    7 => 1,
+                    _ => -1
+                    
+                };
+
+                if(myPartnerIndex==-1) {
+
+                    return;
+
+                }
+                
+                int dpsOnMyLeft=myIndex switch {
+                    
+                    4 => 6,
+                    5 => 7,
+                    6 => 5,
+                    7 => -1,
+                    _ => -1
+                    
+                };
+                
+                int dpsOnMyRight=myIndex switch {
+                    
+                    4 => -1,
+                    5 => 6,
+                    6 => 4,
+                    7 => 5,
+                    _ => -1
+                    
+                };
+                
+                Vector3 myStackPosition=rotatePosition(new Vector3(100,-150,75.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myLinePosition=rotatePosition(new Vector3(100,-150,89.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myStandbyPosition=getPlatformCenter((PlatformsOfPhase2)myPlatform);
+                Vector3 myInterceptionPosition=new Vector3(113.20f,-150,99.93f); // Subject to change.
+                // Sorry for measuring the position by the mouse pointer, I don't know how to calculate it accurately with geometric.
+                // But anyway, I guess it doesn't need to be super accurate and geometrically reproducible.
+                
+                // ----- Round 1 -----
+
+                if(beginningPlatform==PlatformsOfPhase2.SOUTHEAST) { // Subject to change.
+
+                    if(currentTempestStackTarget!=accessory.Data.Me) {
+                        
+                        drawObjectGuidanceForDPS(myIndex,myPartnerIndex,accessory);
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        tetherCapturingSemaphore.WaitOne();
+            
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                        accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        ++numberOfSteps;
+                        
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                    }
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(beginningPlatform==PlatformsOfPhase2.NORTHEAST) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myInterceptionPosition,accessory);
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round2Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ----- Round 2 -----
+                
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round3Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 3 -----
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round4Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 4 -----
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,myInterceptionPosition,accessory);
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                tempestEndSemaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (R1 Or D3 Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42097"])]
+    
+        public void Phase_2_Twofold_Tempest_R1_Or_D3_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=6) { // Subject to change.
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            tempestGuidanceSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                int myPlatform=(int)(myIndex switch {
+                    
+                    4 => PlatformsOfPhase2.SOUTHWEST,
+                    5 => PlatformsOfPhase2.NORTHEAST,
+                    6 => PlatformsOfPhase2.NORTHWEST,
+                    7 => PlatformsOfPhase2.SOUTHEAST,
+                    _ => PlatformsOfPhase2.SOUTH
+                    
+                });
+
+                if(myPlatform==((int)PlatformsOfPhase2.SOUTH)) {
+
+                    return;
+
+                }
+                
+                int myPartnerIndex=myIndex switch {
+                    
+                    4 => 0,
+                    5 => 3,
+                    6 => 2,
+                    7 => 1,
+                    _ => -1
+                    
+                };
+
+                if(myPartnerIndex==-1) {
+
+                    return;
+
+                }
+                
+                int dpsOnMyLeft=myIndex switch {
+                    
+                    4 => 6,
+                    5 => 7,
+                    6 => 5,
+                    7 => -1,
+                    _ => -1
+                    
+                };
+                
+                int dpsOnMyRight=myIndex switch {
+                    
+                    4 => -1,
+                    5 => 6,
+                    6 => 4,
+                    7 => 5,
+                    _ => -1
+                    
+                };
+                
+                Vector3 myStackPosition=rotatePosition(new Vector3(100,-150,75.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myLinePosition=rotatePosition(new Vector3(100,-150,89.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myStandbyPosition=getPlatformCenter((PlatformsOfPhase2)myPlatform);
+                Vector3 interceptionPositionOnMyLeft=new Vector3(96.54f,-150,87.11f); // Subject to change.
+                Vector3 interceptionPositionOnMyRight=new Vector3(89.05f,-150,92.51f); // Subject to change.
+                Vector3 myStandbyPositionOnAnotherPlatform=new Vector3(82.13f,-150,99.12f); // Subject to change.
+                // Sorry for measuring these three positions by the mouse pointer, I don't know how to calculate it accurately with geometric.
+                // But anyway, I guess it doesn't need to be super accurate and geometrically reproducible.
+                
+                // ----- Round 1 -----
+
+                if(beginningPlatform==PlatformsOfPhase2.SOUTHWEST) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                if(beginningPlatform==PlatformsOfPhase2.NORTHWEST) { // Subject to change.
+                    
+                    if(currentTempestStackTarget!=accessory.Data.Me) {
+                        
+                        drawObjectGuidanceForDPS(myIndex,myPartnerIndex,accessory);
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        tetherCapturingSemaphore.WaitOne();
+            
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                        accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        ++numberOfSteps;
+                        
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                    }
+                    
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPositionOnAnotherPlatform,accessory);
+                    
+                }
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round2Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ----- Round 2 -----
+                
+                if(beginningPlatform==PlatformsOfPhase2.SOUTHWEST) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,interceptionPositionOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(beginningPlatform==PlatformsOfPhase2.NORTHWEST) { // Subject to change.
+                    
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round3Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 3 -----
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,interceptionPositionOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round4Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 4 -----
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                tempestEndSemaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (M2 Or D2 Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42097"])]
+    
+        public void Phase_2_Twofold_Tempest_M2_Or_D2_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=5) { // Subject to change.
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            tempestGuidanceSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+                
+                int myPlatform=(int)(myIndex switch {
+                    
+                    4 => PlatformsOfPhase2.SOUTHWEST,
+                    5 => PlatformsOfPhase2.NORTHEAST,
+                    6 => PlatformsOfPhase2.NORTHWEST,
+                    7 => PlatformsOfPhase2.SOUTHEAST,
+                    _ => PlatformsOfPhase2.SOUTH
+                    
+                });
+
+                if(myPlatform==((int)PlatformsOfPhase2.SOUTH)) {
+
+                    return;
+
+                }
+                
+                int myPartnerIndex=myIndex switch {
+                    
+                    4 => 0,
+                    5 => 3,
+                    6 => 2,
+                    7 => 1,
+                    _ => -1
+                    
+                };
+
+                if(myPartnerIndex==-1) {
+
+                    return;
+
+                }
+                
+                int dpsOnMyLeft=myIndex switch {
+                    
+                    4 => 6,
+                    5 => 7,
+                    6 => 5,
+                    7 => -1,
+                    _ => -1
+                    
+                };
+                
+                int dpsOnMyRight=myIndex switch {
+                    
+                    4 => -1,
+                    5 => 6,
+                    6 => 4,
+                    7 => 5,
+                    _ => -1
+                    
+                };
+                
+                Vector3 myStackPosition=rotatePosition(new Vector3(100,-150,75.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myLinePosition=rotatePosition(new Vector3(100,-150,89.5f),ARENA_CENTER_OF_PHASE_2,Math.PI/5+(Math.PI*2/5*myPlatform));
+                Vector3 myStandbyPosition=getPlatformCenter((PlatformsOfPhase2)myPlatform);
+                Vector3 interceptionPositionOnMyLeft=new Vector3(111.05f,-150,92.84f); // Subject to change.
+                Vector3 interceptionPositionOnMyRight=new Vector3(103.89f,-150,87.60f); // Subject to change.
+                Vector3 myStandbyPositionOnAnotherPlatform=new Vector3(117.52f,-150,99.04f); // Subject to change.
+                // Sorry for measuring these three positions by the mouse pointer, I don't know how to calculate it accurately with geometric.
+                // But anyway, I guess it doesn't need to be super accurate and geometrically reproducible.
+                
+                // ----- Round 1 -----
+
+                if(beginningPlatform==PlatformsOfPhase2.SOUTHEAST) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                if(beginningPlatform==PlatformsOfPhase2.NORTHEAST) { // Subject to change.
+                    
+                    if(currentTempestStackTarget!=accessory.Data.Me) {
+                        
+                        drawObjectGuidanceForDPS(myIndex,myPartnerIndex,accessory);
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        tetherCapturingSemaphore.WaitOne();
+            
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                        accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                        System.Threading.Thread.MemoryBarrier();
+
+                        ++numberOfSteps;
+                        
+                        System.Threading.Thread.MemoryBarrier();
+                        
+                    }
+                    
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPositionOnAnotherPlatform,accessory);
+                    
+                }
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round2Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ----- Round 2 -----
+                
+                if(beginningPlatform==PlatformsOfPhase2.SOUTHEAST) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,interceptionPositionOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(beginningPlatform==PlatformsOfPhase2.NORTHEAST) { // Subject to change.
+                    
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+
+                if(tetherBeginsFromTheWest) { // Subject to change.
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round3Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 3 -----
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawPositionGuidanceForDPS(myIndex,interceptionPositionOnMyRight,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherCapturingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStackPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                round4Semaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+                
+                // ---- Round 4 -----
+
+                if(!tetherBeginsFromTheWest) { // Subject to change.
+
+                    drawPositionGuidanceForDPS(myIndex,myLinePosition,accessory);
+                    
+                }
+
+                else {
+                    
+                    drawObjectGuidanceForDPS(myIndex,dpsOnMyLeft,accessory); // Subject to change.
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    tetherLeavingSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    ++numberOfSteps;
+                        
+                    System.Threading.Thread.MemoryBarrier();
+                    
+                    drawPositionGuidanceForDPS(myIndex,myStandbyPosition,accessory);
+                    
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+
+                tempestEndSemaphore.WaitOne();
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                accessory.Method.RemoveDraw(numberOfSteps.ToString());
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+                ++numberOfSteps;
+                        
+                System.Threading.Thread.MemoryBarrier();
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Elemental Purge (Sub-phase 2 Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42101"],
+            userControl:false)]
+    
+        public void Phase_2_Elemental_Purge_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=2) {
+
+                return;
+
+            }
+
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=3;
+            
+            tempestLineSemaphore.Reset();
+            tempestGuidanceSemaphore.Reset();
+            tetherLeavingSemaphore.Reset(); 
+            tetherCapturingSemaphore.Reset();
+            round2Semaphore.Reset();
+            round3Semaphore.Reset();
+            round4Semaphore.Reset();
+            tempestEndSemaphore.Reset();
+            
+            accessory.Log.Debug("Now moving to Phase 2 Sub-phase 3.");
         
         }
         
@@ -7673,7 +9653,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
         }
 
-        public static bool isALegalIndex(int partyIndex) {
+        public static bool isLegalIndex(int partyIndex) {
 
             return (0<=partyIndex&&partyIndex<=7);
 
