@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.19",
+        version:"0.0.0.20",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -110,6 +110,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          
          Sub-phase 1: Elemental Purge
          Sub-phase 2: Twofold Tempest
+         Sub-phase 3: Champion's Circuit
          
         */
         
@@ -6094,11 +6095,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         }
         
-        [ScriptMethod(name:"Phase 2 Gleaming Barrage (Normal)",
+        [ScriptMethod(name:"Phase 2 Gleaming Beam",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42078"])]
     
-        public void Phase_2_Gleaming_Barrage_Normal(Event @event,ScriptAccessory accessory) {
+        public void Phase_2_Gleaming_Beam(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=2) {
 
@@ -9537,6 +9538,338 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             tempestEndSemaphore.Reset();
             
             accessory.Log.Debug("Now moving to Phase 2 Sub-phase 3.");
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Gleaming Barrage",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42102"])]
+    
+        public void Phase_2_Gleaming_Barrage(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8,31);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2800;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Champion's Circuit",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(42103|42104)$"])]
+    
+        public void Phase_2_Champions_Circuit(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+            
+            double sourceRotation=0;
+
+            try {
+
+                sourceRotation=JsonConvert.DeserializeObject<double>(@event["SourceRotation"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourceRotation deserialization failed.");
+
+                return;
+
+            }
+
+            double actualRotation=convertRotation(sourceRotation);
+            int targetPlatform=-1;
+
+            for(int i=0;i<=4;++i) {
+
+                if(Math.Abs((Math.PI/5+Math.PI*2/5*i)-actualRotation)<Math.PI*0.05) {
+
+                    targetPlatform=i;
+
+                    break;
+
+                }
+                
+            }
+
+            if(targetPlatform<0||targetPlatform>4) {
+
+                return;
+
+            }
+
+            int donutPlatform=(targetPlatform-1+5)%5;
+            
+            // 42103: Clockwise
+            // 42104: Counterclockwise
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            string prompt=string.Empty;
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(12,27);
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Rotation=((float)sourceRotation)+float.Pi*2/5*0;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                    
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(13);
+            currentProperties.InnerScale=new(4);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Position=getPlatformCenter(((PlatformsOfPhase2)donutPlatform));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                    
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(28.3f);
+            currentProperties.InnerScale=new(15.8f);
+            currentProperties.Radian=float.Pi*2/5;
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Rotation=((float)sourceRotation)+float.Pi*2/5*2;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                    
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(22);
+            currentProperties.Radian=float.Pi*2/5;
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Rotation=((float)sourceRotation)+float.Pi*2/5*3;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(28.3f);
+            currentProperties.InnerScale=new(15.8f);
+            currentProperties.Radian=float.Pi*2/5;
+            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+            currentProperties.Rotation=((float)sourceRotation)+float.Pi*2/5*4;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+
+            if(string.Equals(@event["ActionId"],"42103")) {
+
+                donutPlatform=(donutPlatform+1)%5;
+
+                for(int i=1;i<5;++i,donutPlatform=(donutPlatform+1)%5) {
+
+                    float currentRotation=((float)sourceRotation)+float.Pi*2/5*(-i);
+                    long currentDelay=8000+4375*(i-1);
+                    Vector3 donutCenter=getPlatformCenter(((PlatformsOfPhase2)donutPlatform));
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(12,27);
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*0+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(13);
+                    currentProperties.InnerScale=new(4);
+                    currentProperties.Radian=float.Pi*2;
+                    currentProperties.Position=donutCenter;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(28.3f);
+                    currentProperties.InnerScale=new(15.8f);
+                    currentProperties.Radian=float.Pi*2/5;
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*2+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(22);
+                    currentProperties.Radian=float.Pi*2/5;
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*3+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(28.3f);
+                    currentProperties.InnerScale=new(15.8f);
+                    currentProperties.Radian=float.Pi*2/5;
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*4+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+
+                }
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"42104")) {
+
+                donutPlatform=(donutPlatform-1+10)%5;
+                
+                for(int i=1;i<5;++i,donutPlatform=(donutPlatform-1+10)%5) {
+
+                    float currentRotation=((float)sourceRotation)+float.Pi*2/5*i;
+                    long currentDelay=8000+4375*(i-1);
+                    Vector3 donutCenter=getPlatformCenter(((PlatformsOfPhase2)donutPlatform));
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(12,27);
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*0+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(13);
+                    currentProperties.InnerScale=new(4);
+                    currentProperties.Radian=float.Pi*2;
+                    currentProperties.Position=donutCenter;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(28.3f);
+                    currentProperties.InnerScale=new(15.8f);
+                    currentProperties.Radian=float.Pi*2/5;
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*2+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(22);
+                    currentProperties.Radian=float.Pi*2/5;
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*3+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(28.3f);
+                    currentProperties.InnerScale=new(15.8f);
+                    currentProperties.Radian=float.Pi*2/5;
+                    currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                    currentProperties.Rotation=float.Pi*2/5*4+currentRotation;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=currentDelay;
+                    currentProperties.DestoryAt=4375;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Champion's Circuit (Sub-phase 3 Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42074"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_2_Champions_Circuit_SubPhase_3_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=3) {
+
+                return;
+
+            }
+
+            if(roundOfQuakeIii!=3) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=4;
+            
+            accessory.Log.Debug("Now moving to Phase 2 Sub-phase 4.");
         
         }
         
