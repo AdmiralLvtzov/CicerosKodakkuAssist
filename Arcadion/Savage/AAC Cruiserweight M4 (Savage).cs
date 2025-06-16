@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.20",
+        version:"0.0.0.21",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -111,6 +111,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          Sub-phase 1: Elemental Purge
          Sub-phase 2: Twofold Tempest
          Sub-phase 3: Champion's Circuit
+         Sub-phase 4: Lone Wolf's Lament
          
         */
         
@@ -174,6 +175,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private System.Threading.AutoResetEvent ultraviolentRaySemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int roundOfUltraviolentRay=0;
 
+        private volatile int roundOfTwinbite=0;
+
         private volatile bool mtWasMarkerByPatienceOfWind=false;
         private System.Threading.AutoResetEvent elementalPurgeSemaphore=new System.Threading.AutoResetEvent(false);
 
@@ -191,6 +194,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private System.Threading.AutoResetEvent tempestEndSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int numberOfSteps=65300;
 
+        private volatile int numberOfLamentTethers=0; // Its read-write lock is lockOfLamentData.
+        private volatile int dpsWithTheFarTank=-1,dpsWithTheCloseTank=-1,dpsWithTheFarHealer=-1,dpsWithTheCloseHealer=-1; // Its read-write lock is lockOfLamentData.
+        private volatile int tankWithTheFarDps=-1,tankWithTheCloseDps=-1,healerWithTheFarDps=-1,healerWithTheCloseDps=-1; // Its read-write lock is lockOfLamentData.
+        private System.Threading.AutoResetEvent lamentSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile bool twoPlayerTowerIsOnTheWest=false;
+        private System.Threading.AutoResetEvent northTowerSemaphore=new System.Threading.AutoResetEvent(false);
+
         #endregion
 
         #region Constants
@@ -205,6 +215,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         // The radius of a platform is 8.
         
         private readonly Object lockOfTempestStackTarget=new Object();
+        
+        private readonly Object lockOfLamentData=new Object();
 
         #endregion
         
@@ -332,6 +344,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             playerWasMarkedByAUltraviolentRay=[false,false,false,false,false,false,false,false];
             ultraviolentRaySemaphore.Reset();
             roundOfUltraviolentRay=0;
+            
+            roundOfTwinbite=0;
 
             mtWasMarkerByPatienceOfWind=false;
             elementalPurgeSemaphore.Reset();
@@ -349,6 +363,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             round4Semaphore.Reset();
             tempestEndSemaphore.Reset();
             numberOfSteps=65300;
+            
+            numberOfLamentTethers=0;
+            dpsWithTheFarTank=-1;dpsWithTheCloseTank=-1;dpsWithTheFarHealer=-1;dpsWithTheCloseHealer=-1;
+            tankWithTheFarDps=-1;tankWithTheCloseDps=-1;healerWithTheFarDps=-1;healerWithTheCloseDps=-1;
+            lamentSemaphore.Reset();
+            twoPlayerTowerIsOnTheWest=false;
+            northTowerSemaphore.Reset();
             
             shenaniganSemaphore.Set();
             
@@ -6473,6 +6494,25 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         }
         
+        [ScriptMethod(name:"Phase 2 Twinbite (Round Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42189"],
+            userControl:false)]
+    
+        public void Phase_2_Twinbite_Round_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            ++roundOfTwinbite;
+
+        }
+        
         [ScriptMethod(name:"Phase 2 Twinbite (Guidance)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42189"])]
@@ -9871,6 +9911,524 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             accessory.Log.Debug("Now moving to Phase 2 Sub-phase 4.");
         
+        }
+        
+        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Pre-position Guidance)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42190"],
+            suppress:2500)]
+    
+        public void Phase_2_Lone_Wolfs_Lament_PrePosition_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=4) {
+
+                return;
+
+            }
+
+            if(roundOfTwinbite!=2) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+
+                Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
+
+                if(isDps(myIndex)) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+
+                }
+                
+                if(isTank(myIndex)) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+
+                }
+                
+                if(isHealer(myIndex)) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+
+                }
+
+                if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                    return;
+
+                }
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=20500;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(8);
+                currentProperties.Position=myPosition;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=20500;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Acquisition)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(013D|013E)$"],
+            userControl:false)]
+    
+        public void Phase_2_Lone_Wolfs_Lament_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=4) {
+
+                return;
+
+            }
+
+            if(numberOfLamentTethers>=4) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+            
+            int sourceIndex=accessory.Data.PartyList.IndexOf((uint)sourceId);
+            
+            if(!isLegalIndex(sourceIndex)) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["TargetId"], out var targetId)) {
+            
+                return;
+            
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf((uint)targetId);
+            
+            if(!isLegalIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            bool playersHaveToGetClose=false;
+
+            // O13D: Get close
+            // 013E: Stay far
+            
+            if(string.Equals(@event["Id"],"013D")) {
+
+                playersHaveToGetClose=true;
+
+            }
+            
+            if(string.Equals(@event["Id"],"013E")) {
+
+                playersHaveToGetClose=false;
+
+            }
+
+            lock(lockOfLamentData) {
+                
+                ++numberOfLamentTethers;
+            
+                System.Threading.Thread.MemoryBarrier();
+                
+                if(isDps(sourceIndex)) {
+                
+                    if(isTank(targetIndex)) {
+
+                        if(playersHaveToGetClose) {
+
+                            dpsWithTheCloseTank=sourceIndex;
+                            tankWithTheCloseDps=targetIndex;
+
+                        }
+
+                        else {
+
+                            dpsWithTheFarTank=sourceIndex;
+                            tankWithTheFarDps=targetIndex;
+
+                        }
+                
+                    }
+                
+                    if(isHealer(targetIndex)) {
+                    
+                        if(playersHaveToGetClose) {
+
+                            dpsWithTheCloseHealer=sourceIndex;
+                            healerWithTheCloseDps=targetIndex;
+
+                        }
+
+                        else {
+
+                            dpsWithTheFarHealer=sourceIndex;
+                            healerWithTheFarDps=targetIndex;
+
+                        }
+                
+                    }
+                
+                }
+
+                if(isTank(sourceIndex)) {
+                
+                    if(isDps(targetIndex)) {
+                    
+                        if(playersHaveToGetClose) {
+
+                            dpsWithTheCloseTank=targetIndex;
+                            tankWithTheCloseDps=sourceIndex;
+
+                        }
+
+                        else {
+
+                            dpsWithTheFarTank=targetIndex;
+                            tankWithTheFarDps=sourceIndex;
+
+                        }
+                    
+                    }
+                
+                }
+                
+                if(isHealer(sourceIndex)) {
+                
+                    if(isDps(targetIndex)) {
+                    
+                        if(playersHaveToGetClose) {
+
+                            dpsWithTheCloseHealer=targetIndex;
+                            healerWithTheCloseDps=sourceIndex;
+
+                        }
+
+                        else {
+
+                            dpsWithTheFarHealer=targetIndex;
+                            healerWithTheFarDps=sourceIndex;
+
+                        }
+                    
+                    }
+                
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+            
+                if(numberOfLamentTethers>=4) {
+
+                    lamentSemaphore.Set();
+                    
+                    accessory.Log.Debug($"dpsWithTheCloseHealer={dpsWithTheCloseHealer},dpsWithTheFarTank={dpsWithTheFarTank},dpsWithTheCloseTank={dpsWithTheCloseTank},dpsWithTheFarHealer={dpsWithTheFarHealer}");
+                    accessory.Log.Debug($"healerWithTheCloseDps={healerWithTheCloseDps},healerWithTheFarDps={healerWithTheFarDps},tankWithTheFarDps={tankWithTheFarDps},tankWithTheCloseDps={tankWithTheCloseDps}");
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Two-player Tower Acquisition)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42119"],
+            userControl:false)]
+    
+        public void Phase_2_Lone_Wolfs_Lament_TwoPlayer_Tower_Acquisition(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=4) {
+
+                return;
+
+            }
+            
+            Vector3 targetPosition=ARENA_CENTER_OF_PHASE_2;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(targetPosition,getPlatformCenter(PlatformsOfPhase2.NORTHWEST))<8) {
+
+                twoPlayerTowerIsOnTheWest=true;
+
+            }
+
+            else {
+
+                twoPlayerTowerIsOnTheWest=false;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            northTowerSemaphore.Set();
+
+        }
+        
+        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Guidance)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42115"])]
+    
+        public void Phase_2_Lone_Wolfs_Lament_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=4) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            lamentSemaphore.WaitOne();
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+
+                Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
+                bool finalPositionTbd=false;
+
+                if(isHealer(myIndex)) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+
+                }
+                
+                if(myIndex==dpsWithTheCloseHealer) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+
+                }
+                
+                if(myIndex==dpsWithTheFarTank) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+
+                }
+                
+                if(myIndex==tankWithTheFarDps) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+
+                }
+                
+                if(myIndex==dpsWithTheCloseTank||myIndex==tankWithTheCloseDps||myIndex==dpsWithTheFarHealer) {
+
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
+
+                    finalPositionTbd=true;
+
+                }
+
+                if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                    return;
+
+                }
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="Phase_2_Lone_Wolfs_Lament_Guidance_1";
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=18250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+                if(!finalPositionTbd) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=myPosition;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=18250;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                else {
+
+                    northTowerSemaphore.WaitOne();
+            
+                    System.Threading.Thread.MemoryBarrier();
+                        
+                    accessory.Method.RemoveDraw("Phase_2_Lone_Wolfs_Lament_Guidance_1");
+                        
+                    System.Threading.Thread.MemoryBarrier();
+
+                    myPosition=ARENA_CENTER_OF_PHASE_2;
+                    
+                    if(myIndex==dpsWithTheCloseTank||myIndex==tankWithTheCloseDps) {
+
+                        if(twoPlayerTowerIsOnTheWest) {
+
+                            myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+
+                        }
+
+                        else {
+                            
+                            myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
+                            
+                        }
+
+                    }
+                    
+                    if(myIndex==dpsWithTheFarHealer) {
+
+                        if(twoPlayerTowerIsOnTheWest) {
+
+                            myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
+
+                        }
+
+                        else {
+                            
+                            myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+                            
+                        }
+
+                    }
+                    
+                    if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                        return;
+
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=myPosition;
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=8000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=myPosition;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=8000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Sub-phase 4 Control)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42119"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_2_Lone_Wolfs_Lament_SubPhase_4_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=4) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            currentSubPhase=5;
+
+            lamentSemaphore.Reset();
+            northTowerSemaphore.Reset();
+            
+            accessory.Log.Debug("Now moving to Phase 2 Sub-phase 5.");
+
         }
         
         #endregion
