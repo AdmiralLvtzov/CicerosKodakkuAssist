@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.21",
+        version:"0.0.0.22",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -33,8 +33,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             The script will adapt to the popular strats among EU Party Finder with priority.
             
-            The Phase 1 part is completed. The Phase 2 part is still work in progress.
-            Although the work on Ultraviolent Ray is finished, the guidance of the northwest-south strat during Ultraviolent Ray 4 is not available yet.
+            The script is basically completed, but some refinements are still in process.
             
             Link to RaidPlan 84d (Rinon combined with Quad) for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
             Link to Toxic Friends RaidPlan DOG for Phase 2: https://raidplan.io/plan/9M-1G-mmOaaroDOG
@@ -112,6 +111,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
          Sub-phase 2: Twofold Tempest
          Sub-phase 3: Champion's Circuit
          Sub-phase 4: Lone Wolf's Lament
+         Sub-phase 5: Enrage
          
         */
         
@@ -176,6 +176,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile int roundOfUltraviolentRay=0;
 
         private volatile int roundOfTwinbite=0;
+        
+        private volatile int roundOfHerosBlow=0;
 
         private volatile bool mtWasMarkerByPatienceOfWind=false;
         private System.Threading.AutoResetEvent elementalPurgeSemaphore=new System.Threading.AutoResetEvent(false);
@@ -346,6 +348,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             roundOfUltraviolentRay=0;
             
             roundOfTwinbite=0;
+
+            roundOfHerosBlow=0;
 
             mtWasMarkerByPatienceOfWind=false;
             elementalPurgeSemaphore.Reset();
@@ -6231,6 +6235,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             };
 
         }
+
+        private bool isInGroupNorthwest(int partyIndex) {
+
+            if(!isLegalIndex(partyIndex)) {
+
+                return false;
+
+            }
+
+            return (isTank(partyIndex))||(partyIndex==dpsWithTheCloseTank)||(partyIndex==dpsWithTheFarHealer);
+
+        }
         
         [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Guidance)",
             eventType:EventTypeEnum.TargetIcon,
@@ -6441,7 +6457,221 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                     if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Northwest_And_South) {
                         
-                        // To be done...
+                        if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
+
+                            if(isInGroupNorthwest(myIndex)) {
+
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+
+                            }
+
+                            else {
+                    
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    
+                            }
+
+                            prompt="Stay.";
+
+                        }
+                        
+                        else {
+                        
+                            List<int> playersOnTheNorthwest=[tankWithTheFarDps,dpsWithTheCloseTank,dpsWithTheFarHealer,tankWithTheCloseDps],
+                                      playersOnTheSouth=[healerWithTheFarDps,dpsWithTheFarTank,dpsWithTheCloseHealer,healerWithTheCloseDps];
+                            
+                            playersOnTheNorthwest.Sort((x,y) => {
+
+                                var xObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[x]);
+                                var yObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[y]);
+
+                                if(xObject==null||yObject==null) {
+
+                                    return 0;
+
+                                }
+
+                                if(xObject.Rotation<yObject.Rotation) {
+
+                                    return -1;
+
+                                }
+
+                                else {
+                                    
+                                    if(xObject.Rotation>yObject.Rotation) {
+
+                                        return 1;
+
+                                    }
+
+                                    else {
+
+                                        return 0;
+
+                                    }
+                                    
+                                }
+
+                            });
+                            
+                            playersOnTheSouth.Sort((x,y) => {
+
+                                var xObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[x]);
+                                var yObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[y]);
+
+                                if(xObject==null||yObject==null) {
+
+                                    return 0;
+
+                                }
+
+                                if(xObject.Rotation>yObject.Rotation) {
+
+                                    return -1;
+
+                                }
+
+                                else {
+                                    
+                                    if(xObject.Rotation<yObject.Rotation) {
+
+                                        return 1;
+
+                                    }
+
+                                    else {
+
+                                        return 0;
+
+                                    }
+                                    
+                                }
+
+                            });
+                            
+                            List<int> marksOnTheNorthwest=[],marksOnTheSouth=[];
+
+                            for(int i=0;i<4;++i) {
+                                
+                                if(playerWasMarkedByAUltraviolentRay[playersOnTheNorthwest[i]])marksOnTheNorthwest.Add(playersOnTheNorthwest[i]);
+                                if(playerWasMarkedByAUltraviolentRay[playersOnTheSouth[i]])marksOnTheSouth.Add(playersOnTheSouth[i]);
+                                
+                            }
+
+                            int temporaryOrder=-1;
+
+                            if(isInGroupNorthwest(myIndex)) {
+                        
+                                temporaryOrder=marksOnTheNorthwest.IndexOf(myIndex);
+                        
+                            }
+                    
+                            else {
+                        
+                                temporaryOrder=marksOnTheSouth.IndexOf(myIndex);
+                        
+                            }
+
+                            ++temporaryOrder;
+
+                            if(temporaryOrder<1||temporaryOrder>3) {
+                            
+                                return;
+                            
+                            }
+                        
+                            accessory.Log.Debug($"marksOnTheNorthwest={string.Join(",",marksOnTheNorthwest)}, marksOnTheSouth={string.Join(",",marksOnTheSouth)}, temporaryOrder={temporaryOrder}");
+                            
+                            if(isInGroupNorthwest(myIndex)) {
+
+                                switch(temporaryOrder) {
+
+                                    case 1: {
+
+                                        myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
+                                        prompt=getPlatformDescription(PlatformsOfPhase2.NORTHEAST);
+
+                                        break;
+
+                                    }
+                                
+                                    case 2: {
+                                    
+                                        myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+                                        prompt="Stay.";
+
+                                        break;
+
+                                    }
+                                
+                                    case 3: {
+                                    
+                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
+
+                                        break;
+
+                                    }
+                                
+                                    default: {
+
+                                        return;
+
+                                    }
+                                
+                                }
+
+                            }
+
+                            else {
+                    
+                                switch(temporaryOrder) {
+
+                                    case 1: {
+
+                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHEAST);
+
+                                        break;
+
+                                    }
+                                
+                                    case 2: {
+                                    
+                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                                        prompt="Stay.";
+
+                                        break;
+
+                                    }
+                                
+                                    case 3: {
+                                    
+                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
+
+                                        break;
+
+                                    }
+                                
+                                    default: {
+
+                                        return;
+
+                                    }
+                                
+                                }
+                    
+                            }
+
+                            if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                                return;
+
+                            }
+                            
+                        }
                         
                     }
                 
@@ -6807,6 +7037,25 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
                 
             }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Hero's Blow (Round Control)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(42080|42082)$"],
+            userControl:false)]
+    
+        public void Phase_2_Heros_Blow_Round_Control(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            ++roundOfHerosBlow;
         
         }
         
@@ -10429,6 +10678,148 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             accessory.Log.Debug("Now moving to Phase 2 Sub-phase 5.");
 
+        }
+        
+        [ScriptMethod(name:"Phase 2 Ultraviolent Ray 4 (Pre-position Guidance)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(42080|42082)$"],
+            suppress:2500)]
+    
+        public void Phase_2_Ultraviolent_Ray_4_PrePosition_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(roundOfHerosBlow!=2) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+
+                Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
+
+                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Same_As_Usual) {
+
+                    if(isInGroup1(myIndex)) {
+
+                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+
+                    }
+                    
+                    if(isInGroup2(myIndex)) {
+
+                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+
+                    }
+                    
+                }
+                
+                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Northwest_And_South) {
+
+                    if(isInGroupNorthwest(myIndex)) {
+
+                        myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+
+                    }
+                    
+                    else {
+
+                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+
+                    }
+                    
+                }
+
+                if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                    return;
+
+                }
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(8);
+                currentProperties.Position=myPosition;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"Phase 2 Mooncleaver (Enrage)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:42829"])]
+    
+        public void Phase_2_Mooncleaver_Enrage(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+            
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            Vector3 targetPosition=ARENA_CENTER_OF_PHASE_2;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8);
+            currentProperties.Position=targetPosition;
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
         }
         
         #endregion
