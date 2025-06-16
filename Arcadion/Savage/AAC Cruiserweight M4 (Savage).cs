@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.18",
+        version:"0.0.0.19",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -269,7 +269,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             accessory.Method.RemoveDraw(".*");
             
-            currentPhase=2;
+            currentPhase=1;
             currentSubPhase=1;
             
             reignId=string.Empty;
