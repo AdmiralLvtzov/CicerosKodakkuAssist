@@ -6,7 +6,7 @@
     "Author":"Cicero 灵视",
     "TerritoryIds":[1085],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Pandemonium/Normal/Abyssos%20The%20Seventh%20Circle%20%E4%B8%87%E9%AD%94%E6%AE%BF%20%E7%82%BC%E5%87%80%E4%B9%8B%E7%8B%B13.cs",
-    "UpdateInfo":"The script is completed. 已完工。"
+    "UpdateInfo":"The script has been completed. 已完工。"
   },
   {
     "Name":"Karlin's FRU script (Customized by Cicero) Karlin的绝伊甸脚本 (灵视改装版)",
@@ -20,10 +20,10 @@
   {
     "Name":"AAC Cruiserweight M4 (Savage)",
     "Guid":"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-    "Version":"0.0.0.24",
+    "Version":"0.0.0.25",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1263],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/AAC%20Cruiserweight%20M4%20(Savage).cs",
-    "UpdateInfo":"Last update: June 19, 2025.\nUpdate notes: Fix position calculations of the northwest-south strat during Ultraviolent Ray 4."
+    "UpdateInfo":"Last update: June 19, 2025.\nUpdate notes: The script has been completed."
   }
 ]

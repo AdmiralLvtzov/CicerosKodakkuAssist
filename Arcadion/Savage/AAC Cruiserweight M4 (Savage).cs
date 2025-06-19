@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.24",
+        version:"0.0.0.25",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -31,11 +31,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             """
             This is the English version of the script for AAC Cruiserweight M4 (Savage), which is also known as M8S in short.
             
-            The script will adapt to the popular strats among EU Party Finder with priority.
+            The script has been completed, at least for all the popular strats among EU Party Finder.
+            If you encounter any issue, please report to @_publius_cornelius_scipio_ in Kodakku Assist Discord.
             
-            The script is basically completed, but some refinements are still in process.
-            
-            Link to RaidPlan 84d (Rinon combined with Quad) for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
+            Link to RaidPlan 84d for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
             Link to Toxic Friends RaidPlan DOG for Phase 2: https://raidplan.io/plan/9M-1G-mmOaaroDOG
             
             The "Half Rinon" strat during Terrestrial Rage is the one combines the first half of Rinon with the second half of the clock strat.
@@ -317,7 +316,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             addsRotateClockwise=false;
             addRotationSemaphore.Reset();
             addRotationHasBeenDrawn=false;
-            idOfTheWindWolfAdd=null; idOfTheStoneWolfAdd=null; idOfTheWindFont = null; idOfTheEarthFont=null;
+            idOfTheWindWolfAdd=null; idOfTheStoneWolfAdd=null; idOfTheWindFont=null; idOfTheEarthFont=null;
             windpackWasApplied=[false,false,false,false,false,false,false,false];
             windborneEndWasApplied=[false,false,false,false,false,false,false,false]; 
             roundForCleanse=[-1,-1,-1,-1,-1,-1,-1,-1];
@@ -10809,6 +10808,57 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         }
         
+        [ScriptMethod(name:"Phase 2 Mooncleaver (Enrage Pre-position Guidance)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:42077"],
+            suppress:2500)]
+    
+        public void Phase_2_Mooncleaver_Enrage_PrePosition_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            if(roundOfUltraviolentRay!=4) {
+
+                return;
+
+            }
+
+            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6500;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(8);
+                currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=6500;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+        
+        }
+        
         [ScriptMethod(name:"Phase 2 Mooncleaver (Enrage)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42829"])]
@@ -10849,6 +10899,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentProperties.DestoryAt=4000;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+            string prompt="Stay on the next platform at least until the tower appears!";
+            
+            if(enablePrompts) {
+                    
+                accessory.Method.TextInfo(prompt,4000,true);
+                    
+            }
+                    
+            accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
         
         }
         

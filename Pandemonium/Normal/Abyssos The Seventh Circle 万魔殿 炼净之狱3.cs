@@ -22,7 +22,7 @@ namespace CicerosKodakkuAssist.Pandemonium.Normal;
     guid:"073ca5d8-9a34-41ff-8757-c3862c465be0",
     version:"0.0.0.13",
     author:"Cicero 灵视",
-    note:"A script for Abyssos The Seventh Circle.\n万魔殿 炼净之狱3的脚本。")]
+    note:"A simple script for the duty Abyssos The Seventh Circle.\n万魔殿 炼净之狱3的脚本。")]
 
 public class Abyssos_The_Seventh_Circle
 {
