@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.22",
+        version:"0.0.0.23",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -148,6 +148,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         private volatile int currentAddRound=0;
         private volatile bool windGuidanceHasBeenDrawn=false,earthGuidanceHasBeenDrawn=false;
 
+        private Vector3 positionOfTheOuterFang=ARENA_CENTER_OF_PHASE_1;
         private double rotationOfTheOuterFang=0;
         private volatile bool outerFangHasBeenCaptured=false;
         private System.Threading.AutoResetEvent newNorthArrowSemaphore=new System.Threading.AutoResetEvent(false);
@@ -320,6 +321,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             currentAddRound=0;
             windGuidanceHasBeenDrawn=false; earthGuidanceHasBeenDrawn=false;
 
+            positionOfTheOuterFang=ARENA_CENTER_OF_PHASE_1;
             rotationOfTheOuterFang=0;
             outerFangHasBeenCaptured=false;
             newNorthArrowSemaphore.Reset();
@@ -4166,7 +4168,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             
             System.Threading.Thread.MemoryBarrier();
 
-            rotationOfTheOuterFang=getRotation(sourcePosition,ARENA_CENTER_OF_PHASE_1);
+            positionOfTheOuterFang=sourcePosition;
+            rotationOfTheOuterFang=getRotation(positionOfTheOuterFang,ARENA_CENTER_OF_PHASE_1);
             
             System.Threading.Thread.MemoryBarrier();
             
@@ -4669,12 +4672,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
                     
-                    if(Math.Abs(getRotation(sourcePosition,ARENA_CENTER_OF_PHASE_1)-rotationOfTheOuterFang)<Math.Abs(refinedRotationForFullRinon-rotationOfTheOuterFang)) {
+                    shadowsAreOnTheCardinals=true;
+
+                    if(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1)>-18.9f.DegToRad()) {
+                        // This strat is... very mathematically unfriendly.
+                        // There are eight possible positions for the new north at 45 degree intervals, but five for the shadows,at 72 degree intervals. Meanwhile, the shadows can be on cardinals or intercardinals.
+                        // My initial approach was to capture the shadow closest to the new north, but it went wrong in some situations.
+                        // Later I took a different approach that was to always capture the next shadow clockwise. The mistakes became less but still existed.
+                        // Finally, after a lot of math work (mainly countless enumeration) combined with checking a ton of replays, I found out that it should allow an angle of -18 degrees, and capture the shadow closest to the new north based on this.
+                        // After establishing a solid math model, my only question is, how can a player without plugin assistance find it accurately in combat? I guess this is how the Half Rinon strat was born for.
+                        
+                        if(Math.Abs(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1))<Math.Abs(refinedRotationForFullRinon)) {
                     
-                        refinedRotationForFullRinon=getRotation(sourcePosition,ARENA_CENTER_OF_PHASE_1);
+                            refinedRotationForFullRinon=getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1);
 
-                        shadowsAreOnTheCardinals=true;
-
+                        }
+                        
                     }
                     
                 }
@@ -4692,6 +4705,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 System.Threading.Thread.MemoryBarrier();
 
                 if(numberOfShadows>=5) {
+                    
+                    if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
+
+                        refinedRotationForFullRinon=rotationOfTheOuterFang+refinedRotationForFullRinon;
+
+                    }
+                    
+                    System.Threading.Thread.MemoryBarrier();
 
                     shadowSemaphore.Set();
                     
@@ -10915,6 +10936,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             return (position.Equals(center))?
                 (0):
                 ((Math.PI-Math.Atan2(position.X-center.X,position.Z-center.Z)+2*Math.PI)%(2*Math.PI));
+            
+        }
+        
+        public static double getRotationDifference(Vector3 position1,Vector3 position2,Vector3 center) {
+
+            double rawDifference=(getRotation(position2,center)-getRotation(position1,center)+2*Math.PI)%(2*Math.PI);
+
+            return (rawDifference<=Math.PI)?(rawDifference):(rawDifference-2*Math.PI);
             
         }
         
