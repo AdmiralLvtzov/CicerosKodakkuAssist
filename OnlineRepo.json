@@ -20,10 +20,19 @@
   {
     "Name":"AAC Cruiserweight M4 (Savage)",
     "Guid":"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-    "Version":"0.0.0.25",
+    "Version":"0.0.0.26",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1263],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/AAC%20Cruiserweight%20M4%20(Savage).cs",
     "UpdateInfo":"Last update: June 19, 2025.\nUpdate notes: The script has been completed."
+  },
+  {
+    "Name":"阿卡狄亚零式登天斗技场 中量级4",
+    "Guid":"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
+    "Version":"0.0.1.0",
+    "Author":"Cicero 灵视",
+    "TerritoryIds":[1263],
+    "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/Placeholder.cs",
+    "UpdateInfo":"上次更新: 2025年6月19日\n更新内容: 基于脚本的国际服版本创建此国服分支。"
   }
 ]

@@ -14,13 +14,13 @@ using KodakkuAssist.Module.GameOperate;
 using Lumina.Data.Parsing;
 using Newtonsoft.Json.Linq;
 
-namespace CicerosKodakkuAssist.Arcadion.Savage
+namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 {
     
-    [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
+    [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
-        guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.26",
+        guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
+        version:"0.0.1.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -29,61 +29,64 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         public const string scriptNotes=
             """
-            This is the English version of the script for AAC Cruiserweight M4 (Savage), which is also known as M8S in short.
+            阿卡狄亚零式登天斗技场中量级4(也就是M8S)的脚本。
             
-            The script has been completed, at least for all the popular strats among EU Party Finder.
-            If you encounter any issue, please report to @_publius_cornelius_scipio_ in Kodakku Assist Discord.
+            此脚本基于其国际服版本创建,但尚未对国服做任何适配,因为目前还不知道国服攻略的具体内容。
+            如果指路不适配当前攻略,可以在方法设置中将指路关闭。所有指路的方法名称中均标注有Guidance一词。
             
-            Link to RaidPlan 84d for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
-            Link to Toxic Friends RaidPlan DOG for Phase 2: https://raidplan.io/plan/9M-1G-mmOaaroDOG
+            此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
+            对于门神的Terrestrial Rage机制提供了Full Rinon和Half Rinon两个可选选项。对于本体的第四次Ultraviolent Ray也提供了两种站位。
             
-            The "Half Rinon" strat during Terrestrial Rage is the one combines the first half of Rinon with the second half of the clock strat.
-            You could check Hector's M8S video guide for more details.
+            门神RaidPlan 84d的链接: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
+            本体Toxic Friends RaidPlan DOG的链接: https://raidplan.io/plan/9M-1G-mmOaaroDOG
             
-            The guidance of the "Northwest and South" strat during Ultraviolent Ray 4 is based on real-time positions of players.
-            Please make sure to get to the correct platform and form conga as quickly as possible.
+            Terrestrial Rage机制的"Half Rinon"打法是将欧服Rinon打法的前半和美服Clock打法的后半结合起来,也就是在机制的后半段重新以真北为参照。
+            推荐在Youtube上搜索Hector的M8S视频攻略了解详情。
+            
+            第四次Ultraviolent Ray"西北-南"打法的指路是根据玩家实时位置进行计算的。
+            为了使指路有效且可靠,需要尽快赶到正确的平台并排队。
             """;
 
         #region User_Settings
 
-        [UserSetting("----- Global Settings ----- (This setting has no practical meaning.)")]
+        [UserSetting("----- 全局设置 ----- (此设置项无实际意义。)")]
         public bool _____Global_Settings_____ { get; set; } = false;
         
-        [UserSetting("Enbale Text Prompts")]
+        [UserSetting("启用文字提示")]
         public bool enablePrompts { get; set; } = true;
-        [UserSetting("Enable Vanilla TTS")]
+        [UserSetting("启用原生TTS")]
         public bool enableVanillaTts { get; set; } = true;
-        [UserSetting("Enable Daily Routines TTS (It requires the plugin \"Daily Routines\" to be installed and enabled!)")]
+        [UserSetting("启用Daily Routines TTS (需要安装并启用Daily Routines插件!)")]
         public bool enableDailyRoutinesTts { get; set; } = false;
-        [UserSetting("Colour Of Direction Indicators")]
+        [UserSetting("机制方向的颜色")]
         public ScriptColor colourOfDirectionIndicators { get; set; } = new() { V4 = new Vector4(1,1,0, 1) }; // Yellow by default.
-        [UserSetting("Colour Of Highly Dangerous Attacks")]
+        [UserSetting("高度危险攻击的颜色")]
         public ScriptColor colourOfHighlyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
-        [UserSetting("Enable Shenanigans")]
+        [UserSetting("启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
         
-        [UserSetting("----- Phase 1 Settings ----- (This setting has no practical meaning.)")]
+        [UserSetting("----- 门神设置 ----- (此设置项无实际意义。)")]
         public bool _____Phase_1_Settings_____ { get; set; } = false;
         
-        [UserSetting("Strats Of Millennial Decay")]
+        [UserSetting("Millennial Decay打法")]
         public StratsOfMillennialDecay stratOfMillennialDecay { get; set; }
-        [UserSetting("Tanks Or Melee Go Further For The Second Set While Doing RaidPlan 84d During Millennial Decay")]
+        [UserSetting("在Millennial Decay采用Raidplan 84d打法时,坦克和近战总是在旋转时多走几步")]
         public bool meleeGoFurther { get; set; } = true;
-        [UserSetting("Strats Of Terrestrial Rage")]
+        [UserSetting("Terrestrial Rage打法")]
         public StratsOfTerrestrialRage stratOfTerrestrialRage { get; set; }
-        [UserSetting("Strats Of Beckon Moonlight")]
+        [UserSetting("Beckon Moonlight打法")]
         public StratsOfBeckonMoonlight stratOfBeckonMoonlight { get; set; }
         
-        [UserSetting("----- Phase 2 Settings ----- (This setting has no practical meaning.)")]
+        [UserSetting("----- 本体设置 ----- (此设置项无实际意义。)")]
         public bool _____Phase_2_Settings_____ { get; set; } = false;
         
-        [UserSetting("Strats Of Phase 2")]
+        [UserSetting("本体打法")]
         public StratsOfPhase2 stratOfPhase2 { get; set; }
-        [UserSetting("Colour Of The North-south Axis And Two Combined Arrows")]
+        [UserSetting("南北中轴线及其附属箭头的颜色")]
         public ScriptColor colourOfTheNorthSouthAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
-        [UserSetting("Arrows Of The North-south Axis Point South Instead Of North")]
+        [UserSetting("南北中轴线附属箭头指向南而不是北")]
         public bool arrowsPointSouth { get; set; } = false;
-        [UserSetting("Strats Of Ultraviolent Ray 4")]
+        [UserSetting("第四次Ultraviolent Ray打法")]
         public StratsOfUltraviolentRay4 stratOfUltraviolentRay4 { get; set; }
 
         #endregion
@@ -264,8 +267,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         public enum StratsOfUltraviolentRay4 {
             
-            Same_As_Usual,
-            Northwest_And_South
+            和前三次保持一致,
+            西北_南
             
         }
 
@@ -391,56 +394,56 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
         private System.Threading.AutoResetEvent shenaniganSemaphore=new System.Threading.AutoResetEvent(false);
         private static IReadOnlyList<string> quotes=[
-            "Del Giordano le rive saluta, di Sionne le torri atterrate...",
-            "Through the graves the wind is blowing.",
-            "The enslaved were not bricks in your road, and their lives were not chapters in your redemptive history.",
-            "Thou hast made us for thyself, O Lord, and our heart is restless until it finds its rest in thee.",
-            "No! I'm alive! I will live forever! I have in my heart what does not die!",
-            "The living denied a table; the dead get a whole coffin.",
-            "What was born by the sword shall die by the sword.",
-            "Injustice anywhere is a threat to justice everywhere.",
-            "I die without seeing the dawn brighten over my native land.",
-            "I entered a kind world and loved it wholeheartedly. I leave in an evil one and have nothing to say by way of farewells.",
-            "You cannot nurture a man with pain, nor can you feed him with anger.",
-            "\"Hemos pasado!\"",
-            "The Banteng has been led to slaughter - and the villagers feast on its remnants.",
-            "Those who wear the shirt of fire will realize it burns as much as it warms.",
-            "What is built on sand sooner or later would tumble down.",
-            "A faithful man shall abound with blessings.",
-            "She smiled sadly, as she flew into the night.",
-            "Only in death does duty end.",
-            "The end may justify the means as long as there is something that justifies the end.",
-            "Sing your death song and die like a hero going home.",
-            "The mutineers ride into the night.",
-            "The specter of homicidal violence has appeared in history whenever it was believed that the hypocritical respect for formalities could replace the obedience of moral obligations.",
-            "Nothing more cruel and inhuman than a war. Nothing more desirable than peace. But peace has its causes, it is an effect. The effect of respect for mutual rights.",
-            "One by one the righteous fell, and the ills of ignorance permeated.",
-            "They defended the grains of sand in the desert to the last drop of their blood.",
-            "All history is man's efforts to realise ideals.\n- Éamon de Valera, 1929",
-            "Let us dedicate ourselves to what the Greeks wrote so many years ago: to tame the savageness of man and make gentle the life of this world.\n- Robert F. Kennedy, 1968",
-            "Yesterday is not ours to recover, but tomorrow is ours to win or lose.\n- Lyndon B. Johnson, 1964",
-            "The end of hope is the beginning of death.\n- Charles de Gaulle, 1945",
-            "The day I leave the power, inside my pockets will only be dust.\n- Antonio de Oliveira Salazar, 1968",
-            "When smashing monuments, save the pedestals. They always come in handy.\n- Stanisław Jerzy Lec, 1957",
-            "Fear not the path of truth for the lack of people walking on it.\n- Robert F. Kennedy, 1968",
-            "The rocket worked perfectly, except for landing on the wrong planet.\n- Wernher von Braun upon the first V-2 hitting London, 1944",
-            "A man is not finished when he's defeated. He's finished when he quits.\n- Richard Nixon, 1962",
-            "Do not pray for easy lives, pray to be stronger men.\n- John F. Kennedy, 1963",
-            "Nature does not know extinction, only transformation.\n- Wernher von Braun, 1962",
-            "The optimist thinks this is the best of all possible worlds. The pessimist fears it is true.\n- James Branch Cabell, The Silver Stallion, 1926",
-            "One seldom recognizes the devil when he is putting his hand on your shoulder.\n- Albert Speer, 1972",
-            "Laws are silent in times of war.\n- Marcus Tullius Cicero, 52 BC",
-            "They don't ask much of you. They only want you to hate the things you love and to love the things you despise.\n- Boris Pasternak, 1960",
-            "Most economic fallacies derive from the tendency to assume that there is a fixed pie, that one party can gain only at the expense of another.\n- Milton Friedman, 1980",
-            "There are three kinds of lies: lies, damned lies, and statistics.\n- Mark Twain, 1907",
-            "Bite us once, shame on the dog; bite us repeatedly, shame on us for allowing it.\n- Phyllis Schlafly, 1995",
-            "I know not with what weapons World War III will be fought, but World War IV will be fought with sticks and stones.\n- Albert Einstein, 1949",
-            "You can believe in Feng Shui if you want, but ultimately people control their own fate.\n- Li Ka-shing, 1969",
-            "I believe it is a big mistake to think that money is the only way to compensate a person for his work. People need money, but they also want to be happy in their work and proud of it.\n- Morita Akio, 1966",
-            "A good reputation for yourself and your company is an invaluable asset not reflected in the balance sheets.\n- Li Ka-shing, 1967",
-            "Knowledge is your real companion, your life long companion, not fortune. Fortune can disappear.\n- Stanley Ho, 1966",
-            "People sometimes say: \"we are in a society that is all rotten, all dishonest.\" That is not true. There are still so many good people, so many honest people.\n- John Paul I, 1978",
-            "Half the confusion in the world comes from not knowing how little we need.\n- Admiral Richard E. Byrd on his time in Antarctica, 1935"
+            "问候约旦河的河畔,以及锡安倾倒的高塔...",
+            "坟冢之上,风呼啸而过。",
+            "奴隶不是铺就你道路的砖石,他们也不是你救赎历史中的章节。",
+            "主啊,你造我们是为了你,我们的心如不安息在你怀中,便不会安宁。",
+            "不!我还活着!我将永远活着!我心中有些东西是永远不会死去的!",
+            "生者不当座上宾,死者却做棺中人。",
+            "凡持剑的,必死在剑下。",
+            "任何地方的不公不义,都威胁着所有的公平正义。",
+            "我至死也未能见到照耀我祖国的曙光。",
+            "我生在了一个善良的世界,全心全意地爱着它。我死在了一个邪恶的世界,离别时刻无话可说。",
+            "你不能用痛苦养育一个人,也无法用怒火来让他饱腹。",
+            "\"我们已经通过了!\"",
+            "野牛惨遭屠戮,村民享其残躯。",
+            "引火上身的人早晚会意识到灼痛的感觉会与暖身的温度伴随而至。",
+            "流沙之上,大厦将倾。",
+            "忠诚笃实的人,将满渥福祉。",
+            "她凄然地笑着,遁入了无尽的夜空。",
+            "唯有死亡才算是责任的尾声。",
+            "目的为手段赋予了正义,但总得有什么为目的赋予正义。",
+            "高唱你的死亡咏赞,如归乡英雄般死去。",
+            "叛变者骑着战马,消失于夜色之中。",
+            "历史上,每当人们开始认为,可以用对形式框架的虚伪尊重取代对道德义务的真心服从时,嗜杀成性的暴戾恶鬼就会重返人间。",
+            "没有什么东西比战争更残酷和不人道,没有什么事物比和平更令人神往。但没有互相尊重对方权利的因,就得不到和平的果。",
+            "信士接连倒下,蒙昧之祸四散蔓延。",
+            "为了保卫沙中之砾,他们流干了最后一滴血。",
+            "历史就是人类努力回想起理想的过程。\n——埃蒙·德·瓦莱拉, 1929",
+            "让我们致力于希腊人在很多很多年前就曾写下的内容: 驯服人的野蛮并创造这个世界的温雅生活。\n——罗伯特·F·肯尼迪, 1968",
+            "昨日的失误已无法弥补,但明天的输赢仍可以拼搏。\n——林登·B·约翰逊, 1964",
+            "希望之末,败亡之始。\n——夏尔·戴高乐, 1945",
+            "我挂冠回乡之时,惟余两袖清风。\n——安东尼奥·德·奥利韦拉·萨拉查, 1968",
+            "拆毁纪念像时,得留下底座。它们将来总会派上用处。\n——斯坦尼斯瓦夫·耶日·莱茨, 1957",
+            "不要害怕真理之路上无人同行。\n——罗伯特·F·肯尼迪, 1968",
+            "这火箭什么都好,就是目的地选错了星球。\n——韦恩赫尔·冯·布劳恩在V-2火箭首次打击伦敦后, 1944",
+            "一个人被打败不算完蛋,当他放弃就真正完蛋了。\n——理查德·尼克松, 1962",
+            "不要祈祷更安逸的生活,我的朋友,祈祷自己成为更坚强的人。\n——约翰·F·肯尼迪, 1963",
+            "大自然不解消亡,只解演变。\n——韦恩赫尔·冯·布劳恩, 1962",
+            "乐观主义者认为这个世界是所有可能中最好的,而悲观主义者担心这就是真的。\n——詹姆斯·布朗奇·卡贝尔, 《银马》, 1926",
+            "当魔鬼和你勾肩搭背时,你很难认出他来。\n——阿尔伯特·施佩尔, 1972",
+            "战时无法律。\n——马库斯·图利乌斯·西塞罗, 52BC",
+            "他们对你的要求不多: 只是要你去恨你所爱的,去爱你所厌的。\n——鲍里斯·帕斯捷尔纳克, 1960",
+            "大部分经济学上的谬误都源自于\"定量馅饼\"的前提假设,以为一方得益,另一方就必有所失。\n——米尔顿·弗里德曼, 1980",
+            "世界上有三种谎言: 谎言,糟糕透顶的谎言和统计数据。\n——马克·吐温, 1907",
+            "咬我一次,可耻在狗;咬我多次,纵容它的我才可耻。\n——菲莉丝·施拉夫利, 1995",
+            "我不知道第三次世界大战会使用何种武器,但我知道,第四次世界大战会使用棍子和石头。\n——阿尔伯特·爱因斯坦, 1949",
+            "风水这个东西,你要信也可以,但是我更相信事在人为。\n——李嘉诚, 1969",
+            "金钱是补偿一个人的工作的唯一办法,我认为这种看法大错特错。人们是需要钱,但他们也需要在工作中得到愉快和自豪。\n——盛田昭夫, 1966",
+            "建立个人和企业的良好信誉,这是资产负债表之中见不到,但却是价值无限的资产。\n——李嘉诚, 1967",
+            "财富聚散无常,唯学问终生受用。\n——何鸿燊, 1966",
+            "人们常言道:\"我们生活在一个腐败,虚伪的社会当中。\"这也不尽然。心慈好善的人仍占多数。\n——若望·保禄一世, 1978",
+            "这世界上半数的困惑,都来源于我们不知道自己的需求是多么微不足道。\n——理查德·E·伯德海军上将, 于南极洲, 1935"
         ];
 
         [ScriptMethod(name:"Shenanigans",
@@ -6318,7 +6321,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                 
                 if((roundOfUltraviolentRay!=4)
                    ||
-                   (roundOfUltraviolentRay==4&&stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Same_As_Usual)) {
+                   (roundOfUltraviolentRay==4&&stratOfUltraviolentRay4==StratsOfUltraviolentRay4.和前三次保持一致)) {
 
                     if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
 
@@ -6478,7 +6481,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 else {
 
-                    if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Northwest_And_South) {
+                    if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.西北_南) {
                         
                         if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
 
@@ -10746,7 +10749,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
-                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Same_As_Usual) {
+                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.和前三次保持一致) {
 
                     if(isInGroup1(myIndex)) {
 
@@ -10762,7 +10765,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                 }
                 
-                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.Northwest_And_South) {
+                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.西北_南) {
 
                     if(isInGroupNorthwest(myIndex)) {
 
