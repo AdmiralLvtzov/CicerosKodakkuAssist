@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.23",
+        version:"0.0.0.24",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -38,8 +38,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             Link to RaidPlan 84d (Rinon combined with Quad) for Phase 1: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
             Link to Toxic Friends RaidPlan DOG for Phase 2: https://raidplan.io/plan/9M-1G-mmOaaroDOG
             
-            "Half Rinon" during Terrestrial Rage is the one combines the first half of Rinon with the second half of the clock strat.
+            The "Half Rinon" strat during Terrestrial Rage is the one combines the first half of Rinon with the second half of the clock strat.
             You could check Hector's M8S video guide for more details.
+            
+            The guidance of the "Northwest and South" strat during Ultraviolent Ray 4 is based on real-time positions of players.
+            Please make sure to get to the correct platform and form conga as quickly as possible.
             """;
 
         #region User_Settings
@@ -4676,10 +4679,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                     if(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1)>-18.9f.DegToRad()) {
                         // This strat is... very mathematically unfriendly.
-                        // There are eight possible positions for the new north at 45 degree intervals, but five for the shadows,at 72 degree intervals. Meanwhile, the shadows can be on cardinals or intercardinals.
+                        // There are eight possible positions for the new north at 45 degree intervals, but five for the shadows at 72 degree intervals. Meanwhile, the shadows can be on cardinals or intercardinals.
                         // My initial approach was to capture the shadow closest to the new north, but it went wrong in some situations.
                         // Later I took a different approach that was to always capture the next shadow clockwise. The mistakes became less but still existed.
-                        // Finally, after a lot of math work (mainly countless enumeration) combined with checking a ton of replays, I found out that it should allow an angle of -18 degrees, and capture the shadow closest to the new north based on this.
+                        // Finally, after a lot of mathematical work (mainly countless enumeration) combined with checking a ton of replays, I found out that it should allow an angle of -18 degrees, and capture the shadow closest to the new north based on this.
                         // After establishing a solid math model, my only question is, how can a player without plugin assistance find it accurately in combat? I guess this is how the Half Rinon strat was born for.
                         
                         if(Math.Abs(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1))<Math.Abs(refinedRotationForFullRinon)) {
@@ -6512,7 +6515,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                                 }
 
-                                if(xObject.Rotation<yObject.Rotation) {
+                                double xRotation=getRotation(xObject.Position,ARENA_CENTER_OF_PHASE_2);
+                                double yRotation=getRotation(yObject.Position,ARENA_CENTER_OF_PHASE_2);
+
+                                if(xRotation>yRotation) {
 
                                     return -1;
 
@@ -6520,7 +6526,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                                 else {
                                     
-                                    if(xObject.Rotation>yObject.Rotation) {
+                                    if(xRotation<yRotation) {
 
                                         return 1;
 
@@ -6547,7 +6553,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                                 }
 
-                                if(xObject.Rotation>yObject.Rotation) {
+                                double xRotation=getRotation(xObject.Position,ARENA_CENTER_OF_PHASE_2);
+                                double yRotation=getRotation(yObject.Position,ARENA_CENTER_OF_PHASE_2);
+
+                                if(xRotation<yRotation) {
 
                                     return -1;
 
@@ -6555,7 +6564,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                                 else {
                                     
-                                    if(xObject.Rotation<yObject.Rotation) {
+                                    if(xRotation>yRotation) {
 
                                         return 1;
 
