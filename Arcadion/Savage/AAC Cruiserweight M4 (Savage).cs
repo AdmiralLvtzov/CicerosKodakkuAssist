@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.26",
+        version:"0.0.0.27",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -5820,7 +5820,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         [ScriptMethod(name:"Phase 1 Beckon Moonlight (Sub-phase 8 Control)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42897"],
-            suppress:2500)]
+            suppress:2500,
+            userControl:false)]
     
         public void Phase_1_Beckon_Moonlight_SubPhase_8_Control(Event @event,ScriptAccessory accessory) {
 

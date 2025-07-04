@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.0",
+        version:"0.0.1.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -5823,7 +5823,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         [ScriptMethod(name:"Phase 1 Beckon Moonlight (Sub-phase 8 Control)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42897"],
-            suppress:2500)]
+            suppress:2500,
+            userControl:false)]
     
         public void Phase_1_Beckon_Moonlight_SubPhase_8_Control(Event @event,ScriptAccessory accessory) {
 
