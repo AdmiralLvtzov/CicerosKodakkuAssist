@@ -29,10 +29,10 @@
   {
     "Name":"阿卡狄亚零式登天斗技场 中量级4",
     "Guid":"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-    "Version":"0.0.1.1",
+    "Version":"0.0.1.2",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1263],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/%E9%98%BF%E5%8D%A1%E7%8B%84%E4%BA%9A%E9%9B%B6%E5%BC%8F%E7%99%BB%E5%A4%A9%E6%96%97%E6%8A%80%E5%9C%BA%20%E4%B8%AD%E9%87%8F%E7%BA%A74.cs",
-    "UpdateInfo":"上次更新: 2025年7月4日\n更新内容: 合并国际服版本的一个小修复。"
+    "UpdateInfo":"上次更新: 2025年7月5日\n更新内容: 更新脚本描述与配置,开始国服适配。"
   }
 ]

@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.1",
+        version:"0.0.1.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -31,26 +31,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场中量级4(也就是M8S)的脚本。
             
-            此脚本基于其国际服版本创建,但尚未对国服做任何适配,因为目前还不知道国服攻略的具体内容。
-            如果指路不适配当前攻略,可以在方法设置中将指路关闭。所有指路的方法名称中均标注有Guidance一词。
+            此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
+            如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
+            
+            门神指路适配进度: 风土之魔技 ×, 扫旋击群狼剑 √, 大地的呼唤 √, 千年风化 ×, 光狼召唤 ×, 大地之怒 ×, 幻狼召唤 √
+            本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
-            对于门神的Terrestrial Rage机制提供了Full Rinon和Half Rinon两个可选选项。对于本体的第四次Ultraviolent Ray也提供了两种站位。
+            对于尚未完成国服适配的机制,其指路将仍然是基于欧服攻略的。适配预计将在一周内完成。
             
             门神RaidPlan 84d的链接: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
             本体Toxic Friends RaidPlan DOG的链接: https://raidplan.io/plan/9M-1G-mmOaaroDOG
-            
-            Terrestrial Rage机制的"Half Rinon"打法是将欧服Rinon打法的前半和美服Clock打法的后半结合起来,也就是在机制的后半段重新以真北为参照。
-            推荐在Youtube上搜索Hector的M8S视频攻略了解详情。
-            
-            第四次Ultraviolent Ray"西北-南"打法的指路是根据玩家实时位置进行计算的。
-            为了使指路有效且可靠,需要尽快赶到正确的平台并排队。
+            MMW攻略组门神小抄: https://xivstrat.com/07/m8s1/
+            MMW攻略组本体小抄: https://xivstrat.com/07/m8s2/
             """;
 
         #region User_Settings
-
-        [UserSetting("----- 全局设置 ----- (此设置项无实际意义。)")]
-        public bool _____Global_Settings_____ { get; set; } = false;
         
         [UserSetting("启用文字提示")]
         public bool enablePrompts { get; set; } = true;
@@ -65,29 +61,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         [UserSetting("启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
         
-        [UserSetting("----- 门神设置 ----- (此设置项无实际意义。)")]
-        public bool _____Phase_1_Settings_____ { get; set; } = false;
-        
-        [UserSetting("Millennial Decay打法")]
-        public StratsOfMillennialDecay stratOfMillennialDecay { get; set; }
-        [UserSetting("在Millennial Decay采用Raidplan 84d打法时,坦克和近战总是在旋转时多走几步")]
+        [UserSetting("门神攻略")]
+        public StratsOfPhase1 stratOfPhase1 { get; set; }
+        [UserSetting("千年风化时,坦克和近战总是在旋转时多走几步")]
         public bool meleeGoFurther { get; set; } = true;
-        [UserSetting("Terrestrial Rage打法")]
-        public StratsOfTerrestrialRage stratOfTerrestrialRage { get; set; }
-        [UserSetting("Beckon Moonlight打法")]
-        public StratsOfBeckonMoonlight stratOfBeckonMoonlight { get; set; }
         
-        [UserSetting("----- 本体设置 ----- (此设置项无实际意义。)")]
-        public bool _____Phase_2_Settings_____ { get; set; } = false;
         
-        [UserSetting("本体打法")]
+        [UserSetting("本体攻略")]
         public StratsOfPhase2 stratOfPhase2 { get; set; }
-        [UserSetting("南北中轴线及其附属箭头的颜色")]
+        [UserSetting("本体Boss中轴线及其附属箭头的颜色")]
         public ScriptColor colourOfTheNorthSouthAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
-        [UserSetting("南北中轴线附属箭头指向南而不是北")]
+        [UserSetting("本体Boss中轴线附属箭头指向南而不是北")]
         public bool arrowsPointSouth { get; set; } = false;
-        [UserSetting("第四次Ultraviolent Ray打法")]
-        public StratsOfUltraviolentRay4 stratOfUltraviolentRay4 { get; set; }
 
         #endregion
         
@@ -230,46 +215,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         #region Enumerations_And_Classes
 
-        public enum StratsOfMillennialDecay {
+        public enum StratsOfPhase1 {
 
-            Rinon_Or_RaidPlan_84d,
-            // Ferring,
-            // Murderless_Ferring
-            Other_Strats_Are_Work_In_Progress
-
-        }
-        
-        public enum StratsOfTerrestrialRage {
-
-            Full_Rinon_Or_RaidPlan_84d,
-            Half_Rinon,
-            // Clock
-            Other_Strats_Are_Work_In_Progress
-
-        }
-        
-        public enum StratsOfBeckonMoonlight {
-
-            Quad_Or_RaidPlan_84d,
-            // Rinon,
-            // Toxic_Friends_RaidPlan_XOs
-            Other_Strats_Are_Work_In_Progress
+            MMW攻略组与苏帕酱噗,
+            其他攻略正在施工中
 
         }
         
         public enum StratsOfPhase2 {
 
-            Toxic_Friends_RaidPlan_DOG,
-            // Rinon
-            Other_Strats_Are_Work_In_Progress
+            MMW攻略组与苏帕酱噗,
+            其他攻略正在施工中
 
-        }
-
-        public enum StratsOfUltraviolentRay4 {
-            
-            和前三次保持一致,
-            西北_南
-            
         }
 
         public enum PlatformsOfPhase2 {
@@ -1491,7 +1448,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfMillennialDecay==StratsOfMillennialDecay.Rinon_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 string prompt="Enable anti-knockback!";
             
@@ -1628,7 +1585,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(stratOfMillennialDecay==StratsOfMillennialDecay.Rinon_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 Vector3 northwest=new Vector3(95.417f,0,90);
                 Vector3 northeast=new Vector3(104.583f,0,90);
@@ -1732,7 +1689,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(stratOfMillennialDecay==StratsOfMillennialDecay.Rinon_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 Vector3 northwest=new Vector3(95.417f,0,90);
                 Vector3 northeast=new Vector3(104.583f,0,90);
@@ -2083,7 +2040,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfMillennialDecay==StratsOfMillennialDecay.Rinon_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 string prompt="Don't enable anti-knockback!";
             
@@ -2222,7 +2179,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(stratOfMillennialDecay==StratsOfMillennialDecay.Rinon_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 Vector3 standbyPositionForTowers=new Vector3(100,0,98);
                 Vector3 finalPositionForTowers=new Vector3(100,0,90);
@@ -4287,32 +4244,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,91),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-            
-            currentProperties.DestoryAt=stratOfTerrestrialRage switch {
-                
-                StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d => 14250,
-                StratsOfTerrestrialRage.Half_Rinon => 8500,
-                _ => 0
-                
-            };
+            currentProperties.DestoryAt=14250;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
-
-            if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Half_Rinon) {
-                
-                currentProperties=accessory.Data.GetDefaultDrawProperties();
-                    
-                currentProperties.Scale=new(2);
-                currentProperties.Position=new Vector3(100,0,97);
-                currentProperties.TargetPosition=new Vector3(100,0,91);
-                currentProperties.ScaleMode|=ScaleMode.YByDistance;
-                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-                currentProperties.Delay=8500;
-                currentProperties.DestoryAt=5750;
-        
-                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
-                
-            }
 
         }
         
@@ -4360,9 +4294,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d
-               ||
-               stratOfTerrestrialRage==StratsOfTerrestrialRage.Half_Rinon) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 Vector3 leftRangePosition1=new Vector3(90,0,99);
                 Vector3 leftRangePosition2=new Vector3(90,0,101);
@@ -4675,7 +4607,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 }
 
-                if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
+                if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                     
                     shadowsAreOnTheCardinals=true;
 
@@ -4711,7 +4643,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 if(numberOfShadows>=5) {
                     
-                    if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
+                    if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
 
                         refinedRotationForFullRinon=rotationOfTheOuterFang+refinedRotationForFullRinon;
 
@@ -4754,9 +4686,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
 
-            if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d
-               ||
-               stratOfTerrestrialRage==StratsOfTerrestrialRage.Half_Rinon) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 double topRotation=0;
                 
@@ -4766,7 +4696,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 }
 
-                if(stratOfTerrestrialRage==StratsOfTerrestrialRage.Full_Rinon_Or_RaidPlan_84d) {
+                if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
 
                     topRotation=refinedRotationForFullRinon;
 
@@ -5399,7 +5329,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            if(stratOfBeckonMoonlight==StratsOfBeckonMoonlight.Quad_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 List<int> riskIndexAfterTheSecondCleave=[0,0,0,0]; // Northeast, southeast, southwest, northwest accordingly.
 
@@ -5588,7 +5518,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            if(stratOfBeckonMoonlight==StratsOfBeckonMoonlight.Quad_Or_RaidPlan_84d) {
+            if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
                 List<int> riskIndexAfterTheFourthCleave=[0,0,0,0]; // Northeast, southeast, southwest, northwest accordingly.
 
@@ -6048,7 +5978,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
                 string prompt=string.Empty;
@@ -6315,399 +6245,163 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
                 string prompt=string.Empty;
                 
-                if((roundOfUltraviolentRay!=4)
-                   ||
-                   (roundOfUltraviolentRay==4&&stratOfUltraviolentRay4==StratsOfUltraviolentRay4.和前三次保持一致)) {
+                if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
 
-                    if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
+                    if(isInGroup1(myIndex)) {
 
-                        if(isInGroup1(myIndex)) {
-
-                            myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
-
-                        }
-
-                        if(isInGroup2(myIndex)) {
-                    
-                            myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
-                    
-                        }
-
-                        if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
-
-                            return;
-
-                        }
-
-                        prompt="Stay.";
+                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
 
                     }
 
-                    else {
-                        
-                        List<int> marksOnTheLeft=[],marksOnTheRight=[];
-
-                        if(playerWasMarkedByAUltraviolentRay[0])marksOnTheLeft.Add(0);
-                        if(playerWasMarkedByAUltraviolentRay[1])marksOnTheRight.Add(1);
-                        
-                        if(playerWasMarkedByAUltraviolentRay[2])marksOnTheLeft.Add(2);
-                        if(playerWasMarkedByAUltraviolentRay[3])marksOnTheRight.Add(3);
-                        
-                        if(playerWasMarkedByAUltraviolentRay[6])marksOnTheLeft.Add(6);
-                        if(playerWasMarkedByAUltraviolentRay[7])marksOnTheRight.Add(7);
-                        
-                        if(playerWasMarkedByAUltraviolentRay[4])marksOnTheLeft.Add(4);
-                        if(playerWasMarkedByAUltraviolentRay[5])marksOnTheRight.Add(5);
-
-                        int temporaryOrder=-1;
-
-                        if(isInGroup1(myIndex)) {
-                        
-                            temporaryOrder=marksOnTheLeft.IndexOf(myIndex);
-                        
-                        }
+                    if(isInGroup2(myIndex)) {
                     
-                        if(isInGroup2(myIndex)) {
-                        
-                            temporaryOrder=marksOnTheRight.IndexOf(myIndex);
-                        
-                        }
-
-                        ++temporaryOrder;
-
-                        if(temporaryOrder<1||temporaryOrder>3) {
-                            
-                            return;
-                            
-                        }
-                        
-                        accessory.Log.Debug($"marksOnTheLeft={string.Join(",",marksOnTheLeft)}, marksOnTheRight={string.Join(",",marksOnTheRight)}, temporaryOrder={temporaryOrder}");
-
-                        if(isInGroup1(myIndex)) {
-
-                            switch(temporaryOrder) {
-
-                                case 1: {
-
-                                    myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
-                                    prompt=getPlatformDescription(PlatformsOfPhase2.NORTHWEST);
-
-                                    break;
-
-                                }
-                                
-                                case 2: {
-                                    
-                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
-                                    prompt="Stay.";
-
-                                    break;
-
-                                }
-                                
-                                case 3: {
-                                    
-                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
-                                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
-
-                                    break;
-
-                                }
-                                
-                                default: {
-
-                                    return;
-
-                                }
-                                
-                            }
-
-                        }
-
-                        if(isInGroup2(myIndex)) {
+                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
                     
-                            switch(temporaryOrder) {
-
-                                case 1: {
-
-                                    myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
-                                    prompt=getPlatformDescription(PlatformsOfPhase2.NORTHEAST);
-
-                                    break;
-
-                                }
-                                
-                                case 2: {
-                                    
-                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
-                                    prompt="Stay.";
-
-                                    break;
-
-                                }
-                                
-                                case 3: {
-                                    
-                                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
-                                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
-
-                                    break;
-
-                                }
-                                
-                                default: {
-
-                                    return;
-
-                                }
-                                
-                            }
-                    
-                        }
-
-                        if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
-
-                            return;
-
-                        }
-                        
                     }
+
+                    if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                        return;
+
+                    }
+
+                    prompt="Stay.";
 
                 }
 
                 else {
-
-                    if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.西北_南) {
                         
-                        if(!playerWasMarkedByAUltraviolentRay[myIndex]) {
+                    List<int> marksOnTheLeft=[],marksOnTheRight=[];
 
-                            if(isInGroupNorthwest(myIndex)) {
-
-                                myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
-
-                            }
-
-                            else {
-                    
-                                myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
-                    
-                            }
-
-                            prompt="Stay.";
-
-                        }
+                    if(playerWasMarkedByAUltraviolentRay[0])marksOnTheLeft.Add(0);
+                    if(playerWasMarkedByAUltraviolentRay[1])marksOnTheRight.Add(1);
                         
-                        else {
+                    if(playerWasMarkedByAUltraviolentRay[2])marksOnTheLeft.Add(2);
+                    if(playerWasMarkedByAUltraviolentRay[3])marksOnTheRight.Add(3);
                         
-                            List<int> playersOnTheNorthwest=[tankWithTheFarDps,dpsWithTheCloseTank,dpsWithTheFarHealer,tankWithTheCloseDps],
-                                      playersOnTheSouth=[healerWithTheFarDps,dpsWithTheFarTank,dpsWithTheCloseHealer,healerWithTheCloseDps];
-                            
-                            playersOnTheNorthwest.Sort((x,y) => {
-
-                                var xObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[x]);
-                                var yObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[y]);
-
-                                if(xObject==null||yObject==null) {
-
-                                    return 0;
-
-                                }
-
-                                double xRotation=getRotation(xObject.Position,ARENA_CENTER_OF_PHASE_2);
-                                double yRotation=getRotation(yObject.Position,ARENA_CENTER_OF_PHASE_2);
-
-                                if(xRotation>yRotation) {
-
-                                    return -1;
-
-                                }
-
-                                else {
-                                    
-                                    if(xRotation<yRotation) {
-
-                                        return 1;
-
-                                    }
-
-                                    else {
-
-                                        return 0;
-
-                                    }
-                                    
-                                }
-
-                            });
-                            
-                            playersOnTheSouth.Sort((x,y) => {
-
-                                var xObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[x]);
-                                var yObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[y]);
-
-                                if(xObject==null||yObject==null) {
-
-                                    return 0;
-
-                                }
-
-                                double xRotation=getRotation(xObject.Position,ARENA_CENTER_OF_PHASE_2);
-                                double yRotation=getRotation(yObject.Position,ARENA_CENTER_OF_PHASE_2);
-
-                                if(xRotation<yRotation) {
-
-                                    return -1;
-
-                                }
-
-                                else {
-                                    
-                                    if(xRotation>yRotation) {
-
-                                        return 1;
-
-                                    }
-
-                                    else {
-
-                                        return 0;
-
-                                    }
-                                    
-                                }
-
-                            });
-                            
-                            List<int> marksOnTheNorthwest=[],marksOnTheSouth=[];
-
-                            for(int i=0;i<4;++i) {
-                                
-                                if(playerWasMarkedByAUltraviolentRay[playersOnTheNorthwest[i]])marksOnTheNorthwest.Add(playersOnTheNorthwest[i]);
-                                if(playerWasMarkedByAUltraviolentRay[playersOnTheSouth[i]])marksOnTheSouth.Add(playersOnTheSouth[i]);
-                                
-                            }
-
-                            int temporaryOrder=-1;
-
-                            if(isInGroupNorthwest(myIndex)) {
+                    if(playerWasMarkedByAUltraviolentRay[6])marksOnTheLeft.Add(6);
+                    if(playerWasMarkedByAUltraviolentRay[7])marksOnTheRight.Add(7);
                         
-                                temporaryOrder=marksOnTheNorthwest.IndexOf(myIndex);
+                    if(playerWasMarkedByAUltraviolentRay[4])marksOnTheLeft.Add(4);
+                    if(playerWasMarkedByAUltraviolentRay[5])marksOnTheRight.Add(5);
+
+                    int temporaryOrder=-1;
+
+                    if(isInGroup1(myIndex)) {
                         
-                            }
-                    
-                            else {
-                        
-                                temporaryOrder=marksOnTheSouth.IndexOf(myIndex);
-                        
-                            }
-
-                            ++temporaryOrder;
-
-                            if(temporaryOrder<1||temporaryOrder>3) {
-                            
-                                return;
-                            
-                            }
-                        
-                            accessory.Log.Debug($"marksOnTheNorthwest={string.Join(",",marksOnTheNorthwest)}, marksOnTheSouth={string.Join(",",marksOnTheSouth)}, temporaryOrder={temporaryOrder}");
-                            
-                            if(isInGroupNorthwest(myIndex)) {
-
-                                switch(temporaryOrder) {
-
-                                    case 1: {
-
-                                        myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
-                                        prompt=getPlatformDescription(PlatformsOfPhase2.NORTHEAST);
-
-                                        break;
-
-                                    }
-                                
-                                    case 2: {
-                                    
-                                        myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
-                                        prompt="Stay.";
-
-                                        break;
-
-                                    }
-                                
-                                    case 3: {
-                                    
-                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
-                                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
-
-                                        break;
-
-                                    }
-                                
-                                    default: {
-
-                                        return;
-
-                                    }
-                                
-                                }
-
-                            }
-
-                            else {
-                    
-                                switch(temporaryOrder) {
-
-                                    case 1: {
-
-                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
-                                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHEAST);
-
-                                        break;
-
-                                    }
-                                
-                                    case 2: {
-                                    
-                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
-                                        prompt="Stay.";
-
-                                        break;
-
-                                    }
-                                
-                                    case 3: {
-                                    
-                                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
-                                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
-
-                                        break;
-
-                                    }
-                                
-                                    default: {
-
-                                        return;
-
-                                    }
-                                
-                                }
-                    
-                            }
-
-                            if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
-
-                                return;
-
-                            }
-                            
-                        }
+                        temporaryOrder=marksOnTheLeft.IndexOf(myIndex);
                         
                     }
-                
+                    
+                    if(isInGroup2(myIndex)) {
+                        
+                        temporaryOrder=marksOnTheRight.IndexOf(myIndex);
+                        
+                    }
+
+                    ++temporaryOrder;
+
+                    if(temporaryOrder<1||temporaryOrder>3) {
+                            
+                        return;
+                            
+                    }
+                        
+                    accessory.Log.Debug($"marksOnTheLeft={string.Join(",",marksOnTheLeft)}, marksOnTheRight={string.Join(",",marksOnTheRight)}, temporaryOrder={temporaryOrder}");
+
+                    if(isInGroup1(myIndex)) {
+
+                        switch(temporaryOrder) {
+
+                            case 1: {
+
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
+                                prompt=getPlatformDescription(PlatformsOfPhase2.NORTHWEST);
+
+                                break;
+
+                            }
+                                
+                            case 2: {
+                                    
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                                prompt="Stay.";
+
+                                break;
+
+                            }
+                                
+                            case 3: {
+                                    
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                                prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+
+                                break;
+
+                            }
+                                
+                            default: {
+
+                                return;
+
+                            }
+                                
+                        }
+
+                    }
+
+                    if(isInGroup2(myIndex)) {
+                    
+                        switch(temporaryOrder) {
+
+                            case 1: {
+
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
+                                prompt=getPlatformDescription(PlatformsOfPhase2.NORTHEAST);
+
+                                break;
+
+                            }
+                                
+                            case 2: {
+                                    
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                                prompt="Stay.";
+
+                                break;
+
+                            }
+                                
+                            case 3: {
+                                    
+                                myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                                prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+
+                                break;
+
+                            }
+                                
+                            default: {
+
+                                return;
+
+                            }
+                                
+                        }
+                    
+                    }
+
+                    if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
+
+                        return;
+
+                    }
+                        
                 }
                 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
@@ -6796,7 +6490,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
                 string prompt=string.Empty;
@@ -7231,7 +6925,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -7644,7 +7338,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 string prompt=string.Empty;
                 bool isWarning=false;
@@ -7865,7 +7559,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
@@ -7939,7 +7633,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -8393,7 +8087,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -8591,7 +8285,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -8882,7 +8576,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -9173,7 +8867,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -9520,7 +9214,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -10228,7 +9922,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
@@ -10538,7 +10232,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
                 bool finalPositionTbd=false;
@@ -10746,40 +10440,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
-                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.和前三次保持一致) {
+                if(isInGroup1(myIndex)) {
 
-                    if(isInGroup1(myIndex)) {
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
 
-                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
-
-                    }
-                    
-                    if(isInGroup2(myIndex)) {
-
-                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
-
-                    }
-                    
                 }
-                
-                if(stratOfUltraviolentRay4==StratsOfUltraviolentRay4.西北_南) {
-
-                    if(isInGroupNorthwest(myIndex)) {
-
-                        myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
-
-                    }
                     
-                    else {
+                if(isInGroup2(myIndex)) {
 
-                        myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
 
-                    }
-                    
                 }
 
                 if(myPosition.Equals(ARENA_CENTER_OF_PHASE_2)) {
@@ -10837,7 +10511,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(stratOfPhase2==StratsOfPhase2.Toxic_Friends_RaidPlan_DOG) {
+            if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
             
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
