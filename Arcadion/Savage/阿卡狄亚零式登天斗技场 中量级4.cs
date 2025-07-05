@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.5",
+        version:"0.0.1.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -2268,7 +2268,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Line)",
+        [ScriptMethod(name:"门神 大地的呼唤 (直线)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41926"])]
     
@@ -2303,7 +2303,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Cross)",
+        [ScriptMethod(name:"门神 大地的呼唤 (十字)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41943"])]
     
@@ -2348,7 +2348,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Line Direction Acquisition)",
+        [ScriptMethod(name:"门神 大地的呼唤 (直线方向获取)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41926"],
             suppress:2500,
@@ -2404,7 +2404,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Oblique Cross Acquisition)",
+        [ScriptMethod(name:"门神 大地的呼唤 (斜十字获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18221"],
             userControl:false)]
@@ -2481,7 +2481,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Guidance)",
+        [ScriptMethod(name:"门神 大地的呼唤 (指路)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18221"],
             suppress:2500)]
@@ -2528,7 +2528,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Titans (Sub-phase 3 Control)",
+        [ScriptMethod(name:"门神 大地的呼唤 (子阶段3控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:41943"],
             suppress:2500,
