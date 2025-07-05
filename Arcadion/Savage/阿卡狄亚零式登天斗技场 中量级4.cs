@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.3",
+        version:"0.0.1.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -707,7 +707,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Circle)",
+        [ScriptMethod(name:"门神 扫旋击群狼剑 (钢铁)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(43308|43309|43310|43312|43313)$"])]
     
@@ -755,7 +755,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Direction)",
+        [ScriptMethod(name:"门神 扫旋击群狼剑 (方向)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(43312|43313)$"])]
     
@@ -818,13 +818,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(string.Equals(@event["ActionId"],"43312")) {
 
-                prompt="Fan later, get closer.";
+                prompt="后续扇形,靠近";
 
             }
             
             if(string.Equals(@event["ActionId"],"43313")) {
 
-                prompt="Circle later, stay away.";
+                prompt="后续钢铁,远离";
 
             }
             
@@ -842,7 +842,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (ID Acquisition)",
+        [ScriptMethod(name:"门神 扫旋击群狼剑 (ID获取)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(43312|43313)$"],
             userControl:false)]
@@ -861,7 +861,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Combo)",
+        [ScriptMethod(name:"门神 扫旋击群狼剑 (后续连击)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:regex:^(42927|41880)$"])]
     
@@ -1006,7 +1006,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Guidance)",
+        [ScriptMethod(name:"门神 扫旋击群狼剑 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(43312|43313)$"])]
     
@@ -1155,7 +1155,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Eminent Reign And Revolutionary Reign (Add)",
+        [ScriptMethod(name:"门神 扫旋击群狼剑 (小怪)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42893"])]
     
