@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.2",
+        version:"0.0.1.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
             
-            门神指路适配进度: 风土之魔技 ×, 扫旋击群狼剑 √, 大地的呼唤 √, 千年风化 ×, 光狼召唤 ×, 大地之怒 ×, 幻狼召唤 √
+            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 大地的呼唤 √, 千年风化 ×, 光狼召唤 ×, 大地之怒 ×, 幻狼召唤 √
             本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
@@ -445,7 +445,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         #region Phase_1
 
-        [ScriptMethod(name:"Phase 1 Windfang And Stonefang",
+        [ScriptMethod(name:"门神 风土之魔技",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(41885|41886|41889|41890)$"])]
     
@@ -463,7 +463,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             }
             
-            IReadOnlyList<int> getPartner=[6,5,4,7,2,1,0,3];
+            IReadOnlyList<int> getPartner=[6,7,4,5,2,3,0,1];
         
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             string prompt=string.Empty;
@@ -520,7 +520,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
-                prompt+="Get in and stack at the ";
+                if(string.Equals(@event["ActionId"],"41885")) {
+                    
+                    prompt="靠近,斜点分摊";
+                    
+                }
+                
+                if(string.Equals(@event["ActionId"],"41886")) {
+                    
+                    prompt="靠近,正点分摊";
+                    
+                }
 
             }
             
@@ -550,7 +560,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
-                prompt+="Get out and spread at the ";
+                prompt="远离,分散";
 
             }
             
@@ -574,8 +584,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 currentProperties.DestoryAt=6000;
         
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
-
-                prompt+="intercardinal.";
 
             }
             
@@ -601,8 +609,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
 
-                prompt+="cardinal.";
-
             }
 
             if(!string.IsNullOrWhiteSpace(prompt)) {
@@ -619,7 +625,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Windfang And Stonefang (Guidance)",
+        [ScriptMethod(name:"门神 风土之魔技 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(41885|41886|41889|41890)$"])]
     
@@ -650,7 +656,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             if(string.Equals(@event["ActionId"],"41885")) {
                 
-                IReadOnlyList<float> getDegree=[315,135,225,45,225,135,315,45];
+                IReadOnlyList<float> getDegree=[315,45,225,135,225,135,315,45];
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -667,7 +673,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             if(string.Equals(@event["ActionId"],"41886")) {
                 
-                IReadOnlyList<float> getDegree=[0,180,270,90,270,180,0,90];
+                IReadOnlyList<float> getDegree=[0,90,270,180,270,180,0,90];
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -682,26 +688,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
             
-            if(string.Equals(@event["ActionId"],"41889")) {
+            if(string.Equals(@event["ActionId"],"41889")||string.Equals(@event["ActionId"],"41890")) {
                 
-                IReadOnlyList<float> getDegree=[335,155,245,65,205,115,295,25];
-                
-                currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-                currentProperties.Scale=new(2);
-                currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
-                currentProperties.ScaleMode|=ScaleMode.YByDistance;
-                currentProperties.Color=accessory.Data.DefaultSafeColor;
-                currentProperties.DestoryAt=6000;
-        
-                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-
-            }
-            
-            if(string.Equals(@event["ActionId"],"41890")) {
-                
-                IReadOnlyList<float> getDegree=[20,200,290,110,250,160,340,70];
+                IReadOnlyList<float> getDegree=[337.5f,67.5f,247.5f,157.5f,202.5f,112.5f,292.5f,22.5f];
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
