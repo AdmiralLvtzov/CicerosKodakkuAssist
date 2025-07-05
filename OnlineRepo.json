@@ -20,11 +20,11 @@
   {
     "Name":"AAC Cruiserweight M4 (Savage)",
     "Guid":"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-    "Version":"0.0.0.27",
+    "Version":"0.0.0.28",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1263],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/AAC%20Cruiserweight%20M4%20(Savage).cs",
-    "UpdateInfo":"Last update: July 4, 2025.\nUpdate notes: The script has been completed."
+    "UpdateInfo":"Last update: July 5, 2025.\nUpdate notes: The script has been completed."
   },
   {
     "Name":"阿卡狄亚零式登天斗技场 中量级4",
