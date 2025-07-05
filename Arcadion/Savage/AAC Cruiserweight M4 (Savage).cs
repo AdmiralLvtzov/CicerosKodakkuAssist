@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.28",
+        version:"0.0.0.29",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -3678,7 +3678,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
             
             // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
-            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Sand Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -3758,7 +3758,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
             
             // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
-            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Sand Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -3903,7 +3903,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             }
             
             // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
-            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Sand Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             

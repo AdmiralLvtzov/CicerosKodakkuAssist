@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.6",
+        version:"0.0.1.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
             
-            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 千年风化 √, 大地的呼唤 √, 光狼召唤 ×, 大地之怒 ×, 幻狼召唤 √
+            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 千年风化 √, 大地的呼唤 √, 光狼召唤 √, 大地之怒 ×, 幻狼召唤 √
             本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
@@ -87,7 +87,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
          Sub-phase 2: 千年风化后半
          Sub-phase 3: 大地的呼唤
          Sub-phase 4: 期间群狼剑机制
-         Sub-phase 5: Tactical Pack
+         Sub-phase 5: 光狼召唤
          Sub-phase 6: Terrestrial Rage
          Sub-phase 7: 期间群狼剑机制
          Sub-phase 8: Beckon Moonlight
@@ -2558,7 +2558,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 4 Control)",
+        [ScriptMethod(name:"门神 期间群狼剑机制 (子阶段4控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41928"],
             userControl:false)]
@@ -2585,7 +2585,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Add Position Acquisition)",
+        [ScriptMethod(name:"门神 光狼召唤 (小怪位置获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18219"],
             userControl:false)]
@@ -2634,7 +2634,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Direction Acquisition)",
+        [ScriptMethod(name:"门神 光狼召唤 (方向获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18262"],
             userControl:false)]
@@ -2699,7 +2699,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Direction)",
+        [ScriptMethod(name:"门神 光狼召唤 (方向)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18262"])]
     
@@ -2752,7 +2752,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
-                prompt="Clockwise.";
+                prompt="顺时针";
 
             }
 
@@ -2774,7 +2774,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
                 
-                prompt="Counterclockwise.";
+                prompt="逆时针";
                 
             }
             
@@ -2790,7 +2790,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Direction Destruction)",
+        [ScriptMethod(name:"门神 光狼召唤 (方向销毁)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:regex:^(18225|18219)$"],
             userControl:false)]
@@ -2827,7 +2827,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Initial Add Guidance)",
+        [ScriptMethod(name:"门神 光狼召唤 (初始小怪指路)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:regex:^(0150|014F)$"])]
     
@@ -2883,13 +2883,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 if(targetId==idOfTheWindWolfAdd) {
 
-                    prompt="Go to Wolf of Stone.";
+                    prompt="去土狼首";
 
                 }
                 
                 if(targetId==idOfTheStoneWolfAdd) {
                     
-                    prompt="Go to Wolf of Wind.";
+                    prompt="去风狼首";
                     
                 }
                 
@@ -2911,13 +2911,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 
                 if(sourceId==idOfTheWindWolfAdd) {
 
-                    prompt="Go to Wolf of Stone.";
+                    prompt="去土狼首";
 
                 }
                 
                 if(sourceId==idOfTheStoneWolfAdd) {
                     
-                    prompt="Go to Wolf of Wind.";
+                    prompt="去风狼首";
                     
                 }
                 
@@ -2960,7 +2960,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Add Acquisition)",
+        [ScriptMethod(name:"门神 光狼召唤 (小怪获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:regex:^(18225|18219|18262|18261)$"],
             userControl:false)]
@@ -3011,7 +3011,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Firewall Status Maintenance)",
+        [ScriptMethod(name:"门神 光狼召唤 (防火墙状态维护)",
             eventType:EventTypeEnum.StatusAdd,
             eventCondition:["StatusID:regex:^(4389|4390)$"],
             userControl:false)]
@@ -3068,7 +3068,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Doom Status Acquisition)",
+        [ScriptMethod(name:"门神 光狼召唤 (死宣状态获取)",
             eventType:EventTypeEnum.StatusAdd,
             eventCondition:["StatusID:regex:^(4391|4392)$"],
             userControl:false)]
@@ -3186,7 +3186,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Round Control)",
+        [ScriptMethod(name:"门神 光狼召唤 (轮次控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41932"],
             suppress:2500,
@@ -3216,7 +3216,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Tank Buster)",
+        [ScriptMethod(name:"门神 光狼召唤 (死刑)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41932"])]
     
@@ -3303,7 +3303,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Line)",
+        [ScriptMethod(name:"门神 光狼召唤 (直线)",
             eventType:EventTypeEnum.TargetIcon)]
     
         public void Phase_1_Tactical_Pack_Line(Event @event,ScriptAccessory accessory) {
@@ -3398,12 +3398,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Earthborne End Guidance)",
+        [ScriptMethod(name:"门神 光狼召唤 (风之咒痕指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:41956"],
             suppress:2500)]
     
-        public void Phase_1_Tactical_Pack_Earthborne_End_Guidance(Event @event,ScriptAccessory accessory) {
+        public void Phase_1_Tactical_Pack_Windborne_End_Guidance(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=1) {
 
@@ -3440,7 +3440,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(windborneEndWasApplied[myIndex]) {
+            if(!windborneEndWasApplied[myIndex]) {
 
                 return;
 
@@ -3458,235 +3458,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             currentProperties.Scale=new(2);
             currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetObject=((ulong)idOfTheEarthFont);
-            currentProperties.ScaleMode|=ScaleMode.YByDistance;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=1000;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-            
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Scale=new(2);
-            currentProperties.Owner=((ulong)idOfTheEarthFont);
-            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
-            currentProperties.ScaleMode|=ScaleMode.YByDistance;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=1000;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-            
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Scale=new(1.5f);
-            currentProperties.Owner=((ulong)idOfTheEarthFont);
-            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
-            currentProperties.DestoryAt=1000;
-            
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-            
-            // From 1s:
-            
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_1";
-            currentProperties.Scale=new(2);
-            currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetObject=((ulong)idOfTheEarthFont);
-            currentProperties.ScaleMode|=ScaleMode.YByDistance;
-            currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=1000;
-            currentProperties.DestoryAt=15500;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-            
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_2";
-            currentProperties.Scale=new(2);
-            currentProperties.Owner=((ulong)idOfTheEarthFont);
-            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
-            currentProperties.ScaleMode|=ScaleMode.YByDistance;
-            currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=1000;
-            currentProperties.DestoryAt=15500;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-            
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_3";
-            currentProperties.Scale=new(1.5f);
-            currentProperties.Owner=((ulong)idOfTheEarthFont);
-            currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=1000;
-            currentProperties.DestoryAt=15500;
-            
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-            
-            System.Threading.Thread.MemoryBarrier();
-
-            earthGuidanceHasBeenDrawn=true;
-
-        }
-        
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Earthborne End Guidance 2)",
-            eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:regex:^(41966|43138|43520)$"],
-            suppress:2500,
-            userControl:false)]
-    
-        public void Phase_1_Tactical_Pack_Earthborne_End_Guidance_2(Event @event,ScriptAccessory accessory) {
-            
-            if(!earthGuidanceHasBeenDrawn) {
-
-                return;
-
-            }
-
-            else {
-
-                earthGuidanceHasBeenDrawn=false;
-
-            }
-
-            if(currentPhase!=1) {
-
-                return;
-
-            }
-
-            if(currentSubPhase!=5) {
-
-                return;
-
-            }
-            
-            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
-            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
-            
-            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-            
-            if(!isLegalIndex(myIndex)) {
-
-                return;
-
-            }
-
-            if(currentAddRound!=roundForCleanse[myIndex]) {
-
-                return;
-
-            }
-
-            if(windborneEndWasApplied[myIndex]) {
-
-                return;
-
-            }
-
-            if(idOfTheEarthFont==null||idOfTheWindWolfAdd==null) {
-
-                return;
-
-            }
-            
-            System.Threading.Thread.MemoryBarrier();
-            
-            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_1");
-            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_2");
-            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_3");
-            
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Scale=new(2);
-            currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
-            currentProperties.ScaleMode|=ScaleMode.YByDistance;
-            currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.DestoryAt=2500;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-
-            if(!string.Equals(@event["ActionId"],"43520")) {
-                
-                currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-                currentProperties.Scale=new(1.5f);
-                currentProperties.Owner=((ulong)idOfTheEarthFont);
-                currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
-                currentProperties.DestoryAt=2500;
-            
-                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-                
-            }
-
-        }
-        
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Windborne End Guidance)",
-            eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:regex:^(41966|43138|43520)$"],
-            suppress:2500)]
-    
-        public void Phase_1_Tactical_Pack_Windborne_End_Guidance(Event @event,ScriptAccessory accessory) {
-
-            if(currentPhase!=1) {
-
-                return;
-
-            }
-
-            if(currentSubPhase!=5) {
-
-                return;
-
-            }
-            
-            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
-            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
-            
-            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-            
-            if(!isLegalIndex(myIndex)) {
-
-                return;
-
-            }
-            
-            if(myIndex==0||myIndex==1) {
-
-                return;
-
-            }
-
-            if(currentAddRound!=roundForCleanse[myIndex]) {
-
-                return;
-
-            }
-
-            if(!windborneEndWasApplied[myIndex]) {
-
-                return;
-
-            }
-
-            if(idOfTheWindFont==null||idOfTheStoneWolfAdd==null) {
-
-                return;
-
-            }
-            
-            // From 0s to 4s:
-            
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Scale=new(2);
-            currentProperties.Owner=accessory.Data.Me;
             currentProperties.TargetObject=((ulong)idOfTheWindFont);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=4000;
+            currentProperties.DestoryAt=1000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
@@ -3697,7 +3472,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             currentProperties.TargetObject=((ulong)idOfTheStoneWolfAdd);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=4000;
+            currentProperties.DestoryAt=1000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
@@ -3706,11 +3481,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             currentProperties.Scale=new(1.5f);
             currentProperties.Owner=((ulong)idOfTheWindFont);
             currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
-            currentProperties.DestoryAt=4000;
+            currentProperties.DestoryAt=1000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
-            // From 4s:
+            // From 1s:
             
             currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -3720,7 +3495,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             currentProperties.TargetObject=((ulong)idOfTheWindFont);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=4000;
+            currentProperties.Delay=1000;
             currentProperties.DestoryAt=15500;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
@@ -3733,7 +3508,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             currentProperties.TargetObject=((ulong)idOfTheStoneWolfAdd);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=4000;
+            currentProperties.Delay=1000;
             currentProperties.DestoryAt=15500;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
@@ -3744,7 +3519,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             currentProperties.Scale=new(1.5f);
             currentProperties.Owner=((ulong)idOfTheWindFont);
             currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=4000;
+            currentProperties.Delay=1000;
             currentProperties.DestoryAt=15500;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
@@ -3755,7 +3530,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Tactical Pack (Windborne End Guidance 2)",
+        [ScriptMethod(name:"门神 光狼召唤 (风之咒痕指路2)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:regex:^(41965|43137|43519)$"],
             suppress:2500,
@@ -3788,7 +3563,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             }
             
             // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
-            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Wind Surge (Add Death) from Font of Earth Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Sand Surge (Add Death) from Font of Earth Aether.
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -3810,7 +3585,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(idOfTheWindFont==null||idOfTheStoneWolfAdd==null) {
+            if(idOfTheEarthFont==null||idOfTheWindWolfAdd==null) {
 
                 return;
 
@@ -3836,9 +3611,234 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             if(!string.Equals(@event["ActionId"],"43519")) {
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
-                
+
                 currentProperties.Scale=new(1.5f);
                 currentProperties.Owner=((ulong)idOfTheWindFont);
+                currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=2500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"门神 光狼召唤 (土之咒痕指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(41965|43137|43519)$"],
+            suppress:2500)]
+    
+        public void Phase_1_Tactical_Pack_Earthborne_End_Guidance(Event @event,ScriptAccessory accessory) {
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Sand Surge (Add Death) from Font of Earth Aether.
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            if(myIndex==0||myIndex==1) {
+
+                return;
+
+            }
+
+            if(currentAddRound!=roundForCleanse[myIndex]) {
+
+                return;
+
+            }
+
+            if(windborneEndWasApplied[myIndex]) {
+
+                return;
+
+            }
+
+            if(idOfTheWindFont==null||idOfTheStoneWolfAdd==null) {
+
+                return;
+
+            }
+            
+            // From 0s to 4s:
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheEarthFont);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(1.5f);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=4000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            // From 4s:
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_1";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheEarthFont);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=15500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_2";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=15500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="Phase_1_Tactical_Pack_Earthborne_End_Guidance_3";
+            currentProperties.Scale=new(1.5f);
+            currentProperties.Owner=((ulong)idOfTheEarthFont);
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=15500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            earthGuidanceHasBeenDrawn=true;
+
+        }
+        
+        [ScriptMethod(name:"门神 光狼召唤 (土之咒痕指路2)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(41966|43138|43520)$"],
+            suppress:2500,
+            userControl:false)]
+    
+        public void Phase_1_Tactical_Pack_Earthborne_End_Guidance_2(Event @event,ScriptAccessory accessory) {
+            
+            if(!earthGuidanceHasBeenDrawn) {
+
+                return;
+
+            }
+
+            else {
+
+                earthGuidanceHasBeenDrawn=false;
+
+            }
+
+            if(currentPhase!=1) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=5) {
+
+                return;
+
+            }
+            
+            // 41965 Wind Surge, 43137 Wind Surge (Last) and 43519 Wind Surge (Add Death) from Font of Wind Aether.
+            // 41966 Sand Surge, 43138 Sand Surge (Last) and 43520 Sand Surge (Add Death) from Font of Earth Aether.
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(currentAddRound!=roundForCleanse[myIndex]) {
+
+                return;
+
+            }
+
+            if(windborneEndWasApplied[myIndex]) {
+
+                return;
+
+            }
+
+            if(idOfTheWindFont==null||idOfTheStoneWolfAdd==null) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_1");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_2");
+            accessory.Method.RemoveDraw("Phase_1_Tactical_Pack_Earthborne_End_Guidance_3");
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=((ulong)idOfTheWindWolfAdd);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(!string.Equals(@event["ActionId"],"43520")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(1.5f);
+                currentProperties.Owner=((ulong)idOfTheEarthFont);
                 currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
                 currentProperties.DestoryAt=2500;
                             
@@ -3848,7 +3848,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 5 Control)",
+        [ScriptMethod(name:"门神 期间群狼剑机制 (子阶段5控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42825"],
             userControl:false)]
