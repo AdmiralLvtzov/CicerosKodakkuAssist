@@ -2359,7 +2359,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             eventCondition:["ActionId:41913"],
             userControl:false)]
     
-        public void Phase_1_The_Second_Half_Of_Millennial_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
+        public void Phase_1_The_Second_Half_Of_Millennial_Decay_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=1) {
 

@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.4",
+        version:"0.0.1.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
             
-            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 大地的呼唤 √, 千年风化 ×, 光狼召唤 ×, 大地之怒 ×, 幻狼召唤 √
+            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 千年风化 √, 大地的呼唤 √, 光狼召唤 ×, 大地之怒 ×, 幻狼召唤 √
             本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
@@ -63,8 +63,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         [UserSetting("门神攻略")]
         public StratsOfPhase1 stratOfPhase1 { get; set; }
-        [UserSetting("千年风化时,坦克和近战总是在旋转时多走几步")]
-        public bool meleeGoFurther { get; set; } = true;
         
         
         [UserSetting("本体攻略")]
@@ -85,15 +83,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
          
          Phase 1:
          
-         Sub-phase 1: The first half of Millennial Decay
-         Sub-phase 2: The second half of Millennial Decay
-         Sub-phase 3: Terrestrial Titans
-         Sub-phase 4: intermission regins
+         Sub-phase 1: 千年风化前半
+         Sub-phase 2: 千年风化后半
+         Sub-phase 3: 大地的呼唤
+         Sub-phase 4: 期间群狼剑机制
          Sub-phase 5: Tactical Pack
          Sub-phase 6: Terrestrial Rage
-         Sub-phase 7: intermission regins
+         Sub-phase 7: 期间群狼剑机制
          Sub-phase 8: Beckon Moonlight
-         Sub-phase 9: intermission fangs
+         Sub-phase 9: 期间魔技机制
          
          Phase 2:
          
@@ -101,7 +99,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
          Sub-phase 2: Twofold Tempest
          Sub-phase 3: Champion's Circuit
          Sub-phase 4: Lone Wolf's Lament
-         Sub-phase 5: Enrage
+         Sub-phase 5: 狂暴
          
         */
         
@@ -1184,7 +1182,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Line)",
+        [ScriptMethod(name:"门神 千年风化前半 (直线)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41908"])]
     
@@ -1230,7 +1228,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Direction Acquisition)",
+        [ScriptMethod(name:"门神 千年风化前半 (方向获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18218"],
             userControl:false)]
@@ -1329,7 +1327,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Direction)",
+        [ScriptMethod(name:"门神 千年风化前半 (方向)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18218"],
             suppress:20000)]
@@ -1376,7 +1374,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
-                prompt="Clockwise.";
+                prompt="顺时针";
 
             }
 
@@ -1397,7 +1395,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
                 
-                prompt="Counterclockwise.";
+                prompt="逆时针";
                 
             }
             
@@ -1419,7 +1417,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Anti-knockback Warning)",
+        [ScriptMethod(name:"门神 千年风化前半 (防击退警告)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41912"])]
     
@@ -1439,7 +1437,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
-                string prompt="Enable anti-knockback!";
+                string prompt="防击退!";
             
                 // System.Threading.Thread.Sleep(500);
             
@@ -1455,7 +1453,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Gust Acquisition)",
+        [ScriptMethod(name:"门神 千年风化前半 (狂风获取)",
             eventType:EventTypeEnum.TargetIcon,
             suppress:2500,
             userControl:false)]
@@ -1536,7 +1534,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (First Set Guidance)",
+        [ScriptMethod(name:"门神 千年风化前半 (第一轮指路)",
             eventType:EventTypeEnum.TargetIcon,
             suppress:7500)]
     
@@ -1600,17 +1598,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_1;
             
-                // Northwest: MT(0) or R1(6)
-                // Northeast: H2(3) or R2(7)
-                // Southwest: H1(2) or M1(4)
-                // Southeast: OT(1) or M2(5)
+                // Northwest: MT(0) or D3(6)
+                // Northeast: ST(1) or D4(7)
+                // Southwest: H1(2) or D1(4)
+                // Southeast: H2(3) or D2(5)
 
                 myPosition=myIndex switch {
                 
                     0 => northwest,
-                    1 => southeast,
+                    1 => northeast,
                     2 => southwest,
-                    3 => northeast,
+                    3 => southeast,
                     4 => southwest,
                     5 => southeast,
                     6 => northwest,
@@ -1640,7 +1638,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Second Set Guidance)",
+        [ScriptMethod(name:"门神 千年风化前半 (第二轮指路)",
             eventType:EventTypeEnum.TargetIcon,
             suppress:7500)]
     
@@ -1680,6 +1678,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
+                Vector3 trueNorth=new Vector3(100,0,89);
+                Vector3 trueSouth=new Vector3(100,0,111);
                 Vector3 northwest=new Vector3(95.417f,0,90);
                 Vector3 northeast=new Vector3(104.583f,0,90);
                 Vector3 southwest=new Vector3(95.417f,0,110);
@@ -1728,125 +1728,61 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
-                if(meleeGoFurther) {
-
-                    if(windWolvesRotateClockwise) {
+                if(windWolvesRotateClockwise) {
                         
-                        myPosition=myIndex switch {
-                    
-                            0 => northwest,
-                            1 => southeast,
-                            2 => southwest,
-                            3 => northeast,
-                            4 => northwest, // Swap with R1.
-                            5 => southeast,
-                            6 => southwest, // Swap with M1.
-                            7 => northeast,
-                            _ => ARENA_CENTER_OF_PHASE_1
-                    
-                        };
-                        
-                    }
-
-                    else {
-                        
-                        myPosition=myIndex switch {
-                    
-                            0 => southwest, // Swap with H1.
-                            1 => northeast, // Swap with H2.
-                            2 => northwest, // Swap with MT.
-                            3 => southeast, // Swap with OT.
-                            4 => southwest,
-                            5 => northeast, // Swap with R2.
-                            6 => northwest,
-                            7 => southeast, // Swap with M2.
-                            _ => ARENA_CENTER_OF_PHASE_1
-                    
-                        };
-                        
-                    }
-                    
-                    if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
-
-                        return;
-
-                    }
-                    
-                    guidanceDelay=myIndex switch {
-                        
-                        0 => 3300,
-                        1 => 3300,
-                        2 => 0,
-                        3 => 0,
-                        4 => 3300,
-                        5 => 3300,
-                        6 => 0,
-                        7 => 0,
-                        _ => 0
-                    
-                    };
-                    
-                }
-
-                else {
-                    
                     myPosition=myIndex switch {
-                        
+                    
                         0 => northwest,
-                        1 => southeast,
-                        2 => southwest,
-                        3 => northeast,
-                        4 => southwest,
+                        1 => southeast, // Swap with H2.
+                        2 => trueNorth,
+                        3 => trueSouth,
+                        4 => northwest, // Swap with D3.
                         5 => southeast,
-                        6 => northwest,
-                        7 => northeast,
+                        6 => trueNorth,
+                        7 => trueSouth,
                         _ => ARENA_CENTER_OF_PHASE_1
                     
                     };
-
-                    if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
-
-                        return;
-
-                    }
-
-                    if(windWolvesRotateClockwise) {
                         
-                        guidanceDelay=myIndex switch {
-                        
-                            0 => 3300,
-                            1 => 3300,
-                            2 => 0,
-                            3 => 0,
-                            4 => 0,
-                            5 => 3300,
-                            6 => 3300,
-                            7 => 0,
-                            _ => 0
-                    
-                        };
-                        
-                    }
-
-                    else {
-                        
-                        guidanceDelay=myIndex switch {
-                        
-                            0 => 0,
-                            1 => 0,
-                            2 => 3300,
-                            3 => 3300,
-                            4 => 3300,
-                            5 => 0,
-                            6 => 0,
-                            7 => 3300,
-                            _ => 0
-                    
-                        };
-                        
-                    }
-                    
                 }
+
+                else {
+                        
+                    myPosition=myIndex switch {
+                    
+                        0 => southwest, // Swap with H1.
+                        1 => northeast, 
+                        2 => trueSouth,
+                        3 => trueNorth,
+                        4 => southwest,
+                        5 => northeast, // Swap with D4.
+                        6 => trueSouth,
+                        7 => trueNorth,
+                        _ => ARENA_CENTER_OF_PHASE_1
+                    
+                    };
+                        
+                }
+                    
+                if(myPosition.Equals(ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+                    
+                guidanceDelay=myIndex switch {
+                        
+                    0 => 3300,
+                    1 => 3300,
+                    2 => 0,
+                    3 => 0,
+                    4 => 3300,
+                    5 => 3300,
+                    6 => 0,
+                    7 => 0,
+                    _ => 0
+                    
+                };
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -1875,7 +1811,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The First Half Of Millennial Decay (Sub-phase 1 Control)",
+        [ScriptMethod(name:"门神 千年风化前半 (子阶段1控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:41907"],
             suppress:2500,
@@ -1921,7 +1857,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Fan)",
+        [ScriptMethod(name:"门神 千年风化后半 (扇形)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:regex:^(0039|0001)$"])]
     
@@ -2011,7 +1947,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Anti-knockback Warning)",
+        [ScriptMethod(name:"门神 千年风化后半 (防击退警告)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41912"])]
     
@@ -2031,7 +1967,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
-                string prompt="Don't enable anti-knockback!";
+                string prompt="不要防击退!";
             
                 if(enablePrompts) {
                     
@@ -2045,7 +1981,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Data Acquisition)",
+        [ScriptMethod(name:"门神 千年风化后半 (数据获取)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:regex:^(0039|0001)$"],
             userControl:false)]
@@ -2143,7 +2079,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Guidance)",
+        [ScriptMethod(name:"门神 千年风化后半 (指路)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:regex:^(0039|0001)$"],
             suppress:9500)]
@@ -2186,10 +2122,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 Vector3 myStandbyPosition=ARENA_CENTER_OF_PHASE_1;
                 Vector3 myFinalPosition=ARENA_CENTER_OF_PHASE_1;
                 
-                // 7 and 0: MT(0) and R1(6)
-                // 1 and 2: H2(3) and R2(7)
-                // 3 and 4: OT(1) and M2(5)
-                // 5 and 6: H1(2) and M1(4)
+                // 7 and 0: MT(0) or D3(6)
+                // 1 and 2: ST(1) or D4(7)
+                // 3 and 4: H2(3) or D2(5)
+                // 5 and 6: H1(2) or D1(4)
 
                 if(getWindWolfTethers[myIndex]!=-1) {
 
@@ -2209,9 +2145,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         myDiscretizedPosition=myIndex switch {
                             
                             0 => 7,
-                            1 => 3,
+                            1 => 1,
                             2 => 5,
-                            3 => 1,
+                            3 => 3,
                             4 => 5,
                             5 => 3,
                             6 => 7,
@@ -2227,9 +2163,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         myDiscretizedPosition=myIndex switch {
                             
                             0 => 0,
-                            1 => 4,
+                            1 => 2,
                             2 => 6,
-                            3 => 2,
+                            3 => 4,
                             4 => 6,
                             5 => 4,
                             6 => 0,
@@ -2303,12 +2239,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 The Second Half Of Millennial Decay (Sub-phase 2 Control)",
+        [ScriptMethod(name:"门神 千年风化后半 (子阶段2控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41913"],
             userControl:false)]
     
-        public void Phase_1_The_Second_Half_Of_Millennial_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
+        public void Phase_1_The_Second_Half_Of_Millennial_Decay_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=1) {
 
