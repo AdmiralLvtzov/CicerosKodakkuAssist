@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.9",
+        version:"0.0.1.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -68,9 +68,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         [UserSetting("本体攻略")]
         public StratsOfPhase2 stratOfPhase2 { get; set; }
         [UserSetting("本体Boss中轴线及其附属箭头的颜色")]
-        public ScriptColor colourOfTheNorthSouthAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
-        [UserSetting("本体Boss中轴线附属箭头指向南而不是北")]
-        public bool arrowsPointSouth { get; set; } = false;
+        public ScriptColor colourOfTheBossAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
 
         #endregion
         
@@ -152,6 +150,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         private System.Threading.AutoResetEvent fourthMoonbeamsBiteSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile bool secondSetGuidanceHasBeenDrawn=false;
         private volatile bool stoneWolvesAreOnTheCardinals=false;
+
+        private volatile string phase2BossId=string.Empty;
         
         private volatile bool axisAndArrowsHaveBeenDrawn=false;
         
@@ -295,6 +295,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             fourthMoonbeamsBiteSemaphore.Reset();
             secondSetGuidanceHasBeenDrawn=false;
             stoneWolvesAreOnTheCardinals=false;
+            
+            phase2BossId=string.Empty;
             
             axisAndArrowsHaveBeenDrawn=false;
             
@@ -5753,7 +5755,57 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         #region Phase_2
         
-        [ScriptMethod(name:"Phase 2 North-south Axis And Arrows",
+        [ScriptMethod(name:"本体 Boss实体ID获取",
+            eventType:EventTypeEnum.Targetable,
+            userControl:false)]
+
+        public void 本体_Boss实体ID获取(Event @event, ScriptAccessory accessory) {
+
+            if(!string.IsNullOrWhiteSpace(phase2BossId)) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2) {
+
+                return;
+
+            }
+
+            if(currentSubPhase!=1) {
+
+                return;
+
+            }
+            
+            if(!convertObjectId(@event["SourceId"], out var sourceId)) {
+            
+                return;
+            
+            }
+
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=18222) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            phase2BossId=@event["SourceId"];
+
+        }
+        
+        [ScriptMethod(name:"本体 Boss中轴线及其附属箭头",
             eventType:EventTypeEnum.Targetable)]
 
         public void Phase_2_NorthSouth_Axis_And_Arrows(Event @event, ScriptAccessory accessory) {
@@ -5802,8 +5854,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_1";
             currentProperties.Scale=new(0.5f,51);
-            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
-            currentProperties.Color=colourOfTheNorthSouthAxis.V4.WithW(1);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfTheBossAxis.V4.WithW(1);
             currentProperties.DestoryAt=420000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
@@ -5812,23 +5864,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_2";
             currentProperties.Scale=new(2,9);
-            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
-            currentProperties.Color=colourOfTheNorthSouthAxis.V4.WithW(1);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfTheBossAxis.V4.WithW(1);
             currentProperties.DestoryAt=420000;
-
-            if(arrowsPointSouth) {
-
-                currentProperties.Rotation=0;
-                currentProperties.Offset=new Vector3(5.562f,0,4.5f);
-
-            }
-
-            else {
-                
-                currentProperties.Rotation=float.Pi;
-                currentProperties.Offset=new Vector3(5.562f,0,-4.5f);
-                
-            }
+            currentProperties.Offset=new Vector3(5.562f,0,4.5f);
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
             
@@ -5836,23 +5875,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_3";
             currentProperties.Scale=new(2,9);
-            currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
-            currentProperties.Color=colourOfTheNorthSouthAxis.V4.WithW(1);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfTheBossAxis.V4.WithW(1);
             currentProperties.DestoryAt=420000;
-            
-            if(arrowsPointSouth) {
-
-                currentProperties.Rotation=0;
-                currentProperties.Offset=new Vector3(-5.562f,0,4.5f);
-
-            }
-
-            else {
-                
-                currentProperties.Rotation=float.Pi;
-                currentProperties.Offset=new Vector3(-5.562f,0,-4.5f);
-                
-            }
+            currentProperties.Offset=new Vector3(-5.562f,0,4.5f);
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
             
@@ -5874,7 +5900,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"Phase 2 Quake III (Round Control)",
+        [ScriptMethod(name:"本体 爆震 (轮次控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42074"],
             userControl:false)]
@@ -5893,7 +5919,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Quake III (Guidance)",
+        [ScriptMethod(name:"本体 爆震 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42074"])]
     
@@ -5914,9 +5940,24 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             }
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
+                
+                if(!convertObjectId(phase2BossId, out var bossId)) {
+            
+                    return;
+            
+                }
+                
+                var bossObject=accessory.Data.Objects.SearchById(bossId);
+
+                if(bossObject==null) {
+
+                    return;
+
+                }
+
+                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
-                string prompt=string.Empty;
 
                 if(isInGroup1(myIndex)) {
 
@@ -5926,7 +5967,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                     currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.TargetPosition=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=5125;
@@ -5936,20 +5977,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=5125;
         
                     accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-                        
-                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
                         
                     // The another group:
                         
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=accessory.Data.DefaultDangerColor;
                     currentProperties.DestoryAt=5125;
         
@@ -5965,7 +6004,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                     currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.TargetPosition=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=5125;
@@ -5975,20 +6014,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=5125;
         
                     accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-                        
-                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHEAST);
                         
                     // The another group:
                         
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=accessory.Data.DefaultDangerColor;
                     currentProperties.DestoryAt=5125;
         
@@ -5996,23 +6033,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
                 
-                if(!string.IsNullOrWhiteSpace(prompt)) {
-                    
-                    if(enablePrompts) {
-                    
-                        accessory.Method.TextInfo(prompt,5125);
-                    
-                    }
-                    
-                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
-
-                }
-                
             }
         
         }
         
-        [ScriptMethod(name:"Phase 2 Gleaming Beam",
+        [ScriptMethod(name:"本体 闪光炮",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42078"])]
     
@@ -6386,7 +6411,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Twinbite (Round Control)",
+        [ScriptMethod(name:"本体 双牙击 (轮次控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42189"],
             userControl:false)]
@@ -6405,7 +6430,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Twinbite (Guidance)",
+        [ScriptMethod(name:"本体 双牙击 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42189"])]
     
@@ -6426,9 +6451,24 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             }
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
+                
+                if(!convertObjectId(phase2BossId, out var bossId)) {
+            
+                    return;
+            
+                }
+                
+                var bossObject=accessory.Data.Objects.SearchById(bossId);
+
+                if(bossObject==null) {
+
+                    return;
+
+                }
+
+                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
-                string prompt=string.Empty;
 
                 if(isTank(myIndex)) {
 
@@ -6440,7 +6480,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                         currentProperties.Scale=new(2);
                         currentProperties.Owner=accessory.Data.Me;
-                        currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                        currentProperties.TargetPosition=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                         currentProperties.ScaleMode|=ScaleMode.YByDistance;
                         currentProperties.Color=accessory.Data.DefaultSafeColor;
                         currentProperties.DestoryAt=7125;
@@ -6450,20 +6490,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                         currentProperties.Scale=new(8);
-                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                        currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                         currentProperties.Color=accessory.Data.DefaultSafeColor;
                         currentProperties.DestoryAt=7125;
         
                         accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-                        
-                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHWEST);
                         
                         // The another tank:
                         
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                         currentProperties.Scale=new(8);
-                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                        currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                         currentProperties.Color=accessory.Data.DefaultDangerColor;
                         currentProperties.DestoryAt=7125;
         
@@ -6479,7 +6517,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                         currentProperties.Scale=new(2);
                         currentProperties.Owner=accessory.Data.Me;
-                        currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                        currentProperties.TargetPosition=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                         currentProperties.ScaleMode|=ScaleMode.YByDistance;
                         currentProperties.Color=accessory.Data.DefaultSafeColor;
                         currentProperties.DestoryAt=7125;
@@ -6489,20 +6527,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                         currentProperties.Scale=new(8);
-                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                        currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                         currentProperties.Color=accessory.Data.DefaultSafeColor;
                         currentProperties.DestoryAt=7125;
         
                         accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-                        
-                        prompt=getPlatformDescription(PlatformsOfPhase2.SOUTHEAST);
                         
                         // The another tank:
                         
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                         currentProperties.Scale=new(8);
-                        currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                        currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                         currentProperties.Color=accessory.Data.DefaultDangerColor;
                         currentProperties.DestoryAt=7125;
         
@@ -6515,7 +6551,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTH),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
                     currentProperties.DestoryAt=7125;
         
@@ -6531,7 +6567,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                     currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    currentProperties.TargetPosition=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTH),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=7125;
@@ -6541,20 +6577,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTH),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=7125;
         
                     accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-                    
-                    prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
                     
                     // Dangerous platforms:
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHWEST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
                     currentProperties.DestoryAt=7125;
         
@@ -6563,23 +6597,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                     currentProperties.Scale=new(8);
-                    currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
+                    currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTHEAST),ARENA_CENTER_OF_PHASE_2,bossRotation);
                     currentProperties.Color=colourOfHighlyDangerousAttacks.V4.WithW(1);
                     currentProperties.DestoryAt=7125;
         
                     accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-
-                }
-                
-                if(!string.IsNullOrWhiteSpace(prompt)) {
-                    
-                    if(enablePrompts) {
-                    
-                        accessory.Method.TextInfo(prompt,7125);
-                    
-                    }
-                    
-                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
 
                 }
                 
@@ -9492,7 +9514,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Gleaming Barrage",
+        [ScriptMethod(name:"本体 连击闪光炮",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42102"])]
     
