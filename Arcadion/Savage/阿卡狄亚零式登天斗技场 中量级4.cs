@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.10",
+        version:"0.0.1.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -35,7 +35,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
             
             门神指路已经完全适配国服。
-            本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
+            本体指路适配进度: 魔光 √, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
             对于尚未完成国服适配的机制,其指路将仍然是基于欧服攻略的。适配预计将在一周内完成。
@@ -6066,7 +6066,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Acquisition)",
+        [ScriptMethod(name:"本体 魔光 (获取)",
             eventType:EventTypeEnum.TargetIcon,
             userControl:false)]
     
@@ -6165,7 +6165,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Guidance)",
+        [ScriptMethod(name:"本体 魔光 (指路)",
             eventType:EventTypeEnum.TargetIcon,
             suppress:2500)]
     
@@ -6207,6 +6207,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
+                if(!convertObjectId(phase2BossId, out var bossId)) {
+            
+                    return;
+            
+                }
+                
+                var bossObject=accessory.Data.Objects.SearchById(bossId);
+
+                if(bossObject==null) {
+
+                    return;
+
+                }
+
+                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
                 string prompt=string.Empty;
                 
@@ -6230,7 +6246,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                     }
 
-                    prompt="Stay.";
+                    prompt="留在当前平台";
 
                 }
 
@@ -6240,15 +6256,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                     if(playerWasMarkedByAUltraviolentRay[0])marksOnTheLeft.Add(0);
                     if(playerWasMarkedByAUltraviolentRay[1])marksOnTheRight.Add(1);
-                        
-                    if(playerWasMarkedByAUltraviolentRay[2])marksOnTheLeft.Add(2);
-                    if(playerWasMarkedByAUltraviolentRay[3])marksOnTheRight.Add(3);
+                    
+                    if(playerWasMarkedByAUltraviolentRay[4])marksOnTheLeft.Add(4);
+                    if(playerWasMarkedByAUltraviolentRay[5])marksOnTheRight.Add(5);
                         
                     if(playerWasMarkedByAUltraviolentRay[6])marksOnTheLeft.Add(6);
                     if(playerWasMarkedByAUltraviolentRay[7])marksOnTheRight.Add(7);
-                        
-                    if(playerWasMarkedByAUltraviolentRay[4])marksOnTheLeft.Add(4);
-                    if(playerWasMarkedByAUltraviolentRay[5])marksOnTheRight.Add(5);
+                    
+                    if(playerWasMarkedByAUltraviolentRay[2])marksOnTheLeft.Add(2);
+                    if(playerWasMarkedByAUltraviolentRay[3])marksOnTheRight.Add(3);
 
                     int temporaryOrder=-1;
 
@@ -6281,7 +6297,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             case 1: {
 
                                 myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHWEST);
-                                prompt=getPlatformDescription(PlatformsOfPhase2.NORTHWEST);
+                                prompt="去上";
 
                                 break;
 
@@ -6290,7 +6306,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             case 2: {
                                     
                                 myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHWEST);
-                                prompt="Stay.";
+                                prompt="留在当前平台";
 
                                 break;
 
@@ -6299,7 +6315,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             case 3: {
                                     
                                 myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
-                                prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+                                prompt="去下";
 
                                 break;
 
@@ -6322,7 +6338,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             case 1: {
 
                                 myPosition=getPlatformCenter(PlatformsOfPhase2.NORTHEAST);
-                                prompt=getPlatformDescription(PlatformsOfPhase2.NORTHEAST);
+                                prompt="去上";
 
                                 break;
 
@@ -6331,7 +6347,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             case 2: {
                                     
                                 myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTHEAST);
-                                prompt="Stay.";
+                                prompt="留在当前平台";
 
                                 break;
 
@@ -6340,7 +6356,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             case 3: {
                                     
                                 myPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
-                                prompt=getPlatformDescription(PlatformsOfPhase2.SOUTH);
+                                prompt="去下";
 
                                 break;
 
@@ -6368,7 +6384,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=myPosition;
+                currentProperties.TargetPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_2,bossRotation);
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6125;
@@ -6391,7 +6407,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Ultraviolent Ray (Destruction)",
+        [ScriptMethod(name:"本体 魔光 (销毁)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42077"],
             suppress:2500,
@@ -6405,9 +6421,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
             
+            ultraviolentRaySemaphore.Reset();
             numberOfUltraviolentRay=0;
             playerWasMarkedByAUltraviolentRay=[false,false,false,false,false,false,false,false];
-            ultraviolentRaySemaphore.Reset();
         
         }
         
@@ -10364,7 +10380,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Ultraviolent Ray 4 (Pre-position Guidance)",
+        [ScriptMethod(name:"本体 第四次魔光 (预站位指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:regex:^(42080|42082)$"],
             suppress:2500)]
@@ -10398,6 +10414,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             }
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
+                
+                if(!convertObjectId(phase2BossId, out var bossId)) {
+            
+                    return;
+            
+                }
+                
+                var bossObject=accessory.Data.Objects.SearchById(bossId);
+
+                if(bossObject==null) {
+
+                    return;
+
+                }
+
+                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
@@ -10423,7 +10455,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=myPosition;
+                currentProperties.TargetPosition=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_2,bossRotation);
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -10433,7 +10465,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(8);
-                currentProperties.Position=myPosition;
+                currentProperties.Position=rotatePosition(myPosition,ARENA_CENTER_OF_PHASE_2,bossRotation);
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
         
