@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.14",
+        version:"0.0.1.15",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -245,8 +245,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             accessory.Method.RemoveDraw(".*");
             
-            currentPhase=2;
-            currentSubPhase=2; // 记得测试后改回去!
+            currentPhase=1;
+            currentSubPhase=1; // 记得测试后改回去!
             
             reignId=string.Empty;
             
@@ -298,7 +298,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             secondSetGuidanceHasBeenDrawn=false;
             stoneWolvesAreOnTheCardinals=false;
             
-            phase2BossId="40010DC0";
+            phase2BossId=string.Empty;
             
             axisAndArrowsHaveBeenDrawn=false;
             
@@ -313,7 +313,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             roundOfHerosBlow=0;
 
-            bossRotationDuringPurgeAndTempest=0.0;
+            bossRotationDuringPurgeAndTempest=null;
             firstMooncleaverSemaphore.Reset();
             mtWasMarkerByPatienceOfWind=false;
             elementalPurgeSemaphore.Reset();
