@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.7",
+        version:"0.0.1.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
             
-            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 千年风化 √, 大地的呼唤 √, 光狼召唤 √, 大地之怒 ×, 幻狼召唤 √
+            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 千年风化 √, 大地的呼唤 √, 光狼召唤 √, 大地之怒 √, 幻狼召唤 √
             本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
@@ -88,7 +88,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
          Sub-phase 3: 大地的呼唤
          Sub-phase 4: 期间群狼剑机制
          Sub-phase 5: 光狼召唤
-         Sub-phase 6: Terrestrial Rage
+         Sub-phase 6: 大地之怒
          Sub-phase 7: 期间群狼剑机制
          Sub-phase 8: Beckon Moonlight
          Sub-phase 9: 期间魔技机制
@@ -139,14 +139,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         private Vector3 positionOfTheOuterFang=ARENA_CENTER_OF_PHASE_1;
         private double rotationOfTheOuterFang=0;
         private volatile bool outerFangHasBeenCaptured=false;
-        private System.Threading.AutoResetEvent newNorthArrowSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent newNorthGuidanceSemaphore=new System.Threading.AutoResetEvent(false);
         private bool? dpsStackFirst=null;
         private System.Threading.AutoResetEvent roleStackSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile bool firstSetGuidanceHasBeenDrawn=false;
         private volatile bool shadowsAreOnTheCardinals=false; // Its read-write lock is lockOfShadowNumber.
         private volatile int numberOfShadows=0; // Its read-write lock is lockOfShadowNumber.
-        private double refinedRotationForFullRinon=double.PositiveInfinity; // Its read-write lock is lockOfShadowNumber.
         private System.Threading.AutoResetEvent shadowSemaphore=new System.Threading.AutoResetEvent(false);
 
         private volatile List<List<int>> moonbeamsBite=[]; // 0=Northeast, 1=southeast, 2=southwest, 3=northwest.
@@ -246,7 +244,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             accessory.Method.RemoveDraw(".*");
             
             currentPhase=1;
-            currentSubPhase=1;
+            currentSubPhase=1; // 记得测试后改回去!
             
             reignId=string.Empty;
             
@@ -284,14 +282,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             positionOfTheOuterFang=ARENA_CENTER_OF_PHASE_1;
             rotationOfTheOuterFang=0;
             outerFangHasBeenCaptured=false;
-            newNorthArrowSemaphore.Reset();
             newNorthGuidanceSemaphore.Reset();
             dpsStackFirst=null;
             roleStackSemaphore.Reset();
             firstSetGuidanceHasBeenDrawn=false;
             shadowsAreOnTheCardinals=false;
             numberOfShadows=0;
-            refinedRotationForFullRinon=double.PositiveInfinity;
             shadowSemaphore.Reset();
             
             moonbeamsBite=[];
@@ -3848,12 +3844,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"门神 期间群狼剑机制 (子阶段5控制)",
+        [ScriptMethod(name:"门神 光狼召唤 (子阶段5控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42825"],
             userControl:false)]
     
-        public void Phase_1_Intermission_Regins_SubPhase_5_Control(Event @event,ScriptAccessory accessory) {
+        public void Phase_1_Tactical_Pack_SubPhase_5_Control(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=1) {
 
@@ -3889,7 +3885,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Fang Line)",
+        [ScriptMethod(name:"门神 大地之怒 (光牙直线)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41942"])]
     
@@ -3934,7 +3930,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Stack)",
+        [ScriptMethod(name:"门神 大地之怒 (分摊)",
             eventType:EventTypeEnum.TargetIcon)]
     
         public void Phase_1_Terrestrial_Rage_Stack(Event @event,ScriptAccessory accessory) {
@@ -4008,7 +4004,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Outer Fang Acquisition)",
+        [ScriptMethod(name:"门神 大地之怒 (外侧光牙获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18220"],
             userControl:false)]
@@ -4062,12 +4058,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
             outerFangHasBeenCaptured=true;
 
-            newNorthArrowSemaphore.Set();
             newNorthGuidanceSemaphore.Set();
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Stack Acquisition)",
+        [ScriptMethod(name:"门神 大地之怒 (分摊获取)",
             eventType:EventTypeEnum.TargetIcon,
             userControl:false)]
     
@@ -4137,7 +4132,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (New North Arrow)",
+        [ScriptMethod(name:"门神 大地之怒 (真北箭头)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18220"],
             suppress:5000)]
@@ -4156,26 +4151,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
             
-            System.Threading.Thread.MemoryBarrier();
-
-            newNorthArrowSemaphore.WaitOne();
-            
-            System.Threading.Thread.MemoryBarrier();
-            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
                     
             currentProperties.Scale=new(2);
-            currentProperties.Position=rotatePosition(new Vector3(100,0,97),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
-            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,91),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+            currentProperties.Position=new Vector3(100,0,97);
+            currentProperties.TargetPosition=new Vector3(100,0,91);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-            currentProperties.DestoryAt=14250;
+            currentProperties.Delay=8500;
+            currentProperties.DestoryAt=5750;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (First Set Guidance)",
+        [ScriptMethod(name:"门神 大地之怒 (第一轮指路)",
             eventType:EventTypeEnum.TargetIcon)]
     
         public void Phase_1_Terrestrial_Rage_First_Set_Guidance(Event @event,ScriptAccessory accessory) {
@@ -4221,16 +4211,80 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
                 
-                Vector3 leftRangePosition1=new Vector3(90,0,99);
-                Vector3 leftRangePosition2=new Vector3(90,0,101);
-                Vector3 leftMeleePosition1=new Vector3(96,0,95);
-                Vector3 leftMeleePosition2=new Vector3(95,0,93);
-                Vector3 rightMeleePosition1=new Vector3(104,0,95);
-                Vector3 rightMeleePosition2=new Vector3(105,0,93);
-                Vector3 rightRangePosition1=new Vector3(110,0,99);
-                Vector3 rightRangePosition2=new Vector3(110,0,101);
-                Vector3 stackPosition1=new Vector3(100,0,107);
-                Vector3 stackPosition2=new Vector3(100,0,105);
+                Vector3 rawNorthPosition=new Vector3(100,0,89);
+                Vector3 rawEastPosition=new Vector3(111,0,100);
+                Vector3 rawSouthPosition=new Vector3(100,0,111);
+                Vector3 rawWestPosition=new Vector3(89,0,100);
+                Vector3 stackPosition1=rotatePosition(new Vector3(100,0,99),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+                Vector3 stackPosition2=rotatePosition(new Vector3(100,0,101),ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
+                Vector3 northPosition1=ARENA_CENTER_OF_PHASE_1,northPosition2=ARENA_CENTER_OF_PHASE_1;
+                Vector3 eastPosition1=ARENA_CENTER_OF_PHASE_1,eastPosition2=ARENA_CENTER_OF_PHASE_1;
+                Vector3 southPosition1=ARENA_CENTER_OF_PHASE_1,southPosition2=ARENA_CENTER_OF_PHASE_1;
+                Vector3 westPosition1=ARENA_CENTER_OF_PHASE_1,westPosition2=ARENA_CENTER_OF_PHASE_1;
+
+                if(Math.Abs(rotationOfTheOuterFang-Math.PI/4*1)<Math.PI*0.05) {
+                    
+                    northPosition1=rotatePosition(rawNorthPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    northPosition2=rawNorthPosition;
+                    
+                    eastPosition1=rotatePosition(rawEastPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    eastPosition2=rawEastPosition;
+                    
+                    southPosition1=rawSouthPosition;
+                    southPosition2=rotatePosition(rawSouthPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    
+                    westPosition1=rawWestPosition;
+                    westPosition2=rotatePosition(rawWestPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+
+                }
+                
+                if(Math.Abs(rotationOfTheOuterFang-Math.PI/4*3)<Math.PI*0.05) {
+                    
+                    northPosition1=rawNorthPosition;
+                    northPosition2=rotatePosition(rawNorthPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    
+                    eastPosition1=rotatePosition(rawEastPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    eastPosition2=rawEastPosition;
+                    
+                    southPosition1=rotatePosition(rawSouthPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    southPosition2=rawSouthPosition;
+                    
+                    westPosition1=rawWestPosition;
+                    westPosition2=rotatePosition(rawWestPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+
+                }
+                
+                if(Math.Abs(rotationOfTheOuterFang-Math.PI/4*5)<Math.PI*0.05) {
+                    
+                    northPosition1=rawNorthPosition;
+                    northPosition2=rotatePosition(rawNorthPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    
+                    eastPosition1=rawEastPosition;
+                    eastPosition2=rotatePosition(rawEastPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    
+                    southPosition1=rotatePosition(rawSouthPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    southPosition2=rawSouthPosition;
+                    
+                    westPosition1=rotatePosition(rawWestPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    westPosition2=rawWestPosition;
+
+                }
+                
+                if(Math.Abs(rotationOfTheOuterFang-Math.PI/4*7)<Math.PI*0.05) {
+                    
+                    northPosition1=rotatePosition(rawNorthPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    northPosition2=rawNorthPosition;
+                    
+                    eastPosition1=rawEastPosition;
+                    eastPosition2=rotatePosition(rawEastPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    
+                    southPosition1=rawSouthPosition;
+                    southPosition2=rotatePosition(rawSouthPosition,ARENA_CENTER_OF_PHASE_1,Math.PI/9);
+                    
+                    westPosition1=rotatePosition(rawWestPosition,ARENA_CENTER_OF_PHASE_1,-Math.PI/9);
+                    westPosition2=rawWestPosition;
+
+                }
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
@@ -4257,7 +4311,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         myPosition1=stackPosition1;
                         myPosition2=stackPosition2;
 
-                        prompt="Stack.";
+                        prompt="分摊";
 
                     }
 
@@ -4265,25 +4319,25 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                         myPosition1=myIndex switch {
                             
-                            0 => leftMeleePosition1,
-                            1 => rightMeleePosition1,
-                            2 => leftRangePosition1,
-                            3 => rightRangePosition1,
+                            0 => northPosition1,
+                            1 => eastPosition1,
+                            2 => westPosition1,
+                            3 => southPosition1,
                             _ => ARENA_CENTER_OF_PHASE_1
                             
                         };
                         
                         myPosition2=myIndex switch {
                             
-                            0 => leftMeleePosition2,
-                            1 => rightMeleePosition2,
-                            2 => leftRangePosition2,
-                            3 => rightRangePosition2,
+                            0 => northPosition2,
+                            1 => eastPosition2,
+                            2 => westPosition2,
+                            3 => southPosition2,
                             _ => ARENA_CENTER_OF_PHASE_1
                             
                         };
                         
-                        prompt="Spread.";
+                        prompt="分散";
 
                     }
                     
@@ -4295,25 +4349,25 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         
                         myPosition1=myIndex switch {
                             
-                            4 => leftMeleePosition1,
-                            5 => rightMeleePosition1,
-                            6 => leftRangePosition1,
-                            7 => rightRangePosition1,
+                            4 => westPosition1,
+                            5 => southPosition1,
+                            6 => northPosition1,
+                            7 => eastPosition1,
                             _ => ARENA_CENTER_OF_PHASE_1
                             
                         };
                         
                         myPosition2=myIndex switch {
                             
-                            4 => leftMeleePosition2,
-                            5 => rightMeleePosition2,
-                            6 => leftRangePosition2,
-                            7 => rightRangePosition2,
+                            4 => westPosition2,
+                            5 => southPosition2,
+                            6 => northPosition2,
+                            7 => eastPosition2,
                             _ => ARENA_CENTER_OF_PHASE_1
                             
                         };
                         
-                        prompt="Spread.";
+                        prompt="分散";
 
                     }
 
@@ -4322,7 +4376,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         myPosition1=stackPosition1;
                         myPosition2=stackPosition2;
                         
-                        prompt="Stack.";
+                        prompt="分摊";
                         
                     }
                     
@@ -4333,9 +4387,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     return;
 
                 }
-
-                myPosition1=rotatePosition(myPosition1,ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
-                myPosition2=rotatePosition(myPosition2,ARENA_CENTER_OF_PHASE_1,rotationOfTheOuterFang);
                 
                 // From 0s to 3.75s:
                 
@@ -4395,7 +4446,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Shadow Line)",
+        [ScriptMethod(name:"门神 大地之怒 (残影直线)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18216"])]
     
@@ -4440,7 +4491,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Wind Wolf Line)",
+        [ScriptMethod(name:"门神 大地之怒 (风狼首直线)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42890"])]
     
@@ -4485,7 +4536,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Shadow Acquisition)",
+        [ScriptMethod(name:"门神 大地之怒 (残影获取)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18216"],
             userControl:false)]
@@ -4532,49 +4583,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 }
 
-                if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
+                if(Vector3.Distance(sourcePosition,new Vector3(100,0,92.5f))<0.375) {
                     
                     shadowsAreOnTheCardinals=true;
-
-                    if(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1)>-18.9f.DegToRad()) {
-                        // This strat is... very mathematically unfriendly.
-                        // There are eight possible positions for the new north at 45 degree intervals, but five for the shadows at 72 degree intervals. Meanwhile, the shadows can be on cardinals or intercardinals.
-                        // My initial approach was to capture the shadow closest to the new north, but it went wrong in some situations.
-                        // Later I took a different approach that was to always capture the next shadow clockwise. The mistakes became less but still existed.
-                        // Finally, after a lot of mathematical work (mainly countless enumeration) combined with checking a ton of replays, I found out that it should allow an angle of -18 degrees, and capture the shadow closest to the new north based on this.
-                        // After establishing a solid math model, my only question is, how can a player without plugin assistance find it accurately in combat? I guess this is how the Half Rinon strat was born for.
-                        
-                        if(Math.Abs(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1))<Math.Abs(refinedRotationForFullRinon)) {
-                    
-                            refinedRotationForFullRinon=getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1);
-
-                        }
-                        
-                    }
-                    
-                }
-
-                else {
-                    
-                    if(Vector3.Distance(sourcePosition,new Vector3(100,0,92.5f))<0.375) {
-                    
-                        shadowsAreOnTheCardinals=true;
-                    
-                    }
                     
                 }
                 
                 System.Threading.Thread.MemoryBarrier();
 
                 if(numberOfShadows>=5) {
-                    
-                    if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
-
-                        refinedRotationForFullRinon=rotationOfTheOuterFang+refinedRotationForFullRinon;
-
-                    }
-                    
-                    System.Threading.Thread.MemoryBarrier();
 
                     shadowSemaphore.Set();
                     
@@ -4586,7 +4603,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Second Set Guidance)",
+        [ScriptMethod(name:"门神 大地之怒 (第二轮指路)",
             eventType:EventTypeEnum.SetObjPos,
             eventCondition:["SourceDataId:18216"],
             suppress:2500)]
@@ -4618,12 +4635,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 if(!shadowsAreOnTheCardinals) {
 
                     topRotation+=Math.PI/5;
-
-                }
-
-                if(stratOfPhase1==StratsOfPhase1.MMW攻略组与苏帕酱噗) {
-
-                    topRotation=refinedRotationForFullRinon;
 
                 }
 
@@ -4665,7 +4676,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             
                         };
 
-                        prompt="Spread.";
+                        prompt="分散";
 
                     }
 
@@ -4673,7 +4684,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                         myRotation=topRotation;
                         
-                        prompt="Stack.";
+                        prompt="分摊";
 
                     }
                     
@@ -4685,7 +4696,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         
                         myRotation=topRotation;
                         
-                        prompt="Stack.";
+                        prompt="分摊";
 
                     }
 
@@ -4701,7 +4712,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             
                         };
 
-                        prompt="Spread.";
+                        prompt="分散";
                         
                     }
                     
@@ -4766,7 +4777,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"Phase 1 Terrestrial Rage (Sub-phase 6 Control)",
+        [ScriptMethod(name:"门神 大地之怒 (子阶段6控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42890"],
             suppress:2500,
@@ -4790,7 +4801,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             currentSubPhase=7;
             
-            newNorthArrowSemaphore.Reset();
             newNorthGuidanceSemaphore.Reset();
             roleStackSemaphore.Reset();
             shadowSemaphore.Reset();

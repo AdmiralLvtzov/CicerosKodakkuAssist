@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.29",
+        version:"0.0.0.30",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -288,7 +288,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
             accessory.Method.RemoveDraw(".*");
             
             currentPhase=1;
-            currentSubPhase=1;
+            currentSubPhase=1; // Remember to dial it back after tests!
             
             reignId=string.Empty;
             
@@ -3963,12 +3963,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         }
         
-        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 5 Control)",
+        [ScriptMethod(name:"Phase 1 Tactical Pack (Sub-phase 5 Control)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42825"],
             userControl:false)]
     
-        public void Phase_1_Intermission_Regins_SubPhase_5_Control(Event @event,ScriptAccessory accessory) {
+        public void Phase_1_Tactical_Pack_SubPhase_5_Control(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=1) {
 
