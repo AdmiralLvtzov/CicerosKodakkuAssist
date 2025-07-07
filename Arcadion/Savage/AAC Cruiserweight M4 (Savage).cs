@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.32",
+        version:"0.0.0.33",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -9824,12 +9824,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
         }
         
-        [ScriptMethod(name:"Phase 2 Elemental Purge (Sub-phase 2 Control)",
+        [ScriptMethod(name:"Phase 2 Twofold Tempest (Sub-phase 2 Control)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42101"],
             userControl:false)]
     
-        public void Phase_2_Elemental_Purge_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
+        public void Phase_2_Twofold_Tempest_SubPhase_2_Control(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=2) {
 
