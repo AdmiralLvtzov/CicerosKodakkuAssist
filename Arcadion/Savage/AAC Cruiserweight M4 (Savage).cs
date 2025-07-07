@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.31",
+        version:"0.0.0.32",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -7309,7 +7309,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         
                     accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
 
-                    prompt="Go southwest or southeast and standby.";
+                    prompt="Go northwest or northeast and standby.";
 
                 }
 
@@ -7407,7 +7407,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                     if(enablePrompts) {
                     
-                        accessory.Method.TextInfo(prompt,4875);
+                        accessory.Method.TextInfo(prompt,2375);
                     
                     }
                     
