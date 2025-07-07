@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.15",
+        version:"0.0.1.16",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -31,19 +31,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场中量级4(也就是M8S)的脚本。
             
-            此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
-            如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
+            此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分也已经完全适配国服攻略,也就是MMW攻略组&苏帕酱噗的视频攻略。
+            如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
             
-            门神指路已经完全适配国服。
-            本体指路适配进度: 魔光 √, 铠袖一触 √, 风震魔印 √, 飓风之相 √, 回天动地 √, 咒刃之相 √
-            
-            此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
-            对于尚未完成国服适配的机制,其指路将仍然是基于欧服攻略的。适配预计将在一周内完成。
-            
-            门神RaidPlan 84d的链接: https://raidplan.io/plan/B5Q3Mk62YKuTy84d
-            本体Toxic Friends RaidPlan DOG的链接: https://raidplan.io/plan/9M-1G-mmOaaroDOG
             MMW攻略组门神小抄: https://xivstrat.com/07/m8s1/
             MMW攻略组本体小抄: https://xivstrat.com/07/m8s2/
+            
+            如果在使用过程中遇到了电椅或异常,请先检查可达鸭本体与脚本是否更新到了最新版本,小队职能是否正确设置,错误是否可以稳定复现。
+            如果上述三项都没有问题,请带着A Realm Recorded插件的录像在可达鸭Discord内联系@_publius_cornelius_scipio_反馈错误。
+            
+            此脚本的国际服版本适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
+            如果你想采用欧服野队攻略,可以下载此脚本的国际服版本也就是英文版本。
             """;
 
         #region User_Settings
@@ -9566,7 +9564,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Champion's Circuit",
+        [ScriptMethod(name:"本体 回天动地",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(42103|42104)$"])]
     
@@ -9835,7 +9833,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Champion's Circuit (Sub-phase 3 Control)",
+        [ScriptMethod(name:"本体 回天动地 (子阶段3控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42074"],
             suppress:2500,
@@ -9869,7 +9867,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Pre-position Guidance)",
+        [ScriptMethod(name:"本体 独狼的诅咒 (预站位指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42190"],
             suppress:2500)]
@@ -9954,7 +9952,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Acquisition)",
+        [ScriptMethod(name:"本体 独狼的诅咒 (获取)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:regex:^(013D|013E)$"],
             userControl:false)]
@@ -10129,7 +10127,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Two-player Tower Acquisition)",
+        [ScriptMethod(name:"本体 独狼的诅咒 (双人塔获取)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42119"],
             userControl:false)]
@@ -10180,7 +10178,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Guidance)",
+        [ScriptMethod(name:"本体 独狼的诅咒 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42115"])]
     
@@ -10356,7 +10354,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Lone Wolf's Lament (Sub-phase 4 Control)",
+        [ScriptMethod(name:"本体 独狼的诅咒 (子阶段4控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42119"],
             suppress:2500,
@@ -10482,7 +10480,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Mooncleaver (Enrage Pre-position Guidance)",
+        [ScriptMethod(name:"本体 刚刃一闪 (狂暴预站位指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42077"],
             suppress:2500)]
@@ -10508,12 +10506,28 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             }
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
+                
+                if(!convertObjectId(phase2BossId, out var bossId)) {
+            
+                    return;
+            
+                }
+                
+                var bossObject=accessory.Data.Objects.SearchById(bossId);
+
+                if(bossObject==null) {
+
+                    return;
+
+                }
+
+                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
             
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                currentProperties.TargetPosition=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTH),ARENA_CENTER_OF_PHASE_2,bossRotation);
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6500;
@@ -10523,7 +10537,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(8);
-                currentProperties.Position=getPlatformCenter(PlatformsOfPhase2.SOUTH);
+                currentProperties.Position=rotatePosition(getPlatformCenter(PlatformsOfPhase2.SOUTH),ARENA_CENTER_OF_PHASE_2,bossRotation);
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6500;
         
@@ -10533,7 +10547,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Mooncleaver (Enrage)",
+        [ScriptMethod(name:"本体 刚刃一闪 (狂暴)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42829"])]
     
@@ -10574,7 +10588,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
 
-            string prompt="Stay on the next platform at least until the tower appears!";
+            string prompt="在下个平台至少等到塔出现!";
             
             if(enablePrompts) {
                     
