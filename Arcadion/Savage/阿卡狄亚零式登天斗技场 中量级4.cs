@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.11",
+        version:"0.0.1.12",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -6625,7 +6625,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Hero's Blow (Left Or Right)",
+        [ScriptMethod(name:"本体 铠袖一触 (左右刀)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(42080|42082)$"])]
     
@@ -6670,7 +6670,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Hero's Blow (Circle Or Donut)",
+        [ScriptMethod(name:"本体 铠袖一触 (钢铁月环)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(42083|42084)$"])]
     
@@ -6705,7 +6705,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
 
-                prompt="Get out once in position.";
+                prompt="就位后远离";
 
             }
 
@@ -6722,7 +6722,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
                 
-                prompt="Get in once in position.";
+                prompt="就位后靠近";
                         
             }
             
@@ -6740,7 +6740,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Hero's Blow (Round Control)",
+        [ScriptMethod(name:"本体 铠袖一触 (轮次控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(42080|42082)$"],
             userControl:false)]
@@ -6759,7 +6759,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 2 Hero's Blow (Guidance)",
+        [ScriptMethod(name:"本体 铠袖一触 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(42080|42082)$"])]
     
