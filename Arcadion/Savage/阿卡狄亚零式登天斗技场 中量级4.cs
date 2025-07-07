@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.8",
+        version:"0.0.1.9",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分正在进行对国服的适配。优先适配MMW攻略组&苏帕酱噗的视频攻略。
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"Guidance"或者"指路"。
             
-            门神指路适配进度: 风土之魔技 √, 扫旋击群狼剑 √, 千年风化 √, 大地的呼唤 √, 光狼召唤 √, 大地之怒 √, 幻狼召唤 √
+            门神指路已经完全适配国服。
             本体指路适配进度: 魔光 ×, 铠袖一触 √, 风震魔印 √, 飓风之相 ×, 回天动地 √, 咒刃之相 √
             
             此脚本的国际服版本已经完工,适配了欧服野队攻略,也就是门神Raidplan 84d,本体Raidplan DOG。
@@ -90,7 +90,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
          Sub-phase 5: 光狼召唤
          Sub-phase 6: 大地之怒
          Sub-phase 7: 期间群狼剑机制
-         Sub-phase 8: Beckon Moonlight
+         Sub-phase 8: 幻狼召唤
          Sub-phase 9: 期间魔技机制
          
          Phase 2:
@@ -4809,7 +4809,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Intermission Regins (Sub-phase 7 Control)",
+        [ScriptMethod(name:"门神 期间群狼剑机制 (子阶段7控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:41921"],
             userControl:false)]
@@ -4841,7 +4841,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Cleave)",
+        [ScriptMethod(name:"门神 幻狼召唤 (半场刀)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(41922|41923)$"])]
     
@@ -4917,7 +4917,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Stack)",
+        [ScriptMethod(name:"门神 幻狼召唤 (分摊)",
             eventType:EventTypeEnum.TargetIcon)]
     
         public void Phase_1_Beckon_Moonlight_Stack(Event @event,ScriptAccessory accessory) {
@@ -4991,7 +4991,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Cleave Acquisition)",
+        [ScriptMethod(name:"门神 幻狼召唤 (半场刀获取)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(41922|41923)$"],
             userControl:false)]
@@ -5148,7 +5148,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Stack Acquisition)",
+        [ScriptMethod(name:"门神 幻狼召唤 (分摊获取)",
             eventType:EventTypeEnum.TargetIcon,
             userControl:false)]
     
@@ -5220,7 +5220,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (First Set Guidance)",
+        [ScriptMethod(name:"门神 幻狼召唤 (第一轮指路)",
             eventType:EventTypeEnum.TargetIcon)]
     
         public void Phase_1_Beckon_Moonlight_First_Set_Guidance(Event @event,ScriptAccessory accessory) {
@@ -5333,7 +5333,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                         myPosition=stackPosition;
 
-                        prompt="Stack.";
+                        prompt="分摊";
 
                     }
 
@@ -5349,7 +5349,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             
                         };
                         
-                        prompt="Spread.";
+                        prompt="分散";
 
                     }
                     
@@ -5369,7 +5369,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             
                         };
                         
-                        prompt="Spread.";
+                        prompt="分散";
 
                     }
 
@@ -5377,7 +5377,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         
                         myPosition=stackPosition;
                         
-                        prompt="Stack.";
+                        prompt="分摊";
                         
                     }
                     
@@ -5422,7 +5422,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Second Set Guidance)",
+        [ScriptMethod(name:"门神 幻狼召唤 (第二轮指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:41920"],
             suppress:2500)]
@@ -5555,7 +5555,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             
                         };
 
-                        prompt="Spread.";
+                        prompt="分散";
 
                     }
 
@@ -5563,7 +5563,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         
                         myPosition=stackPosition;
 
-                        prompt="Stack.";
+                        prompt="分摊";
 
                     }
                     
@@ -5575,7 +5575,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                         
                         myPosition=stackPosition;
                         
-                        prompt="Stack.";
+                        prompt="分摊";
 
                     }
 
@@ -5591,7 +5591,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                             
                         };
                         
-                        prompt="Spread.";
+                        prompt="分散";
                         
                     }
                     
@@ -5650,7 +5650,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Line)",
+        [ScriptMethod(name:"门神 幻狼召唤 (直线)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42897"])]
     
@@ -5685,7 +5685,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Beckon Moonlight (Sub-phase 8 Control)",
+        [ScriptMethod(name:"门神 幻狼召唤 (子阶段8控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42897"],
             suppress:2500,
@@ -5717,7 +5717,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"Phase 1 Cutscenes (Phase 1 Control)",
+        [ScriptMethod(name:"门神 过场动画 (阶段1控制)",
             eventType:EventTypeEnum.AddCombatant,
             eventCondition:["DataId:18227"],
             suppress:2500,
