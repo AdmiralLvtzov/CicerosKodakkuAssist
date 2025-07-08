@@ -20,7 +20,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.16",
+        version:"0.0.1.17",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,8 +34,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             此脚本基于其国际服版本创建。画图部分已经全部完成,指路部分也已经完全适配国服攻略,也就是MMW攻略组&苏帕酱噗的视频攻略。
             如果指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
             
-            MMW攻略组门神小抄: https://xivstrat.com/07/m8s1/
-            MMW攻略组本体小抄: https://xivstrat.com/07/m8s2/
+            由于MMW图文攻略站和MMW视频攻略在本体的参照物基准上存在差异,因此在用户设置中提供了仅影响本体的不同参照物基准。
+            基准的选择会影响指路和基准中轴线及其附属箭头。如果选择任意一种场地基准,基准中轴线将固定在场地的南北轴上并指向南侧,反之则会始终指向Boss面前。
+            
+            MMW攻略组&苏帕酱噗的门神视频攻略: https://www.bilibili.com/video/BV1aT3tzrEnq
+            MMW攻略组&苏帕酱噗的本体视频攻略: https://www.bilibili.com/video/BV1gj3uzXEuB
+            MMW图文攻略站门神: https://xivstrat.com/07/m8s1/
+            MMW图文攻略站本体: https://xivstrat.com/07/m8s2/
+            视频攻略的本体部分采用场地基准,仅第四次魔光采用Boss面向基准。图文攻略站全程采用Boss面向基准。
             
             如果在使用过程中遇到了电椅或异常,请先检查可达鸭本体与脚本是否更新到了最新版本,小队职能是否正确设置,错误是否可以稳定复现。
             如果上述三项都没有问题,请带着A Realm Recorded插件的录像在可达鸭Discord内联系@_publius_cornelius_scipio_反馈错误。
@@ -65,8 +71,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         [UserSetting("本体攻略")]
         public StratsOfPhase2 stratOfPhase2 { get; set; }
-        [UserSetting("本体Boss中轴线及其附属箭头的颜色")]
-        public ScriptColor colourOfTheBossAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
+        [UserSetting("本体参照物基准")]
+        public BenchmarksOfPhase2 benchmarkOfPhase2 { get; set; } = BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略;
+        [UserSetting("本体基准中轴线及其附属箭头的颜色")]
+        public ScriptColor colourOfTheBenchmarkAxis { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
 
         #endregion
         
@@ -92,9 +100,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
          Phase 2:
          
          Sub-phase 1: 风震魔印
-         Sub-phase 2: Twofold Tempest
-         Sub-phase 3: Champion's Circuit
-         Sub-phase 4: Lone Wolf's Lament
+         Sub-phase 2: 双牙暴风击
+         Sub-phase 3: 回天动地
+         Sub-phase 4: 独狼的诅咒
          Sub-phase 5: 狂暴
          
         */
@@ -223,6 +231,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             MMW攻略组与苏帕酱噗,
             其他攻略正在施工中
 
+        }
+
+        public enum BenchmarksOfPhase2 {
+            
+            全程场地基准,
+            全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略,
+            全程Boss面向基准_MMW图文攻略站,
+            
         }
 
         public enum PlatformsOfPhase2 {
@@ -5807,7 +5823,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 Boss中轴线及其附属箭头",
+        [ScriptMethod(name:"本体 基准中轴线及其附属箭头",
             eventType:EventTypeEnum.Targetable)]
 
         public void Phase_2_NorthSouth_Axis_And_Arrows(Event @event, ScriptAccessory accessory) {
@@ -5853,36 +5869,82 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             System.Threading.Thread.MemoryBarrier();
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_1";
-            currentProperties.Scale=new(0.5f,51);
-            currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfTheBossAxis.V4.WithW(1);
-            currentProperties.DestoryAt=420000;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
             
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_2";
-            currentProperties.Scale=new(2,9);
-            currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfTheBossAxis.V4.WithW(1);
-            currentProperties.DestoryAt=420000;
-            currentProperties.Offset=new Vector3(5.562f,0,4.5f);
+            if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+               ||
+               benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_1";
+                currentProperties.Scale=new(0.5f,51);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                currentProperties.Color=colourOfTheBenchmarkAxis.V4.WithW(1);
+                currentProperties.DestoryAt=420000;
         
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
             
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_3";
-            currentProperties.Scale=new(2,9);
-            currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfTheBossAxis.V4.WithW(1);
-            currentProperties.DestoryAt=420000;
-            currentProperties.Offset=new Vector3(-5.562f,0,4.5f);
+                currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_2";
+                currentProperties.Scale=new(2,9);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                currentProperties.Color=colourOfTheBenchmarkAxis.V4.WithW(1);
+                currentProperties.DestoryAt=420000;
+                currentProperties.Rotation=0;
+                currentProperties.Offset=new Vector3(5.562f,0,4.5f);
         
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_3";
+                currentProperties.Scale=new(2,9);
+                currentProperties.Position=ARENA_CENTER_OF_PHASE_2;
+                currentProperties.Color=colourOfTheBenchmarkAxis.V4.WithW(1);
+                currentProperties.DestoryAt=420000;
+                currentProperties.Rotation=0;
+                currentProperties.Offset=new Vector3(-5.562f,0,4.5f);
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+            }
+            
+            if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_1";
+                currentProperties.Scale=new(0.5f,51);
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=colourOfTheBenchmarkAxis.V4.WithW(1);
+                currentProperties.DestoryAt=420000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_2";
+                currentProperties.Scale=new(2,9);
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=colourOfTheBenchmarkAxis.V4.WithW(1);
+                currentProperties.DestoryAt=420000;
+                currentProperties.Offset=new Vector3(5.562f,0,4.5f);
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="Phase_2_NorthSouth_Axis_And_Arrows_3";
+                currentProperties.Scale=new(2,9);
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=colourOfTheBenchmarkAxis.V4.WithW(1);
+                currentProperties.DestoryAt=420000;
+                currentProperties.Offset=new Vector3(-5.562f,0,4.5f);
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+            }
             
             System.Threading.Thread.MemoryBarrier();
 
@@ -5942,22 +6004,36 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             }
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
-                
-                if(!convertObjectId(phase2BossId, out var bossId)) {
+
+                double bossRotation=0;
+
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(!convertObjectId(phase2BossId, out var bossId)) {
             
-                    return;
+                        return;
             
-                }
+                    }
                 
-                var bossObject=accessory.Data.Objects.SearchById(bossId);
+                    var bossObject=accessory.Data.Objects.SearchById(bossId);
 
-                if(bossObject==null) {
+                    if(bossObject==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                    
                 }
 
-                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -6182,21 +6258,41 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(!convertObjectId(phase2BossId, out var bossId)) {
+                double bossRotation=0;
+
+                if((benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站)
+                   ||
+                   (benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略&&roundOfUltraviolentRay==4)) {
+                    
+                    if(!convertObjectId(phase2BossId, out var bossId)) {
             
-                    return;
+                        return;
             
-                }
+                    }
                 
-                var bossObject=accessory.Data.Objects.SearchById(bossId);
+                    var bossObject=accessory.Data.Objects.SearchById(bossId);
 
-                if(bossObject==null) {
+                    if(bossObject==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                    
                 }
 
-                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                else {
+                    
+                    if((benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准)
+                       ||
+                       (benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略&&roundOfUltraviolentRay!=4)) {
+
+                        bossRotation=0;
+
+                    }
+                    
+                }
                 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
                 string prompt=string.Empty;
@@ -6443,21 +6539,35 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(!convertObjectId(phase2BossId, out var bossId)) {
+                double bossRotation=0;
+
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(!convertObjectId(phase2BossId, out var bossId)) {
             
-                    return;
+                        return;
             
-                }
+                    }
                 
-                var bossObject=accessory.Data.Objects.SearchById(bossId);
+                    var bossObject=accessory.Data.Objects.SearchById(bossId);
 
-                if(bossObject==null) {
+                    if(bossObject==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                    
                 }
 
-                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
 
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -6873,21 +6983,35 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(!convertObjectId(phase2BossId, out var bossId)) {
+                double bossRotation=0;
+
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(!convertObjectId(phase2BossId, out var bossId)) {
             
-                    return;
+                        return;
             
-                }
+                    }
                 
-                var bossObject=accessory.Data.Objects.SearchById(bossId);
+                    var bossObject=accessory.Data.Objects.SearchById(bossId);
 
-                if(bossObject==null) {
+                    if(bossObject==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                    
                 }
 
-                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -6939,14 +7063,29 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 System.Threading.Thread.MemoryBarrier();
                 
                 // From 8.25s:
+                
+                bossRotation=0;
 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
+                
                 prompt=string.Empty;
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
@@ -7351,13 +7490,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 string prompt=string.Empty;
                 bool isWarning=false;
@@ -7581,13 +7734,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
+
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
+                }
+
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
 
                 }
-                
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
                 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
@@ -7635,12 +7802,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (预站位指路)",
+        [ScriptMethod(name:"本体 双牙暴风击 (预站位指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42095"],
             suppress:2500)]
     
-        public void 本体_飓风之相_预站位指路(Event @event,ScriptAccessory accessory) {
+        public void 本体_双牙暴风击_预站位指路(Event @event,ScriptAccessory accessory) {
 
             if(currentPhase!=2) {
 
@@ -7662,13 +7829,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
             
-            if(bossRotationDuringPurgeAndTempest==null) {
+            double bossRotation=0;
 
-                return;
+            if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                if(bossRotationDuringPurgeAndTempest==null) {
 
+                    return;
+
+                }
+
+                bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
             }
 
-            double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+            if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+               ||
+               benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                bossRotation=0;
+
+            }
 
             Vector3 mtPosition=rotatePosition(new Vector3(86.80f,-150,99.52f),ARENA_CENTER_OF_PHASE_2,bossRotation);
             Vector3 group1Position=rotatePosition(new Vector3(82.53f,-150,99.42f),ARENA_CENTER_OF_PHASE_2,bossRotation);
@@ -7742,7 +7923,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (直线)",
+        [ScriptMethod(name:"本体 双牙暴风击 (直线)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42097"])]
     
@@ -7957,7 +8138,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (初始化与监控)",
+        [ScriptMethod(name:"本体 双牙暴风击 (初始化与监控)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:0054"],
             userControl:false)]
@@ -8085,7 +8266,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (轮次控制)",
+        [ScriptMethod(name:"本体 双牙暴风击 (轮次控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:42098"],
             suppress:2500,
@@ -8182,7 +8363,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (远程指路)",
+        [ScriptMethod(name:"本体 双牙暴风击 (远程指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42097"])]
     
@@ -8224,13 +8405,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -8392,7 +8587,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (MT指路)",
+        [ScriptMethod(name:"本体 双牙暴风击 (MT指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42097"])]
     
@@ -8434,13 +8629,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -8666,7 +8875,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (ST指路)",
+        [ScriptMethod(name:"本体 双牙暴风击 (ST指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42097"])]
     
@@ -8708,13 +8917,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -8940,7 +9163,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (D1指路)",
+        [ScriptMethod(name:"本体 双牙暴风击 (D1指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42097"])]
     
@@ -8982,13 +9205,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -9220,7 +9457,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (D2指路)",
+        [ScriptMethod(name:"本体 双牙暴风击 (D2指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42097"])]
     
@@ -9262,13 +9499,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(bossRotationDuringPurgeAndTempest==null) {
+                double bossRotation=0;
 
-                    return;
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(bossRotationDuringPurgeAndTempest==null) {
 
+                        return;
+
+                    }
+
+                    bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                    
                 }
 
-                double bossRotation=((double)bossRotationDuringPurgeAndTempest);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
                 
                 int myPlatform=(int)(myIndex switch {
                     
@@ -9318,6 +9569,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                 myLinePosition=rotatePosition(myLinePosition,ARENA_CENTER_OF_PHASE_2,bossRotation);
                 myStandbyPosition=rotatePosition(myStandbyPosition,ARENA_CENTER_OF_PHASE_2,bossRotation);
                 interceptionPositionOnMyLeft=rotatePosition(interceptionPositionOnMyLeft,ARENA_CENTER_OF_PHASE_2,bossRotation);
+                interceptionPositionOnMyRight=rotatePosition(interceptionPositionOnMyRight,ARENA_CENTER_OF_PHASE_2,bossRotation);
                 
                 // ----- Round 1 -----
 
@@ -9499,7 +9751,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"本体 飓风之相 (子阶段2控制)",
+        [ScriptMethod(name:"本体 双牙暴风击 (子阶段2控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:42101"],
             userControl:false)]
@@ -10420,21 +10672,35 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(!convertObjectId(phase2BossId, out var bossId)) {
+                double bossRotation=0;
+
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+                    
+                    if(!convertObjectId(phase2BossId, out var bossId)) {
             
-                    return;
+                        return;
             
-                }
+                    }
                 
-                var bossObject=accessory.Data.Objects.SearchById(bossId);
+                    var bossObject=accessory.Data.Objects.SearchById(bossId);
 
-                if(bossObject==null) {
+                    if(bossObject==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                    
                 }
 
-                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准) {
+
+                    bossRotation=0;
+
+                }
 
                 Vector3 myPosition=ARENA_CENTER_OF_PHASE_2;
 
@@ -10507,21 +10773,35 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             if(stratOfPhase2==StratsOfPhase2.MMW攻略组与苏帕酱噗) {
                 
-                if(!convertObjectId(phase2BossId, out var bossId)) {
+                double bossRotation=0;
+
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程Boss面向基准_MMW图文攻略站) {
+                    
+                    if(!convertObjectId(phase2BossId, out var bossId)) {
             
-                    return;
+                        return;
             
-                }
+                    }
                 
-                var bossObject=accessory.Data.Objects.SearchById(bossId);
+                    var bossObject=accessory.Data.Objects.SearchById(bossId);
 
-                if(bossObject==null) {
+                    if(bossObject==null) {
 
-                    return;
+                        return;
 
+                    }
+
+                    bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                    
                 }
 
-                double bossRotation=(convertRotation(bossObject.Rotation)-Math.PI+2*Math.PI)%(2*Math.PI);
+                if(benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准
+                   ||
+                   benchmarkOfPhase2==BenchmarksOfPhase2.全程场地基准仅第四次魔光Boss面向基准_MMW视频攻略) {
+
+                    bossRotation=0;
+
+                }
             
                 var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
