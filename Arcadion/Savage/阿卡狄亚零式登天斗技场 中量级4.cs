@@ -5,11 +5,9 @@ using KodakkuAssist.Script;
 using KodakkuAssist.Module.Draw;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ECommons;
 using System.Numerics;
 using Newtonsoft.Json;
 using Dalamud.Utility.Numerics;
-using ECommons.MathHelpers;
 using KodakkuAssist.Module.GameOperate;
 using Lumina.Data.Parsing;
 using Newtonsoft.Json.Linq;
@@ -20,7 +18,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.17",
+        version:"0.0.1.18",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -515,7 +513,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties.Scale=new(15);
                     currentProperties.Owner=sourceId;
                     currentProperties.TargetObject=accessory.Data.PartyList[i];
-                    currentProperties.Radian=24f.DegToRad();
+                    currentProperties.Radian=convertDegree(24f);
                     currentProperties.DestoryAt=6000;
 
                     if(i==myIndex||i==getPartner[myIndex]) {
@@ -566,7 +564,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     currentProperties.Scale=new(15);
                     currentProperties.Owner=sourceId;
                     currentProperties.TargetObject=accessory.Data.PartyList[i];
-                    currentProperties.Radian=24f.DegToRad();
+                    currentProperties.Radian=convertDegree(24f);
                     currentProperties.Color=accessory.Data.DefaultDangerColor;
                     currentProperties.DestoryAt=6000;
         
@@ -676,7 +674,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -693,7 +691,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -710,7 +708,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -10998,6 +10996,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         public static double convertRotation(double rawRotation) {
             
             return Math.PI-rawRotation;
+            
+        }
+        
+        public static float convertDegree(float degree) {
+            
+            return degree*float.Pi/180f;
             
         }
 

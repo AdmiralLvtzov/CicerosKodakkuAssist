@@ -5,11 +5,9 @@ using KodakkuAssist.Script;
 using KodakkuAssist.Module.Draw;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ECommons;
 using System.Numerics;
 using Newtonsoft.Json;
 using Dalamud.Utility.Numerics;
-using ECommons.MathHelpers;
 using KodakkuAssist.Module.GameOperate;
 using Lumina.Data.Parsing;
 using Newtonsoft.Json.Linq;
@@ -20,7 +18,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.33",
+        version:"0.0.0.34",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -541,7 +539,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     currentProperties.Scale=new(15);
                     currentProperties.Owner=sourceId;
                     currentProperties.TargetObject=accessory.Data.PartyList[i];
-                    currentProperties.Radian=24f.DegToRad();
+                    currentProperties.Radian=convertDegree(24f);
                     currentProperties.DestoryAt=6000;
 
                     if(i==myIndex||i==getPartner[myIndex]) {
@@ -582,7 +580,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     currentProperties.Scale=new(15);
                     currentProperties.Owner=sourceId;
                     currentProperties.TargetObject=accessory.Data.PartyList[i];
-                    currentProperties.Radian=24f.DegToRad();
+                    currentProperties.Radian=convertDegree(24f);
                     currentProperties.Color=accessory.Data.DefaultDangerColor;
                     currentProperties.DestoryAt=6000;
         
@@ -696,7 +694,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -713,7 +711,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(innerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -730,7 +728,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -747,7 +745,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
 
                 currentProperties.Scale=new(2);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,getDegree[myIndex].DegToRad());
+                currentProperties.TargetPosition=rotatePosition(outerPosition,ARENA_CENTER_OF_PHASE_1,convertDegree(getDegree[myIndex]));
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.DestoryAt=6000;
@@ -4676,7 +4674,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                     shadowsAreOnTheCardinals=true;
 
-                    if(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1)>-18.9f.DegToRad()) {
+                    if(getRotationDifference(positionOfTheOuterFang,sourcePosition,ARENA_CENTER_OF_PHASE_1)>convertDegree(-18.9f)) {
                         // This strat is... very mathematically unfriendly.
                         // There are eight possible positions for the new north at 45 degree intervals, but five for the shadows at 72 degree intervals. Meanwhile, the shadows can be on cardinals or intercardinals.
                         // My initial approach was to capture the shadow closest to the new north, but it went wrong in some situations.
@@ -11031,6 +11029,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
         public static double convertRotation(double rawRotation) {
             
             return Math.PI-rawRotation;
+            
+        }
+        
+        public static float convertDegree(float degree) {
+            
+            return degree*float.Pi/180f;
             
         }
 
