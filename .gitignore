@@ -1,8 +1,21 @@
+# Build
 bin/
 obj/
+
+# NuGet
 /packages/
+
+# Rider
+.rider/
 riderModule.iml
 /_ReSharper.Caches/
+
+# VSC
+*.user
+
+# SDK
+global.json
+
+# contains private data
 *.csproj
 *.sln
-*.user

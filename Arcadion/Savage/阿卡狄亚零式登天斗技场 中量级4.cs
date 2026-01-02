@@ -18,7 +18,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.18",
+        version:"0.0.1.19",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -4400,7 +4400,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
+                /*
+
                 if(Vector3.Equals(myPosition1,ARENA_CENTER_OF_PHASE_1)||Vector3.Equals(myPosition2,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                // Stricter semantics for Vector3.Equals() have been introduced in .NET 10.
+                // Therefore, the previous implementation would no longer work.
+
+                */
+                
+                if(Vector3.Distance(myPosition1,ARENA_CENTER_OF_PHASE_1)<0.05f
+                   ||
+                   Vector3.Distance(myPosition2,ARENA_CENTER_OF_PHASE_1)<0.05f) {
 
                     return;
 
@@ -5401,7 +5416,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
+                /*
+
                 if(Vector3.Equals(myPosition,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                // Stricter semantics for Vector3.Equals() have been introduced in .NET 10.
+                // Therefore, the previous implementation would no longer work.
+
+                */
+                
+                if(Vector3.Distance(myPosition,ARENA_CENTER_OF_PHASE_1)<0.05f) {
 
                     return;
 
@@ -5615,7 +5643,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
                     
                 }
 
+                /*
+
                 if(Vector3.Equals(myPosition,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+
+                // Stricter semantics for Vector3.Equals() have been introduced in .NET 10.
+                // Therefore, the previous implementation would no longer work.
+
+                */
+                
+                if(Vector3.Distance(myPosition,ARENA_CENTER_OF_PHASE_1)<0.05f) {
 
                     return;
 

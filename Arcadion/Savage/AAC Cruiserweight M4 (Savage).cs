@@ -18,7 +18,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
     [ScriptType(name:"AAC Cruiserweight M4 (Savage)",
         territorys:[1263],
         guid:"aeb4391c-e8a6-4daa-ab71-18e44c94fab8",
-        version:"0.0.0.34",
+        version:"0.0.0.35",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -4466,7 +4466,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     
                 }
 
+                /*
+                
                 if(Vector3.Equals(myPosition1,ARENA_CENTER_OF_PHASE_1)||Vector3.Equals(myPosition2,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+                
+                // Stricter semantics for Vector3.Equals() have been introduced in .NET 10.
+                // Therefore, the previous implementation would no longer work.
+                
+                */
+                
+                if(Vector3.Distance(myPosition1,ARENA_CENTER_OF_PHASE_1)<0.05f
+                   ||
+                   Vector3.Distance(myPosition2,ARENA_CENTER_OF_PHASE_1)<0.05f) {
 
                     return;
 
@@ -5512,8 +5527,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     }
                     
                 }
+                
+                /*
 
                 if(Vector3.Equals(myPosition,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+                
+                // Stricter semantics for Vector3.Equals() have been introduced in .NET 10.
+                // Therefore, the previous implementation would no longer work.
+                
+                */
+                
+                if(Vector3.Distance(myPosition,ARENA_CENTER_OF_PHASE_1)<0.05f) {
 
                     return;
 
@@ -5726,8 +5754,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage
                     }
                     
                 }
+                
+                /*
 
                 if(Vector3.Equals(myPosition,ARENA_CENTER_OF_PHASE_1)) {
+
+                    return;
+
+                }
+                
+                // Stricter semantics for Vector3.Equals() have been introduced in .NET 10.
+                // Therefore, the previous implementation would no longer work.
+                
+                */
+                
+                if(Vector3.Distance(myPosition,ARENA_CENTER_OF_PHASE_1)<0.05f) {
 
                     return;
 
