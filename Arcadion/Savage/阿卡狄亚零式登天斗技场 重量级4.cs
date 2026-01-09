@@ -1,17 +1,19 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using KodakkuAssist.Module.GameEvent;
-using KodakkuAssist.Script;
-using KodakkuAssist.Module.Draw;
+using System.Threading;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Numerics;
-using Newtonsoft.Json;
-using Dalamud.Utility.Numerics;
+using System.Linq;
+using System.Diagnostics;
+using KodakkuAssist.Module.GameEvent;
+using KodakkuAssist.Module.Draw;
 using KodakkuAssist.Module.GameOperate;
-using Lumina.Data.Parsing;
+using KodakkuAssist.Script;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Dalamud.Utility.Numerics;
+using Lumina.Data.Parsing;
 
 namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 {
@@ -19,7 +21,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.1",
+        version:"0.0.0.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -41,9 +43,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         #region User_Settings
         
         [UserSetting("启用文字提示")]
-        public bool enablePrompts { get; set; } = true;
+        public bool enablePrompts { get; set; } = false;
         [UserSetting("启用原生TTS")]
-        public bool enableVanillaTts { get; set; } = true;
+        public bool enableVanillaTts { get; set; } = false;
         [UserSetting("启用Daily Routines TTS (需要安装并启用Daily Routines插件!)")]
         public bool enableDailyRoutinesTts { get; set; } = false;
         [UserSetting("机制方向的颜色")]
@@ -52,25 +54,63 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public ScriptColor colourOfExtremelyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
+        [UserSetting("启用调试日志并输出到Dalamud日志中")]
+        public bool enableDebugLogging { get; set; } = false;
+        
+        [UserSetting("致命灾变引导顺序")]
+        public OrdersDuringMortalSlayer orderDuringMortalSlayer { get; set; }
 
         #endregion
         
         #region Variables_And_Semaphores
         
         private volatile bool isInMajorPhase1=true;
-        private volatile int currentPhase=1;
+        private volatile int currentPhase=0;
+        
+        /*
+         
+        Major Phase 1:
+        
+            Phase 1 - 致命灾变
+            Phase 2 -
+            Phase 3 -
+            Phase 4 -
+            Phase 5 -
+            Phase 6 - 致命灾变
+            Phase 7 -
+        
+        Major Phase 2
+         
+        */
+
+        private volatile int currentSphereCount=0;
+        private List<sphereType> sphere=new List<sphereType>();
+        private List<bool> sameSideDifferentColours=new List<bool>();
+        private System.Threading.AutoResetEvent mortalSlayerSemaphore=new System.Threading.AutoResetEvent(false);
         
         #endregion
         
         #region Constants_And_Locks
 
         private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
+        // ± 15 vertically, ± 20 horizontally.
 
         #endregion
         
         #region Enumerations_And_Classes
 
-        
+        public enum OrdersDuringMortalSlayer {
+            
+            近战_远程_治疗
+
+        }
+
+        public class sphereType {
+            
+            public float x=100;
+            public bool isGreen=true;
+
+        }
         
         #endregion
         
@@ -89,7 +129,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private void Variable_And_Semaphore_Initialization() {
             
             isInMajorPhase1=true;
-            currentPhase=1;
+            currentPhase=0;
+            
+            currentSphereCount=0;
+            sphere.Clear();
+            sameSideDifferentColours.Clear();
+            mortalSlayerSemaphore.Reset();
             
         }
 
@@ -181,7 +226,145 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         #region Major_Phase_1
 
+        [ScriptMethod(name:"门神 致命灾变 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46229"],
+            userControl:false)]
+    
+        public void 门神_致命灾变_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            currentSphereCount=0;
+            sphere.Clear();
+            sameSideDifferentColours.Clear();
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
         
+        }
+        
+        [ScriptMethod(name:"门神 致命灾变 (数据收集)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:regex:^(19201|19200)$"],
+            userControl:false)]
+    
+        public void 门神_致命灾变_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=1&&currentPhase!=6) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            lock(sphere) {
+                
+                Vector3 sourcePosition=ARENA_CENTER;
+
+                try {
+
+                    sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+                } catch(Exception e) {
+                
+                    accessory.Log.Error("SourcePosition deserialization failed.");
+
+                    return;
+
+                }
+                
+                sphereType sphereData=new sphereType();
+                
+                sphereData.x=sourcePosition.X;
+
+                if(string.Equals(@event["DataId"],"19201")) {
+
+                    sphereData.isGreen=true;
+
+                }
+
+                if(string.Equals(@event["DataId"],"19200")) {
+
+                    sphereData.isGreen=false;
+
+                }
+                
+                sphere.Add(sphereData);
+                
+                Interlocked.Increment(ref currentSphereCount);
+
+                if(currentSphereCount%2==0&&currentSphereCount>=2) {
+
+                    int currentRound=currentSphereCount/2-1;
+
+                    if(sphere[currentSphereCount-1].isGreen!=sphere[currentSphereCount-2].isGreen) {
+                        
+                        if((sphere[currentSphereCount-1].x<100f&&sphere[currentSphereCount-2].x<100f)
+                           ||
+                           (sphere[currentSphereCount-1].x>100f&&sphere[currentSphereCount-2].x>100f)) {
+
+                            sameSideDifferentColours.Add(true);
+
+                        }
+
+                        else {
+                        
+                            sameSideDifferentColours.Add(false);
+                        
+                        }
+                        
+                    }
+                    
+                    else {
+                        
+                        sameSideDifferentColours.Add(false);
+                        
+                    }
+
+                    if(sphere[currentSphereCount-1].x<sphere[currentSphereCount-2].x) {
+                        
+                        (sphere[currentSphereCount-1],sphere[currentSphereCount-2])=(sphere[currentSphereCount-2],sphere[currentSphereCount-1]);
+                        
+                    }
+
+                }
+                
+                System.Threading.Thread.MemoryBarrier();
+                
+                if(currentSphereCount==8&&sameSideDifferentColours.Count==4) {
+
+                    mortalSlayerSemaphore.Set();
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"sphere.x:{string.Join(",",sphere.Select(s=>s.x))}\nsphere.isGreen:{string.Join(",",sphere.Select(s=>s.isGreen))}\nsameSideDifferentColours:{string.Join(",",sameSideDifferentColours)}");
+                        
+                    }
+
+                }
+                
+            }
+        
+        }
         
         #endregion
         
