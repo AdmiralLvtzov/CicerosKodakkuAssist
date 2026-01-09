@@ -21,7 +21,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.2",
+        version:"0.0.0.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -79,14 +79,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             Phase 6 - 致命灾变
             Phase 7 -
         
-        Major Phase 2
+        Major Phase 2:
          
         */
 
-        private volatile int currentSphereCount=0;
         private List<sphereType> sphere=new List<sphereType>();
-        private List<bool> sameSideDifferentColours=new List<bool>();
-        private System.Threading.AutoResetEvent mortalSlayerSemaphore=new System.Threading.AutoResetEvent(false);
+        private List<int> leftOrder=new List<int>();
+        private List<int> rightOrder=new List<int>();
+        private System.Threading.AutoResetEvent mortalSlayerRangeSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent mortalSlayerGuidanceSemaphore=new System.Threading.AutoResetEvent(false);
         
         #endregion
         
@@ -94,6 +95,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
         // ± 15 vertically, ± 20 horizontally.
+        
+        private static readonly Vector3 LEFT_WHEN_NORMAL_PAIR=new Vector3(96,0,87);
+        private static readonly Vector3 RIGHT_WHEN_NORMAL_PAIR=new Vector3(104,0,87);
+        private static readonly Vector3 LEFT_WHEN_ON_LEFT_SIDE=new Vector3(90,0,87);
+        private static readonly Vector3 RIGHT_WHEN_ON_LEFT_SIDE=new Vector3(98,0,87);
+        private static readonly Vector3 LEFT_WHEN_ON_RIGHT_SIDE=new Vector3(102,0,87);
+        private static readonly Vector3 RIGHT_WHEN_ON_RIGHT_SIDE=new Vector3(110,0,87);
 
         #endregion
         
@@ -131,10 +139,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             isInMajorPhase1=true;
             currentPhase=0;
             
-            currentSphereCount=0;
             sphere.Clear();
-            sameSideDifferentColours.Clear();
-            mortalSlayerSemaphore.Reset();
+            leftOrder.Clear();
+            rightOrder.Clear();
+            mortalSlayerRangeSemaphore.Reset();
+            mortalSlayerGuidanceSemaphore.Reset();
             
         }
 
@@ -241,9 +250,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            currentSphereCount=0;
             sphere.Clear();
-            sameSideDifferentColours.Clear();
+            leftOrder.Clear();
+            rightOrder.Clear();
 
             Interlocked.Increment(ref currentPhase);
 
@@ -310,39 +319,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 sphere.Add(sphereData);
                 
-                Interlocked.Increment(ref currentSphereCount);
-
-                if(currentSphereCount%2==0&&currentSphereCount>=2) {
-
-                    int currentRound=currentSphereCount/2-1;
-
-                    if(sphere[currentSphereCount-1].isGreen!=sphere[currentSphereCount-2].isGreen) {
-                        
-                        if((sphere[currentSphereCount-1].x<100f&&sphere[currentSphereCount-2].x<100f)
-                           ||
-                           (sphere[currentSphereCount-1].x>100f&&sphere[currentSphereCount-2].x>100f)) {
-
-                            sameSideDifferentColours.Add(true);
-
-                        }
-
-                        else {
-                        
-                            sameSideDifferentColours.Add(false);
-                        
-                        }
-                        
-                    }
+                if(sphere.Count%2==0&&sphere.Count>=2) {
                     
-                    else {
+                    int currentRound=sphere.Count/2-1;
+                    
+                    if(sphere[sphere.Count-1].x<sphere[sphere.Count-2].x) {
                         
-                        sameSideDifferentColours.Add(false);
-                        
-                    }
-
-                    if(sphere[currentSphereCount-1].x<sphere[currentSphereCount-2].x) {
-                        
-                        (sphere[currentSphereCount-1],sphere[currentSphereCount-2])=(sphere[currentSphereCount-2],sphere[currentSphereCount-1]);
+                        (sphere[sphere.Count-1],sphere[sphere.Count-2])=(sphere[sphere.Count-2],sphere[sphere.Count-1]);
                         
                     }
 
@@ -350,13 +333,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 System.Threading.Thread.MemoryBarrier();
                 
-                if(currentSphereCount==8&&sameSideDifferentColours.Count==4) {
+                if(sphere.Count==8) {
 
-                    mortalSlayerSemaphore.Set();
+                    // A placeholder for calculation code.
+
+                    mortalSlayerRangeSemaphore.Set();
+                    mortalSlayerGuidanceSemaphore.Set();
 
                     if(enableDebugLogging) {
                         
-                        accessory.Log.Debug($"sphere.x:{string.Join(",",sphere.Select(s=>s.x))}\nsphere.isGreen:{string.Join(",",sphere.Select(s=>s.isGreen))}\nsameSideDifferentColours:{string.Join(",",sameSideDifferentColours)}");
+                        accessory.Log.Debug($"""
+                                            sphere.x:{string.Join(",",sphere.Select(s=>s.x))}
+                                            sphere.isGreen:{string.Join(",",sphere.Select(s=>s.isGreen))}
+                                            leftGroupOrder:{string.Join(",",leftOrder)}
+                                            rightGroupOrder:{string.Join(",",rightOrder)}
+                                            """);
                         
                     }
 
@@ -364,6 +355,163 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
         
+        }
+        
+        [ScriptMethod(name:"门神 致命灾变 (场地分割线)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46229"])]
+    
+        public void 门神_致命灾变_场地分割线(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Name="门神_致命灾变_场地分割线";
+            currentProperties.Scale=new(0.25f,30);
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=23500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 致命灾变 (范围,非预测)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46229"])]
+    
+        public void 门神_致命灾变_范围_非预测(Event @event,ScriptAccessory accessory) {
+
+            return; // To be removed in the future.
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+            
+            mortalSlayerRangeSemaphore.WaitOne();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<4;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(8);
+                currentProperties.TargetObject=accessory.Data.PartyList[leftOrder[i]];
+                currentProperties.Color=((isTank(leftOrder[i]))?(colourOfExtremelyDangerousAttacks.V4.WithW(1)):(accessory.Data.DefaultDangerColor));
+                currentProperties.Delay=((i==0)?(0):(500+3000*i));
+                currentProperties.DestoryAt=((i==0)?(3500):(3000));
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(8);
+                currentProperties.TargetObject=accessory.Data.PartyList[rightOrder[i]];
+                currentProperties.Color=((isTank(rightOrder[i]))?(colourOfExtremelyDangerousAttacks.V4.WithW(1)):(accessory.Data.DefaultDangerColor));
+                currentProperties.Delay=((i==0)?(0):(500+3000*i));
+                currentProperties.DestoryAt=((i==0)?(3500):(3000));
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"门神 致命灾变 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46229"])]
+    
+        public void 门神_致命灾变_指路(Event @event,ScriptAccessory accessory) {
+
+            return; // To be removed in the future.
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            mortalSlayerGuidanceSemaphore.WaitOne();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            int myRound=-1;
+            
+            // A placeholder for calculation code.
+
+            if(myRound<0||myRound>3) {
+
+                return;
+
+            }
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"myIndex={myIndex}\nmyOrder={myRound}");
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // ----- Standby Before -----
+
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40,16);
+            currentProperties.Position=new Vector3(100,0,115);
+            currentProperties.TargetPosition=ARENA_CENTER;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=((myRound==0)?(0):(500+3000*myRound));
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
+            // ----- Bait -----
+
+            Vector3 myPosition=ARENA_CENTER;
+            
+            // A placeholder for calculation code.
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=((myRound==0)?(0):(500+3000*myRound));
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            // ----- Standby After -----
+
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40,16);
+            currentProperties.Position=new Vector3(100,0,115);
+            currentProperties.TargetPosition=ARENA_CENTER;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=3500+3000*myRound;
+            currentProperties.DestoryAt=(3500+3000*3)-(3500+3000*myRound);
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
         }
         
         #endregion
@@ -585,7 +733,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
         }
 
-        public static bool isInGroup1(int partyIndex) {
+        public static bool isInLeftGroup(int partyIndex) {
             
             return partyIndex switch {
 
@@ -599,7 +747,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
         }
         
-        public static bool isInGroup2(int partyIndex) {
+        public static bool isInRightGroup(int partyIndex) {
             
             return partyIndex switch {
 
