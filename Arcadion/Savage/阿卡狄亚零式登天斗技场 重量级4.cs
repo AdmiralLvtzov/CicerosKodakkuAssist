@@ -21,7 +21,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.3",
+        version:"0.0.0.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -32,7 +32,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            脚本刚刚创建,所有的工作都正在进行中。脚本目前尚未达到可用的状态,作者正在加班加点!
+            脚本刚刚创建,所有的工作都正在进行中,目前只在很少的几个机制中提供范围绘制,指路完全没做。作者正在加班加点!
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
@@ -56,9 +56,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public bool enableShenanigans { get; set; } = false;
         [UserSetting("启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
+        [UserSetting("忽略所有阶段检查(调试用)")]
+        public bool skipPhaseChecks { get; set; } = false;
+        
+        /*
         
         [UserSetting("致命灾变引导顺序")]
         public OrdersDuringMortalSlayer orderDuringMortalSlayer { get; set; }
+        
+        */
+        
+        [UserSetting("致命灾变绿球的颜色")]
+        public ScriptColor colourOfGreenSpheres { get; set; } = new() { V4 = new Vector4(0,1,0,1) }; // Green by default.
+        [UserSetting("致命灾变紫球的颜色")]
+        public ScriptColor colourOfPurpleSpheres { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
+        [UserSetting("引爆细胞范围绘制延迟(秒,默认11,最大17)")]
+        public int grotesquerieStatusDelay { get; set; } = 11;
 
         #endregion
         
@@ -72,7 +85,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         Major Phase 1:
         
             Phase 1 - 致命灾变
-            Phase 2 -
+            Phase 2 - 细胞附身·早期
             Phase 3 -
             Phase 4 -
             Phase 5 -
@@ -86,6 +99,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private List<sphereType> sphere=new List<sphereType>();
         private List<int> leftOrder=new List<int>();
         private List<int> rightOrder=new List<int>();
+        private System.Threading.AutoResetEvent mortalSlayerSphereSemaphore=new System.Threading.AutoResetEvent(false); 
         private System.Threading.AutoResetEvent mortalSlayerRangeSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent mortalSlayerGuidanceSemaphore=new System.Threading.AutoResetEvent(false);
         
@@ -107,11 +121,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         #region Enumerations_And_Classes
 
+        /*
+        
         public enum OrdersDuringMortalSlayer {
             
             近战_远程_治疗
 
         }
+        
+        */
 
         public class sphereType {
             
@@ -142,6 +160,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             sphere.Clear();
             leftOrder.Clear();
             rightOrder.Clear();
+            mortalSlayerSphereSemaphore.Reset();
             mortalSlayerRangeSemaphore.Reset();
             mortalSlayerGuidanceSemaphore.Reset();
             
@@ -197,7 +216,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         [ScriptMethod(name:"Shenanigans",
             eventType:EventTypeEnum.AddCombatant,
-            eventCondition:["DataId:19195"],
+            eventCondition:["DataId:19195|19202"],
             suppress:13000,
             userControl:false)]
 
@@ -277,13 +296,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(currentPhase!=1&&currentPhase!=6) {
+            if(currentPhase!=1&&currentPhase!=6&&!skipPhaseChecks) {
 
                 return;
 
             }
-            
-            System.Threading.Thread.MemoryBarrier();
 
             lock(sphere) {
                 
@@ -328,6 +345,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         (sphere[sphere.Count-1],sphere[sphere.Count-2])=(sphere[sphere.Count-2],sphere[sphere.Count-1]);
                         
                     }
+
+                    mortalSlayerSphereSemaphore.Set();
 
                 }
                 
@@ -383,11 +402,79 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"门神 致命灾变 (范围,非预测)",
+        [ScriptMethod(name:"门神 致命灾变 (球体对指示)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:regex:^(19201|19200)$"],
+            suppress:1000)]
+    
+        public void 门神_致命灾变_球体对指示(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            mortalSlayerSphereSemaphore.WaitOne();
+
+            if(currentPhase!=1&&currentPhase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            int currentSphereCount=sphere.Count;
+
+            if(!(currentSphereCount%2==0&&currentSphereCount>=2)) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            int leftSphere=currentSphereCount-2,rightSphere=currentSphereCount-1,currentRound=currentSphereCount/2-1;
+            float leftX=100-1.5f,rightX=100+1.5f;
+
+            if(sphere[leftSphere].x<100&&sphere[rightSphere].x<100) {
+
+                leftX-=3;
+                rightX-=3;
+
+            }
+            
+            if(sphere[leftSphere].x>100&&sphere[rightSphere].x>100) {
+
+                leftX+=3;
+                rightX+=3;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(1);
+            currentProperties.Position=new Vector3(leftX,0,88+2.5f*currentRound);
+            currentProperties.Color=((sphere[leftSphere].isGreen)?(colourOfGreenSpheres.V4.WithW(3)):(colourOfPurpleSpheres.V4.WithW(3)));
+            currentProperties.DestoryAt=10750+625*currentRound;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(1);
+            currentProperties.Position=new Vector3(rightX,0,88+2.5f*currentRound);
+            currentProperties.Color=((sphere[rightSphere].isGreen)?(colourOfGreenSpheres.V4.WithW(3)):(colourOfPurpleSpheres.V4.WithW(3)));
+            currentProperties.DestoryAt=10750+625*currentRound;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 致命灾变 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:46229"])]
     
-        public void 门神_致命灾变_范围_非预测(Event @event,ScriptAccessory accessory) {
+        public void 门神_致命灾变_范围(Event @event,ScriptAccessory accessory) {
 
             return; // To be removed in the future.
 
@@ -398,6 +485,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             mortalSlayerRangeSemaphore.WaitOne();
+            
+            if(currentPhase!=1&&currentPhase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -442,6 +537,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             mortalSlayerGuidanceSemaphore.WaitOne();
+            
+            if(currentPhase!=1&&currentPhase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -512,6 +615,246 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
             
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48829"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_早期_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 引爆细胞 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:4761"])]
+    
+        public void 门神_细胞附身_早期_引爆细胞_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            durationMilliseconds-=grotesquerieStatusDelay*1000;
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=grotesquerieStatusDelay*1000;
+            currentProperties.DestoryAt=durationMilliseconds;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 引爆细胞:大爆炸 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:4762"])]
+    
+        public void 门神_细胞附身_早期_引爆细胞_大爆炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+            
+            durationMilliseconds-=grotesquerieStatusDelay*1000;
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=grotesquerieStatusDelay*1000;
+            currentProperties.DestoryAt=durationMilliseconds;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 引爆细胞:指向 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:3558"])]
+    
+        public void 门神_细胞附身_早期_引爆细胞_指向_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"门神_细胞附身_早期_引爆细胞_指向_范围_{targetId}";
+            currentProperties.Scale=new(32);
+            currentProperties.Owner=targetId;
+            currentProperties.Radian=float.Pi/6;
+            currentProperties.Delay=grotesquerieStatusDelay*1000;
+            currentProperties.DestoryAt=7200000;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            
+            if(string.Equals(@event["Param"],"1036")) {
+
+                currentProperties.Rotation=0;
+
+            }
+            
+            if(string.Equals(@event["Param"],"1037")) {
+
+                currentProperties.Rotation=float.Pi/2;
+
+            }
+            
+            if(string.Equals(@event["Param"],"1038")) {
+
+                currentProperties.Rotation=float.Pi;
+
+            }
+            
+            if(string.Equals(@event["Param"],"1039")) {
+
+                currentProperties.Rotation=float.Pi/2*3;
+
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 引爆细胞:指向 (清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:3558"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_早期_引爆细胞_指向_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                accessory.Method.RemoveDraw("^门神_细胞附身_早期_引爆细胞_指向_范围_.*");
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_早期_引爆细胞_指向_范围_{targetId}");
+        
         }
         
         #endregion
