@@ -21,7 +21,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.4",
+        version:"0.0.0.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -71,7 +71,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         [UserSetting("致命灾变紫球的颜色")]
         public ScriptColor colourOfPurpleSpheres { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
         [UserSetting("引爆细胞范围绘制延迟(秒,默认11,最大17)")]
-        public int grotesquerieStatusDelay { get; set; } = 11;
+        public int grotesquerieStatusDelay { get; set; } = 11; // 11 by default.
 
         #endregion
         
@@ -272,6 +272,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             sphere.Clear();
             leftOrder.Clear();
             rightOrder.Clear();
+            mortalSlayerSphereSemaphore.Reset();
+            mortalSlayerRangeSemaphore.Reset();
+            mortalSlayerGuidanceSemaphore.Reset();
 
             Interlocked.Increment(ref currentPhase);
 
@@ -791,7 +794,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             currentProperties.Name=$"门神_细胞附身_早期_引爆细胞_指向_范围_{targetId}";
-            currentProperties.Scale=new(32);
+            currentProperties.Scale=new(60);
             currentProperties.Owner=targetId;
             currentProperties.Radian=float.Pi/6;
             currentProperties.Delay=grotesquerieStatusDelay*1000;
@@ -855,6 +858,180 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             accessory.Method.RemoveDraw($"门神_细胞附身_早期_引爆细胞_指向_范围_{targetId}");
         
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 极饿伸展 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46237"])]
+    
+        public void 门神_细胞附身_早期_极饿伸展_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(35);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=4875;
+            currentProperties.DestoryAt=5750;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(35);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi*2-float.Pi/3*2;
+            currentProperties.Rotation=float.Pi;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4875;
+            currentProperties.DestoryAt=5750;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 大爆炸 (范围)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2015017"])]
+    
+        public void 门神_细胞附身_早期_大爆炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(12);
+            currentProperties.Position=sourcePosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=13750;
+            currentProperties.DestoryAt=6625;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 脏腑爆裂 (范围)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:0158"])]
+    
+        public void 门神_细胞附身_早期_脏腑爆裂_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=accessory.Data.PartyList[targetIndex];
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·早期 细胞轰炸 (范围)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:00A1"])]
+    
+        public void 门神_细胞附身_早期_细胞轰炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=accessory.Data.PartyList[targetIndex];
+            currentProperties.Color=((isTank(myIndex))?(accessory.Data.DefaultDangerColor):(accessory.Data.DefaultSafeColor));
+            currentProperties.DestoryAt=5125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
         }
         
         #endregion
