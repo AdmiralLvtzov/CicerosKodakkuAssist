@@ -21,7 +21,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.5",
+        version:"0.0.0.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -809,7 +809,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             if(string.Equals(@event["Param"],"1037")) {
 
-                currentProperties.Rotation=float.Pi/2;
+                currentProperties.Rotation=float.Pi/2*3;
 
             }
             
@@ -821,7 +821,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             if(string.Equals(@event["Param"],"1039")) {
 
-                currentProperties.Rotation=float.Pi/2*3;
+                currentProperties.Rotation=float.Pi/2;
 
             }
         
