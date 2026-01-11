@@ -22,7 +22,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.7",
+        version:"0.0.0.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -73,6 +73,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public ScriptColor colourOfPurpleSpheres { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
         [UserSetting("引爆细胞范围绘制延迟(秒,默认11,最大17)")]
         public int grotesquerieStatusDelay { get; set; } = 11; // 11 by default.
+        [UserSetting("仅绘制自己的引爆细胞:指向")]
+        public bool onlyMyDirectedGrotesquerie { get; set; } = true;
 
         #endregion
         
@@ -107,7 +109,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private volatile int act2PartyCount=0;
         private act2PartyType[] act2Party=Enumerable.Range(0,8).Select(i=>new act2PartyType()).ToArray();
         private List<Vector3> act2Tower=new List<Vector3>();
-        private System.Threading.AutoResetEvent[] act2TowerSemaphore=Enumerable.Range(0,8).Select(i=>new System.Threading.AutoResetEvent(false)).ToArray();
         private volatile int skinsplitterCount=0;
         private System.Threading.AutoResetEvent skinsplitterSemaphore=new System.Threading.AutoResetEvent(false);
         private double exitRotation=0;
@@ -183,7 +184,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             act2PartyCount=0;
             for(int i=0;i<act2Party.Length;++i)act2Party[i]=new act2PartyType();
             act2Tower.Clear();
-            for(int i=0;i<act2TowerSemaphore.Length;++i)act2TowerSemaphore[i].Reset();
             skinsplitterCount=0;
             skinsplitterSemaphore.Reset();
             exitRotation=0;
@@ -810,6 +810,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 return;
                 
             }
+
+            if(onlyMyDirectedGrotesquerie) {
+
+                if(targetId!=accessory.Data.Me) {
+
+                    return;
+
+                }
+                
+            }
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -1078,7 +1088,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             act2PartyCount=0;
             for(int i=0;i<act2Party.Length;++i)act2Party[i]=new act2PartyType();
             act2Tower.Clear();
-            for(int i=0;i<act2TowerSemaphore.Length;++i)act2TowerSemaphore[i].Reset();
             skinsplitterCount=0;
             skinsplitterSemaphore.Reset();
             exitRotation=0;
@@ -1276,8 +1285,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 act2Tower.Add(sourcePosition);
 
-                act2TowerSemaphore[act2Tower.Count-1].Set();
-
                 if(enableDebugLogging) {
                     
                     accessory.Log.Debug($"act2Tower.Count={act2Tower.Count}\nact2Tower.Last()={act2Tower.Last()}");
@@ -1473,11 +1480,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(myStatus.isAlpha&&myStatus.rawOrder==3) {
 
-                    act2TowerSemaphore[0].WaitOne();
+                    if(act2Tower.Count<1) {
+
+                        return;
+
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[0];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
@@ -1518,7 +1529,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=4000;
+                    currentProperties.DestoryAt=1000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1530,11 +1553,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(myStatus.isAlpha&&myStatus.rawOrder==1) {
 
-                    act2TowerSemaphore[2].WaitOne();
+                    if(act2Tower.Count<3) {
+
+                        return;
+
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[2];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
@@ -1581,14 +1608,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(myStatus.isAlpha&&myStatus.rawOrder==3) {
                     
+                    if(act2Tower.Count<1) {
+
+                        return;
+
+                    }
+                    
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[0];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=2500;
+                    currentProperties.DestoryAt=2000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1597,7 +1630,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[0];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=2500;
+                    currentProperties.DestoryAt=2000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -1605,11 +1638,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(myStatus.isAlpha&&myStatus.rawOrder==4) {
 
-                    act2TowerSemaphore[1].WaitOne();
+                    if(act2Tower.Count<2) {
+
+                        return;
+
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[1];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
@@ -1650,7 +1687,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=4000;
+                    currentProperties.DestoryAt=1000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1658,27 +1707,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(!myStatus.isAlpha&&myStatus.rawOrder==3) {
 
-                    act2TowerSemaphore[4].WaitOne();
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    if(act2Tower.Count<5) {
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=act2Tower[4];
-                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                        return;
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Position=act2Tower[4];
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -1687,18 +1720,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.TargetPosition=act2Tower[4];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(2);
+                    currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[4];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -1709,15 +1740,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             if(skinsplitterCount==4) {
                 
                 if(myStatus.isAlpha&&myStatus.rawOrder==1) {
+                    
+                    if(act2Tower.Count<3) {
+
+                        return;
+
+                    }
 
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[2];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=7500;
+                    currentProperties.DestoryAt=7000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1726,7 +1763,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[2];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=7500;
+                    currentProperties.DestoryAt=7000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -1734,11 +1771,15 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 if(myStatus.isAlpha&&myStatus.rawOrder==2) {
                     
-                    act2TowerSemaphore[3].WaitOne();
+                    if(act2Tower.Count<4) {
+
+                        return;
+
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[3];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
@@ -1785,14 +1826,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(myStatus.isAlpha&&myStatus.rawOrder==4) {
                     
+                    if(act2Tower.Count<2) {
+
+                        return;
+
+                    }
+                    
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[1];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=2500;
+                    currentProperties.DestoryAt=2000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1801,7 +1848,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[1];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=2500;
+                    currentProperties.DestoryAt=2000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -1828,7 +1875,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=4000;
+                    currentProperties.DestoryAt=1000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1836,27 +1895,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 if(!myStatus.isAlpha&&myStatus.rawOrder==4) {
                     
-                    act2TowerSemaphore[5].WaitOne();
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    if(act2Tower.Count<6) {
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=act2Tower[5];
-                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                        return;
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Position=act2Tower[5];
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -1865,18 +1908,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.TargetPosition=act2Tower[5];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(2);
+                    currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[5];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -1888,14 +1929,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 if(myStatus.isAlpha&&myStatus.rawOrder==2) {
                     
+                    if(act2Tower.Count<4) {
+
+                        return;
+
+                    }
+                    
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(3);
+                    currentProperties.Scale=new(2);
                     currentProperties.Owner=accessory.Data.Me;
                     currentProperties.TargetPosition=act2Tower[3];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=7500;
+                    currentProperties.DestoryAt=7000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -1904,7 +1951,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[3];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.DestoryAt=7500;
+                    currentProperties.DestoryAt=7000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -1937,27 +1984,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 if(!myStatus.isAlpha&&myStatus.rawOrder==1) {
                     
-                    act2TowerSemaphore[6].WaitOne();
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    if(act2Tower.Count<7) {
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=act2Tower[6];
-                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                        return;
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Position=act2Tower[6];
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -1966,18 +1997,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.TargetPosition=act2Tower[6];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(2);
+                    currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[6];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
@@ -2004,7 +2033,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=4000;
+                    currentProperties.DestoryAt=1000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
@@ -2016,27 +2057,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 if(!myStatus.isAlpha&&myStatus.rawOrder==2) {
                     
-                    act2TowerSemaphore[7].WaitOne();
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                    if(act2Tower.Count<8) {
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.TargetPosition=act2Tower[7];
-                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
-                    
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                        return;
 
-                    currentProperties.Scale=new(2);
-                    currentProperties.Position=act2Tower[7];
-                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                    currentProperties.DestoryAt=1000;
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    }
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2045,18 +2070,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     currentProperties.TargetPosition=act2Tower[7];
                     currentProperties.ScaleMode|=ScaleMode.YByDistance;
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    currentProperties.Scale=new(2);
+                    currentProperties.Scale=new(3);
                     currentProperties.Position=act2Tower[7];
                     currentProperties.Color=accessory.Data.DefaultSafeColor;
-                    currentProperties.Delay=1000;
-                    currentProperties.DestoryAt=4000;
+                    currentProperties.DestoryAt=3000;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
