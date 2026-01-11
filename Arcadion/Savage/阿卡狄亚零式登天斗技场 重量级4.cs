@@ -13,6 +13,7 @@ using KodakkuAssist.Script;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Dalamud.Utility.Numerics;
+using FFXIVClientStructs.STD.Helper;
 using Lumina.Data.Parsing;
 
 namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
@@ -21,7 +22,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.6",
+        version:"0.0.0.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -32,7 +33,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            脚本刚刚创建,所有的工作都正在进行中,目前只在很少的几个机制中提供范围绘制,指路完全没做。作者正在加班加点!
+            脚本刚刚创建,所有的工作都正在进行中,目前只在很少的几个机制中工作。作者正在加班加点!
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
@@ -86,7 +87,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
             Phase 1 - 致命灾变
             Phase 2 - 细胞附身·早期
-            Phase 3 -
+            Phase 3 - 细胞附身·中期
             Phase 4 -
             Phase 5 -
             Phase 6 - 致命灾变
@@ -102,6 +103,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent mortalSlayerSphereSemaphore=new System.Threading.AutoResetEvent(false); 
         private System.Threading.AutoResetEvent mortalSlayerRangeSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent mortalSlayerGuidanceSemaphore=new System.Threading.AutoResetEvent(false);
+
+        private volatile int act2PartyCount=0;
+        private act2PartyType[] act2Party=Enumerable.Range(0,8).Select(i=>new act2PartyType()).ToArray();
+        private List<Vector3> act2Tower=new List<Vector3>();
+        private System.Threading.AutoResetEvent[] act2TowerSemaphore=Enumerable.Range(0,8).Select(i=>new System.Threading.AutoResetEvent(false)).ToArray();
+        private volatile int skinsplitterCount=0;
+        private System.Threading.AutoResetEvent skinsplitterSemaphore=new System.Threading.AutoResetEvent(false);
+        private double exitRotation=0;
         
         #endregion
         
@@ -137,6 +146,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             public bool isGreen=true;
 
         }
+
+        public class act2PartyType {
+
+            public bool isAlpha=true;
+            public int rawOrder=0;
+
+        }
         
         #endregion
         
@@ -164,6 +180,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             mortalSlayerRangeSemaphore.Reset();
             mortalSlayerGuidanceSemaphore.Reset();
             
+            act2PartyCount=0;
+            for(int i=0;i<act2Party.Length;++i)act2Party[i]=new act2PartyType();
+            act2Tower.Clear();
+            for(int i=0;i<act2TowerSemaphore.Length;++i)act2TowerSemaphore[i].Reset();
+            skinsplitterCount=0;
+            skinsplitterSemaphore.Reset();
+            exitRotation=0;
+
         }
 
         #endregion
@@ -229,8 +253,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             shenaniganSemaphore.WaitOne();
-
-            System.Threading.Thread.MemoryBarrier();
 
             System.Threading.Thread.Sleep(3000);
             
@@ -391,8 +413,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
-            System.Threading.Thread.MemoryBarrier();
-            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             
             currentProperties.Name="门神_致命灾变_场地分割线";
@@ -418,13 +438,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            mortalSlayerSphereSemaphore.WaitOne();
-
             if(currentPhase!=1&&currentPhase!=6&&!skipPhaseChecks) {
 
                 return;
 
             }
+            
+            mortalSlayerSphereSemaphore.WaitOne();
 
             int currentSphereCount=sphere.Count;
 
@@ -1031,6 +1051,1047 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.DestoryAt=5125;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48830"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_中期_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            act2PartyCount=0;
+            for(int i=0;i<act2Party.Length;++i)act2Party[i]=new act2PartyType();
+            act2Tower.Clear();
+            for(int i=0;i<act2TowerSemaphore.Length;++i)act2TowerSemaphore[i].Reset();
+            skinsplitterCount=0;
+            skinsplitterSemaphore.Reset();
+            exitRotation=0;
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4752|4754)$"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_中期_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(act2PartyCount>=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+
+            lock(act2Party) {
+
+                if(string.Equals(@event["StatusID"],"4752")) {
+
+                    act2Party[targetIndex].isAlpha=true;
+
+                }
+                
+                if(string.Equals(@event["StatusID"],"4754")) {
+
+                    act2Party[targetIndex].isAlpha=false;
+
+                }
+
+                if(0<durationMilliseconds&&durationMilliseconds<=27000) {
+
+                    act2Party[targetIndex].rawOrder=1;
+
+                }
+
+                else {
+                    
+                    if(27000<durationMilliseconds&&durationMilliseconds<=32000) {
+
+                        act2Party[targetIndex].rawOrder=2;
+
+                    }
+
+                    else {
+                        
+                        if(32000<durationMilliseconds&&durationMilliseconds<=37000) {
+
+                            act2Party[targetIndex].rawOrder=3;
+
+                        }
+
+                        else {
+                            
+                            if(37000<durationMilliseconds&&durationMilliseconds<=42000) {
+
+                                act2Party[targetIndex].rawOrder=4;
+
+                            }
+
+                            else {
+
+                                act2Party[targetIndex].rawOrder=0;
+
+                            }
+                    
+                        }
+                    
+                    }
+                    
+                }
+
+                if(act2Party[targetIndex].rawOrder<1||act2Party[targetIndex].rawOrder>4) {
+
+                    return;
+
+                }
+                
+                Interlocked.Increment(ref act2PartyCount);
+
+                if(act2PartyCount==8) {
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             act2Party.isAlpha:{string.Join(",",act2Party.Select(a=>a.isAlpha))}
+                                             act2Party.rawOrder:{string.Join(",",act2Party.Select(a=>a.rawOrder))}
+                                             """);
+                        
+                    }
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 塔 (数据收集)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:19199"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_中期_塔_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(act2Tower.Count>=8) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            lock(act2Tower) {
+                
+                act2Tower.Add(sourcePosition);
+
+                act2TowerSemaphore[act2Tower.Count-1].Set();
+
+                if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"act2Tower.Count={act2Tower.Count}\nact2Tower.Last()={act2Tower.Last()}");
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 (轮次控制)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46268"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_中期_轮次控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(skinsplitterCount>=7) {
+
+                return;
+
+            }
+            
+            Interlocked.Increment(ref skinsplitterCount);
+
+            if(skinsplitterCount==1) {
+                
+                if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                    return;
+                
+                }
+                
+                System.Threading.Thread.Sleep(2000);
+                
+                var bossObject=accessory.Data.Objects.SearchById(sourceId);
+
+                if(bossObject!=null) {
+
+                    exitRotation=convertPolarToCartesian(bossObject.Rotation)+8*Math.PI;
+                    
+                }
+                
+            }
+
+            else {
+
+                exitRotation-=Math.PI/2;
+
+            }
+            
+            skinsplitterSemaphore.Set();
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"skinsplitterCount={skinsplitterCount}\nexitRotation={exitRotation}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 出口 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46267"])]
+    
+        public void 门神_细胞附身_中期_出口_指路(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+            
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="门神_细胞附身_中期_出口_指路";
+            currentProperties.Scale=new(2,12);
+            currentProperties.Owner=sourceId;
+            currentProperties.Offset=new Vector3(0,0,-8);
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=42000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46268"])]
+    
+        public void 门神_细胞附身_中期_指路(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            skinsplitterSemaphore.WaitOne();
+            
+            if(skinsplitterCount<1||skinsplitterCount>7) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            act2PartyType myStatus=act2Party[myIndex];
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"myIndex={myIndex}\nmyStatus.isAlpha={myStatus.isAlpha}\nmyStatus.rawOrder={myStatus.rawOrder}");
+                
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(skinsplitterCount==1) {
+
+                return;
+
+            }
+
+            if(skinsplitterCount==2) {
+
+                if(myStatus.isAlpha&&myStatus.rawOrder==1) {
+                    
+                    accessory.Method.RemoveDraw($"门神_细胞附身_中期_出口_指路");
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==3) {
+
+                    act2TowerSemaphore[0].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[0];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[0];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                if(!myStatus.isAlpha&&myStatus.rawOrder==1) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                }
+                
+            }
+            
+            if(skinsplitterCount==3) {
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==1) {
+
+                    act2TowerSemaphore[2].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[2];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[2];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                if(myStatus.isAlpha&&myStatus.rawOrder==2) {
+                    
+                    accessory.Method.RemoveDraw($"门神_细胞附身_中期_出口_指路");
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==3) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[0];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=2500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[0];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=2500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==4) {
+
+                    act2TowerSemaphore[1].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[1];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[1];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                if(!myStatus.isAlpha&&myStatus.rawOrder==2) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                }
+                
+                if(!myStatus.isAlpha&&myStatus.rawOrder==3) {
+
+                    act2TowerSemaphore[4].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[4];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[4];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[4];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[4];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+            }
+            
+            if(skinsplitterCount==4) {
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==1) {
+
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[2];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=7500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[2];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=7500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                if(myStatus.isAlpha&&myStatus.rawOrder==2) {
+                    
+                    act2TowerSemaphore[3].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[3];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[3];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=5000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==3) {
+                    
+                    accessory.Method.RemoveDraw($"门神_细胞附身_中期_出口_指路");
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==4) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[1];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=2500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[1];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=2500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                if(!myStatus.isAlpha&&myStatus.rawOrder==3) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                }
+                
+                if(!myStatus.isAlpha&&myStatus.rawOrder==4) {
+                    
+                    act2TowerSemaphore[5].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[5];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[5];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[5];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[5];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+            }
+            
+            if(skinsplitterCount==5) {
+
+                if(myStatus.isAlpha&&myStatus.rawOrder==2) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[3];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=7500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(3);
+                    currentProperties.Position=act2Tower[3];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.DestoryAt=7500;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                if(myStatus.isAlpha&&myStatus.rawOrder==4) {
+                    
+                    accessory.Method.RemoveDraw($"门神_细胞附身_中期_出口_指路");
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+
+                if(!myStatus.isAlpha&&myStatus.rawOrder==1) {
+                    
+                    act2TowerSemaphore[6].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[6];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[6];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[6];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[6];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                if(!myStatus.isAlpha&&myStatus.rawOrder==4) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,92),ARENA_CENTER,exitRotation+Math.PI);
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                }
+                
+            }
+            
+            if(skinsplitterCount==6) {
+
+                if(!myStatus.isAlpha&&myStatus.rawOrder==2) {
+                    
+                    act2TowerSemaphore[7].WaitOne();
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[7];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[7];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=act2Tower[7];
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=act2Tower[7];
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+            }
+            
+            if(skinsplitterCount==7) {
+
+                if(!myStatus.isAlpha) {
+                    
+                    accessory.Method.RemoveDraw($"门神_细胞附身_中期_出口_指路");
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=1000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2,20);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=1000;
+                    currentProperties.DestoryAt=4000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+                
+            }
 
         }
         
