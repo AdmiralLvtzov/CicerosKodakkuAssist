@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.10",
+        version:"0.0.0.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -96,7 +96,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             Phase 2 - 细胞附身·早期
             Phase 3 - 细胞附身·中期
             Phase 4 - 细胞附身·晚期
-            Phase 5 -
+            Phase 5 - 细胞附身·末期
             Phase 6 - 致命灾变
             Phase 7 -
         
@@ -123,6 +123,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent mitoticPhaseSemaphore=new System.Threading.AutoResetEvent(false);
         private bool? isCardinal=null; // Its read-write lock is isCardinalLock.
         private System.Threading.AutoResetEvent arenaDestructionSemaphore=new System.Threading.AutoResetEvent(false);
+
+        private volatile int act4PartyCount=0;
+        private bool[] isRottingFlesh=Enumerable.Range(0,8).Select(i=>false).ToArray();
         
         #endregion
         
@@ -232,6 +235,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             mitoticPhaseSemaphore.Reset();
             isCardinal=null;
             arenaDestructionSemaphore.Reset();
+            
+            act4PartyCount=0;
+            for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
 
         }
 
@@ -2899,6 +2905,225 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
 
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48832"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            act4PartyCount=0;
+            for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4761|4763)$"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(act4PartyCount>=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(isRottingFlesh) {
+
+                if(string.Equals(@event["StatusID"],"4763")) {
+
+                    isRottingFlesh[targetIndex]=true;
+
+                }
+                
+                if(string.Equals(@event["StatusID"],"4761")) {
+
+                    isRottingFlesh[targetIndex]=false;
+
+                }
+                
+                Interlocked.Increment(ref act4PartyCount);
+
+                if(act4PartyCount==8) {
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             isRottingFlesh:{string.Join(",",isRottingFlesh)}
+                                             """);
+                        
+                    }
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 极饿伸展 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46237"])]
+    
+        public void 门神_细胞附身_末期_极饿伸展_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(35);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi/3*2;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=4875;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+            }
+
+            else {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(35);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi/3*2;
+                currentProperties.Color=((isRottingFlesh[myIndex])?(accessory.Data.DefaultSafeColor):(accessory.Data.DefaultDangerColor));
+                currentProperties.Delay=4875;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(35);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi*2-float.Pi/3*2;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=((isRottingFlesh[myIndex])?(accessory.Data.DefaultDangerColor):(accessory.Data.DefaultSafeColor));
+                currentProperties.Delay=4875;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 极饿伸展 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46237"])]
+    
+        public void 门神_细胞附身_末期_极饿伸展_指路(Event @event,ScriptAccessory accessory) {
+
+            return; // To be removed very soon...
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            // SourcePosition...
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // ...
+        
         }
         
         #endregion
