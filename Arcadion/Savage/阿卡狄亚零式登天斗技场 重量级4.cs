@@ -13,6 +13,7 @@ using KodakkuAssist.Script;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Dalamud.Utility.Numerics;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.STD.Helper;
 using Lumina.Data.Parsing;
 
@@ -22,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.9",
+        version:"0.0.0.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -43,21 +44,21 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         #region User_Settings
         
-        [UserSetting("启用文字提示")]
+        [UserSetting("通用 启用文字提示")]
         public bool enablePrompts { get; set; } = false;
-        [UserSetting("启用原生TTS")]
+        [UserSetting("通用 启用原生TTS")]
         public bool enableVanillaTts { get; set; } = false;
-        [UserSetting("启用Daily Routines TTS (需要安装并启用Daily Routines插件!)")]
+        [UserSetting("通用 启用Daily Routines TTS (需要安装并启用Daily Routines插件!)")]
         public bool enableDailyRoutinesTts { get; set; } = false;
-        [UserSetting("机制方向的颜色")]
+        [UserSetting("通用 机制方向的颜色")]
         public ScriptColor colourOfDirectionIndicators { get; set; } = new() { V4 = new Vector4(1,1,0, 1) }; // Yellow by default.
-        [UserSetting("高度危险攻击的颜色")]
+        [UserSetting("通用 高度危险攻击的颜色")]
         public ScriptColor colourOfExtremelyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
-        [UserSetting("启用搞怪")]
-        public bool enableShenanigans { get; set; } = false;
-        [UserSetting("启用调试日志并输出到Dalamud日志中")]
+        [UserSetting("通用 启用团灭搞怪")]
+        public bool enableWipeShenanigans { get; set; } = false;
+        [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
-        [UserSetting("忽略所有阶段检查(调试用)")]
+        [UserSetting("调试 忽略所有阶段检查(调试用)")]
         public bool skipPhaseChecks { get; set; } = false;
         
         /*
@@ -67,16 +68,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         */
         
-        [UserSetting("致命灾变绿球的颜色")]
+        [UserSetting("门神 致命灾变 绿球的颜色")]
         public ScriptColor colourOfGreenSpheres { get; set; } = new() { V4 = new Vector4(0,1,0,1) }; // Green by default.
-        [UserSetting("致命灾变紫球的颜色")]
+        [UserSetting("门神 致命灾变 紫球的颜色")]
         public ScriptColor colourOfPurpleSpheres { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
-        [UserSetting("引爆细胞范围绘制延迟(秒,默认11,最大17)")]
-        public int grotesquerieStatusDelay { get; set; } = 11; // 11 by default.
-        [UserSetting("仅绘制自己的引爆细胞:指向")]
+        [UserSetting("门神 细胞附身·早期 引爆细胞范围绘制延迟(秒,默认11,最大17)")]
+        public double grotesquerieStatusDelay { get; set; } = 11; // 11 by default.
+        [UserSetting("门神 细胞附身·早期 仅绘制自己的引爆细胞:指向")]
         public bool onlyMyDirectedGrotesquerie { get; set; } = true;
-        [UserSetting("仅绘制自己的分散细胞")]
+        [UserSetting("门神 细胞附身·晚期 仅绘制自己的分散细胞")]
         public bool onlyMyMitoticPhase { get; set; } = true;
+        [UserSetting("门神 细胞附身·晚期 滴液灾变范围绘制延迟(秒,默认7.25,最大9.75)")]
+        public double venomousScourgeDelay { get; set; } = 7.25; // 7.25 by default.
 
         #endregion
         
@@ -288,7 +291,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         public void Shenanigans(Event @event,ScriptAccessory accessory) {
             
-            if(!enableShenanigans) {
+            if(!enableWipeShenanigans) {
 
                 return;
 
@@ -751,7 +754,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            durationMilliseconds-=grotesquerieStatusDelay*1000;
+            durationMilliseconds-=((int)(grotesquerieStatusDelay*1000));
 
             if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
 
@@ -764,7 +767,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.Scale=new(6);
             currentProperties.Owner=targetId;
             currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-            currentProperties.Delay=grotesquerieStatusDelay*1000;
+            currentProperties.Delay=((int)(grotesquerieStatusDelay*1000));
             currentProperties.DestoryAt=durationMilliseconds;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
@@ -809,7 +812,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
-            durationMilliseconds-=grotesquerieStatusDelay*1000;
+            durationMilliseconds-=((int)(grotesquerieStatusDelay*1000));
 
             if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
 
@@ -822,7 +825,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.Scale=new(6);
             currentProperties.Owner=targetId;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.Delay=grotesquerieStatusDelay*1000;
+            currentProperties.Delay=((int)(grotesquerieStatusDelay*1000));
             currentProperties.DestoryAt=durationMilliseconds;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
@@ -869,7 +872,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.Scale=new(60);
             currentProperties.Owner=targetId;
             currentProperties.Radian=float.Pi/6;
-            currentProperties.Delay=grotesquerieStatusDelay*1000;
+            currentProperties.Delay=((int)(grotesquerieStatusDelay*1000));
             currentProperties.DestoryAt=7200000;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             
@@ -2493,10 +2496,151 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         }
         
+        [ScriptMethod(name:"门神 细胞附身·晚期 震场 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46241|46242)$"],
+            suppress:5000)]
+    
+        public void 门神_细胞附身_晚期_震场_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            if(string.Equals(@event["ActionId"],"46241")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(20,10);
+                currentProperties.Position=ARENA_CENTER;
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(15,10);
+                currentProperties.Position=new Vector3(87.5f,0,90);
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(15,10);
+                currentProperties.Position=new Vector3(112.5f,0,90);
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(15,10);
+                currentProperties.Position=new Vector3(87.5f,0,110);
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(15,10);
+                currentProperties.Position=new Vector3(112.5f,0,110);
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"46242")) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=ARENA_CENTER;
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(10,10);
+                currentProperties.Position=new Vector3(85,0,100);
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(10,10);
+                currentProperties.Position=new Vector3(115,0,100);
+                currentProperties.Rotation=0;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=7250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 细胞爆炸 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46240|46241|46242|46243)$"],
+            suppress:5000)]
+
+        public void 门神_细胞附身_晚期_细胞爆炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(9);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=10000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+
         [ScriptMethod(name:"门神 细胞附身·晚期 塔 (指路)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(46240|46241|46242|46243)$"],
-            suppress:1000)]
+            suppress:5000)]
     
         public void 门神_细胞附身_晚期_塔_指路(Event @event,ScriptAccessory accessory) {
 
@@ -2667,6 +2811,93 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.DestoryAt=10000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 分裂灾变 (范围)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:19196"])]
+
+        public void 门神_细胞附身_晚期_分裂灾变_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10,60);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=7250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 滴液灾变 (范围)",
+            eventType:EventTypeEnum.SetObjPos,
+            eventCondition:["SourceDataId:19196"])]
+
+        public void 门神_细胞附身_晚期_滴液灾变_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            if(venomousScourgeDelay<0||venomousScourgeDelay>=9.75) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(uint i=1;i<=3;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(5);
+                currentProperties.Owner=sourceId;
+                currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+                currentProperties.CentreOrderIndex=i;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=((int)(venomousScourgeDelay*1000));
+                currentProperties.DestoryAt=9750-((int)(venomousScourgeDelay*1000));
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
 
         }
         
