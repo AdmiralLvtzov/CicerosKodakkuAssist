@@ -22,7 +22,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.8",
+        version:"0.0.0.9",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -75,6 +75,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public int grotesquerieStatusDelay { get; set; } = 11; // 11 by default.
         [UserSetting("仅绘制自己的引爆细胞:指向")]
         public bool onlyMyDirectedGrotesquerie { get; set; } = true;
+        [UserSetting("仅绘制自己的分散细胞")]
+        public bool onlyMyMitoticPhase { get; set; } = true;
 
         #endregion
         
@@ -90,7 +92,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             Phase 1 - 致命灾变
             Phase 2 - 细胞附身·早期
             Phase 3 - 细胞附身·中期
-            Phase 4 -
+            Phase 4 - 细胞附身·晚期
             Phase 5 -
             Phase 6 - 致命灾变
             Phase 7 -
@@ -113,6 +115,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent skinsplitterSemaphore=new System.Threading.AutoResetEvent(false);
         private double exitRotation=0;
         
+        private volatile int act3PartyCount=0;
+        private DirectionsOfMitoticPhase[] directionOfMitoticPhase=Enumerable.Range(0,8).Select(i=>DirectionsOfMitoticPhase.UNKNOWN).ToArray();
+        private System.Threading.AutoResetEvent mitoticPhaseSemaphore=new System.Threading.AutoResetEvent(false);
+        private bool? isCardinal=null; // Its read-write lock is isCardinalLock.
+        private System.Threading.AutoResetEvent arenaDestructionSemaphore=new System.Threading.AutoResetEvent(false);
+        
         #endregion
         
         #region Constants_And_Locks
@@ -126,6 +134,24 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 RIGHT_WHEN_ON_LEFT_SIDE=new Vector3(98,0,87);
         private static readonly Vector3 LEFT_WHEN_ON_RIGHT_SIDE=new Vector3(102,0,87);
         private static readonly Vector3 RIGHT_WHEN_ON_RIGHT_SIDE=new Vector3(110,0,87);
+        
+        private readonly object isCardinalLock=new object();
+        private static readonly Vector3 NORTH_SUPPORTER_WHEN_CARDINAL=new Vector3(96,0,114);
+        private static readonly Vector3 SOUTH_SUPPORTER_WHEN_CARDINAL=new Vector3(96,0,94);
+        private static readonly Vector3 WEST_SUPPORTER_WHEN_CARDINAL=new Vector3(111,0,96);
+        private static readonly Vector3 EAST_SUPPORTER_WHEN_CARDINAL=new Vector3(81,0,96);
+        private static readonly Vector3 NORTH_DPS_WHEN_CARDINAL=new Vector3(104,0,106);
+        private static readonly Vector3 SOUTH_DPS_WHEN_CARDINAL=new Vector3(104,0,86);
+        private static readonly Vector3 WEST_DPS_WHEN_CARDINAL=new Vector3(119,0,104);
+        private static readonly Vector3 EAST_DPS_WHEN_CARDINAL=new Vector3(89,0,104);
+        private static readonly Vector3 NORTH_SUPPORTER_WHEN_INTERCARDINAL=new Vector3(81,0,106);
+        private static readonly Vector3 SOUTH_SUPPORTER_WHEN_INTERCARDINAL=new Vector3(111,0,86);
+        private static readonly Vector3 WEST_SUPPORTER_WHEN_INTERCARDINAL=new Vector3(111,0,106);
+        private static readonly Vector3 EAST_SUPPORTER_WHEN_INTERCARDINAL=new Vector3(81,0,86);
+        private static readonly Vector3 NORTH_DPS_WHEN_INTERCARDINAL=new Vector3(89,0,114);
+        private static readonly Vector3 SOUTH_DPS_WHEN_INTERCARDINAL=new Vector3(119,0,94);
+        private static readonly Vector3 WEST_DPS_WHEN_INTERCARDINAL=new Vector3(119,0,114);
+        private static readonly Vector3 EAST_DPS_WHEN_INTERCARDINAL=new Vector3(89,0,94);
 
         #endregion
         
@@ -153,6 +179,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             public bool isAlpha=true;
             public int rawOrder=0;
 
+        }
+
+        public enum DirectionsOfMitoticPhase {
+            
+            NORTH,
+            SOUTH,
+            WEST,
+            EAST,
+            UNKNOWN
+            
         }
         
         #endregion
@@ -187,6 +223,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             skinsplitterCount=0;
             skinsplitterSemaphore.Reset();
             exitRotation=0;
+
+            act3PartyCount=0;
+            for(int i=0;i<directionOfMitoticPhase.Length;++i)directionOfMitoticPhase[i]=DirectionsOfMitoticPhase.UNKNOWN;
+            mitoticPhaseSemaphore.Reset();
+            isCardinal=null;
+            arenaDestructionSemaphore.Reset();
 
         }
 
@@ -2115,6 +2157,516 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 }
                 
             }
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48831"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_晚期_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            act3PartyCount=0;
+            for(int i=0;i<directionOfMitoticPhase.Length;++i)directionOfMitoticPhase[i]=DirectionsOfMitoticPhase.UNKNOWN;
+            mitoticPhaseSemaphore.Reset();
+            isCardinal=null;
+            arenaDestructionSemaphore.Reset();
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 分散细胞 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:3558"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_晚期_分散细胞_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(act3PartyCount>=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(directionOfMitoticPhase) {
+
+                if(string.Equals(@event["Param"],"1078")) {
+
+                    directionOfMitoticPhase[targetIndex]=DirectionsOfMitoticPhase.NORTH;
+
+                }
+                
+                if(string.Equals(@event["Param"],"1079")) {
+
+                    directionOfMitoticPhase[targetIndex]=DirectionsOfMitoticPhase.EAST;
+
+                }
+
+                if(string.Equals(@event["Param"],"1080")) {
+
+                    directionOfMitoticPhase[targetIndex]=DirectionsOfMitoticPhase.SOUTH;
+
+                }
+                
+                if(string.Equals(@event["Param"],"1081")) {
+
+                    directionOfMitoticPhase[targetIndex]=DirectionsOfMitoticPhase.WEST;
+
+                }
+
+                if(directionOfMitoticPhase[targetIndex]==DirectionsOfMitoticPhase.UNKNOWN) {
+
+                    return;
+
+                }
+                
+                Interlocked.Increment(ref act3PartyCount);
+
+                if(act3PartyCount==8) {
+
+                    mitoticPhaseSemaphore.Set();
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             directionOfMitoticPhase:{string.Join(",",directionOfMitoticPhase.Select(d=>d.ToString()))}
+                                             """);
+                        
+                    }
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 分散细胞 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:3558"])]
+    
+        public void 门神_细胞附身_晚期_分散细胞_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(onlyMyMitoticPhase) {
+
+                if(targetId!=accessory.Data.Me) {
+
+                    return;
+
+                }
+                
+            }
+
+            float currentRotation=0;
+            int currentDistance=0;
+            
+            if(string.Equals(@event["Param"],"1078")) {
+
+                currentRotation=float.Pi;
+                currentDistance=20;
+
+            }
+                
+            if(string.Equals(@event["Param"],"1079")) {
+
+                currentRotation=float.Pi/2;
+                currentDistance=30;
+
+            }
+
+            if(string.Equals(@event["Param"],"1080")) {
+
+                currentRotation=0;
+                currentDistance=20;
+
+            }
+                
+            if(string.Equals(@event["Param"],"1081")) {
+
+                currentRotation=float.Pi/2*3;
+                currentDistance=30;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"门神_细胞附身_晚期_分散细胞_范围_{targetId}";
+            currentProperties.Scale=new(2,currentDistance);
+            currentProperties.Owner=targetId;
+            currentProperties.FixRotation=true;
+            currentProperties.Rotation=currentRotation;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=7200000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            /*
+
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"门神_细胞附身_晚期_分散细胞_落点_{targetId}";
+            currentProperties.Scale=new(3);
+            currentProperties.Owner=targetId;
+            currentProperties.FixRotation=true;
+            currentProperties.Rotation=0;
+            currentProperties.Offset=new Vector3(horizontalOffset,0,verticalOffset);
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=7200000;
+
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+            // It's non-viable to achieve the intended drawing due to engine limitations.
+            // The idea may be re-enabled in the future.
+
+            */
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 分散细胞 (清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:3558"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_晚期_分散细胞_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                accessory.Method.RemoveDraw($"门神_细胞附身_晚期_分散细胞_范围_{targetId}");
+                
+                /*
+                
+                accessory.Method.RemoveDraw("^门神_细胞附身_晚期_分散细胞_箭头_.*");
+                accessory.Method.RemoveDraw("^门神_细胞附身_晚期_分散细胞_落点_.*");
+                
+                */
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_晚期_分散细胞_范围_{targetId}");
+            
+            /*
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_晚期_分散细胞_箭头_{targetId}");
+            accessory.Method.RemoveDraw($"门神_细胞附身_晚期_分散细胞_落点_{targetId}");
+            
+            */
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 盛大登场 (数据收集)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46241|46242)$"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_晚期_盛大登场_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            lock(isCardinalLock) {
+
+                if(isCardinal!=null) {
+
+                    return;
+
+                }
+
+                else {
+
+                    if(string.Equals(@event["ActionId"],"46241")) {
+
+                        isCardinal=true;
+
+                        arenaDestructionSemaphore.Set();
+
+                    }
+                    
+                    if(string.Equals(@event["ActionId"],"46242")) {
+
+                        isCardinal=false;
+                        
+                        arenaDestructionSemaphore.Set();
+
+                    }
+
+                    if(isCardinal!=null) {
+
+                        if(enableDebugLogging) {
+                            
+                            accessory.Log.Debug($"isCardinal={isCardinal}");
+                            
+                        }
+                        
+                    }
+                    
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·晚期 塔 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46240|46241|46242|46243)$"],
+            suppress:1000)]
+    
+        public void 门神_细胞附身_晚期_塔_指路(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            mitoticPhaseSemaphore.WaitOne();
+            arenaDestructionSemaphore.WaitOne();
+
+            if(isCardinal==null) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"myIndex={myIndex}\ndirectionOfMitoticPhase[{myIndex}]={directionOfMitoticPhase[myIndex].ToString()}");
+                
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(isCardinal==true) {
+
+                if(isSupporter(myIndex)) {
+
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.NORTH) {
+
+                        myPosition=NORTH_SUPPORTER_WHEN_CARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.SOUTH) {
+
+                        myPosition=SOUTH_SUPPORTER_WHEN_CARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.WEST) {
+
+                        myPosition=WEST_SUPPORTER_WHEN_CARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.EAST) {
+
+                        myPosition=EAST_SUPPORTER_WHEN_CARDINAL;
+
+                    }
+                    
+                }
+
+                if(isDps(myIndex)) {
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.NORTH) {
+
+                        myPosition=NORTH_DPS_WHEN_CARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.SOUTH) {
+
+                        myPosition=SOUTH_DPS_WHEN_CARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.WEST) {
+
+                        myPosition=WEST_DPS_WHEN_CARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.EAST) {
+
+                        myPosition=EAST_DPS_WHEN_CARDINAL;
+
+                    }
+                    
+                }
+                
+            }
+
+            if(isCardinal==false) {
+                
+                if(isSupporter(myIndex)) {
+
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.NORTH) {
+
+                        myPosition=NORTH_SUPPORTER_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.SOUTH) {
+
+                        myPosition=SOUTH_SUPPORTER_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.WEST) {
+
+                        myPosition=WEST_SUPPORTER_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.EAST) {
+
+                        myPosition=EAST_SUPPORTER_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                }
+
+                if(isDps(myIndex)) {
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.NORTH) {
+
+                        myPosition=NORTH_DPS_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.SOUTH) {
+
+                        myPosition=SOUTH_DPS_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.WEST) {
+
+                        myPosition=WEST_DPS_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                    if(directionOfMitoticPhase[myIndex]==DirectionsOfMitoticPhase.EAST) {
+
+                        myPosition=EAST_DPS_WHEN_INTERCARDINAL;
+
+                    }
+                    
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=10000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
         }
         
