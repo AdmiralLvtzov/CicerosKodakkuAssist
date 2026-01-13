@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.11",
+        version:"0.0.0.12",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            脚本刚刚创建,所有的工作都正在进行中,目前只在很少的几个机制中工作。作者正在加班加点!
+            门神主要部分已经完工,本体尚未开始施工。作者正在加班加点!
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
@@ -126,6 +126,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         private volatile int act4PartyCount=0;
         private bool[] isRottingFlesh=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private List<Vector3> fleshPile=new List<Vector3>();
+        private bool areNorthwestAndSoutheast=true;
         
         #endregion
         
@@ -158,6 +160,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 SOUTH_DPS_WHEN_INTERCARDINAL=new Vector3(119,0,94);
         private static readonly Vector3 WEST_DPS_WHEN_INTERCARDINAL=new Vector3(119,0,114);
         private static readonly Vector3 EAST_DPS_WHEN_INTERCARDINAL=new Vector3(89,0,94);
+
+        private static ImmutableList<Vector3> POSITION_ON_LEFT=[new Vector3(94,0,86),new Vector3(91,0,94),new Vector3(91,0,106),new Vector3(94,0,114)];
+        private static ImmutableList<Vector3> POSITION_ON_RIGHT=[new Vector3(106,0,86),new Vector3(109,0,94),new Vector3(109,0,106),new Vector3(106,0,114)];
+        private static ImmutableList<Vector3> SUPPORTER_POSITION=[new Vector3(81,0,86),new Vector3(81,0,95),new Vector3(81,0,105),new Vector3(81,0,114)];
+        private static ImmutableList<Vector3> DPS_POSITION=[new Vector3(119,0,86),new Vector3(119,0,95),new Vector3(119,0,105),new Vector3(119,0,114)];
 
         #endregion
         
@@ -238,6 +245,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             act4PartyCount=0;
             for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
+            fleshPile.Clear();
+            areNorthwestAndSoutheast=true;
 
         }
 
@@ -1409,6 +1418,93 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"门神 细胞附身·中期 连环有害细胞 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4753|4755)$"])]
+    
+        public void 门神_细胞附身_中期_连环有害细胞_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"门神_细胞附身_中期_连环有害细胞_范围_{targetId}";
+            currentProperties.Scale=new(4);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=durationMilliseconds;
+
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·中期 连环有害细胞 (清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:regex:^(4753|4755)$"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_中期_连环有害细胞_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                accessory.Method.RemoveDraw("^门神_细胞附身_中期_连环有害细胞_范围_.*");
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_中期_连环有害细胞_范围_{targetId}");
+        
+        }
+        
         [ScriptMethod(name:"门神 细胞附身·中期 出口 (指路)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:46267"])]
@@ -2417,7 +2513,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
                 
-                accessory.Method.RemoveDraw($"门神_细胞附身_晚期_分散细胞_范围_{targetId}");
+                accessory.Method.RemoveDraw($"门神_细胞附身_晚期_分散细胞_范围_.*");
                 
                 /*
                 
@@ -2930,6 +3026,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             act4PartyCount=0;
             for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
+            fleshPile.Clear();
+            areNorthwestAndSoutheast=true;
 
             Interlocked.Increment(ref currentPhase);
 
@@ -3090,7 +3188,105 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     
         public void 门神_细胞附身_末期_极饿伸展_指路(Event @event,ScriptAccessory accessory) {
 
-            return; // To be removed very soon...
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+                
+                return;
+                
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            Vector3 myPosition=ARENA_CENTER;
+            
+            if(sourcePosition.X<100) {
+
+                if(isRottingFlesh[myIndex]) {
+
+                    myPosition=POSITION_ON_RIGHT[myIndex%4];
+
+                }
+
+                else {
+                    
+                    myPosition=POSITION_ON_LEFT[myIndex%4];
+                    
+                }
+                
+            }
+
+            if(sourcePosition.X>100) {
+                
+                if(isRottingFlesh[myIndex]) {
+
+                    myPosition=POSITION_ON_LEFT[myIndex%4];
+
+                }
+
+                else {
+                    
+                    myPosition=POSITION_ON_RIGHT[myIndex%4];
+                    
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4875;
+            currentProperties.DestoryAt=6125;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=ARENA_CENTER;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=11000;
+            currentProperties.DestoryAt=4750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 连环有害细胞α (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:4753"])]
+    
+        public void 门神_细胞附身_末期_连环有害细胞α_范围(Event @event,ScriptAccessory accessory) {
 
             if(!isInMajorPhase1) {
 
@@ -3104,13 +3300,249 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
                 
                 return;
                 
             }
             
-            // SourcePosition...
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"门神_细胞附身_末期_连环有害细胞α_范围_{targetId}";
+            currentProperties.Scale=new(4);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=durationMilliseconds;
+
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 连环有害细胞α (清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:4753"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_连环有害细胞α_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                accessory.Method.RemoveDraw("^门神_细胞附身_末期_连环有害细胞α_范围_.*");
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_范围_{targetId}");
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 大爆炸 (数据收集)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2015017"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_大爆炸_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+
+            if(fleshPile.Count>=5) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            lock(fleshPile) {
+                
+                fleshPile.Add(sourcePosition);
+
+                if(fleshPile.Count==5) {
+
+                    areNorthwestAndSoutheast=true;
+
+                    for(int i=0;i<fleshPile.Count;++i) {
+
+                        if(Vector3.Distance(fleshPile[i],new Vector3(81,0,86))<12) {
+                            
+                            areNorthwestAndSoutheast=false;
+                            
+                        }
+                        
+                    }
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"areNorthwestAndSoutheast={areNorthwestAndSoutheast}");
+                        
+                    }
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 大爆炸 (范围)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2015017"])]
+    
+        public void 门神_细胞附身_末期_大爆炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(12);
+            currentProperties.Position=sourcePosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=12000;
+            currentProperties.DestoryAt=12500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 连环有害细胞α (指路 阶段1)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:4753"])]
+    
+        public void 门神_细胞附身_末期_连环有害细胞α_指路_阶段1(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -3120,9 +3552,231 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            Vector3 myPosition1=ARENA_CENTER;
+            Vector3 myPosition2=ARENA_CENTER;
+
+            if(isSupporter(myIndex)) {
+
+                myPosition1=SUPPORTER_POSITION[myIndex%4];
+
+            }
+
+            if(isDps(myIndex)) {
+                
+                myPosition1=DPS_POSITION[myIndex%4];
+                
+            }
+
+            if(areNorthwestAndSoutheast) {
+                
+                if(isSupporter(myIndex)) {
+
+                    myPosition2=SUPPORTER_POSITION[0];
+
+                }
+
+                if(isDps(myIndex)) {
+
+                    myPosition2=DPS_POSITION[3];
+
+                }
+                
+            }
+
+            else {
+                
+                if(isSupporter(myIndex)) {
+
+                    myPosition2=SUPPORTER_POSITION[3];
+
+                }
+
+                if(isDps(myIndex)) {
+
+                    myPosition2=DPS_POSITION[0];
+
+                }
+                
+            }
             
-            // ...
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="门神_细胞附身_末期_连环有害细胞α_指路_阶段1_1";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition1;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=durationMilliseconds;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(!(Vector3.Distance(myPosition1,myPosition2)<0.05)) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="门神_细胞附身_末期_连环有害细胞α_指路_阶段1_2";
+                currentProperties.Scale=new(2);
+                currentProperties.Position=myPosition1;
+                currentProperties.TargetPosition=myPosition2;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=durationMilliseconds;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 连环有害细胞α (指路 阶段1 清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:4753"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_连环有害细胞α_指路_阶段1_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段1_1");
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段1_2");
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段1_.*");
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 连环有害细胞α (指路 阶段2)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:4753"])]
+    
+        public void 门神_细胞附身_末期_连环有害细胞α_指路_阶段2(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+            
+            if(areNorthwestAndSoutheast) {
+                
+                if(isSupporter(myIndex)) {
+
+                    myPosition=SUPPORTER_POSITION[0];
+
+                }
+
+                if(isDps(myIndex)) {
+
+                    myPosition=DPS_POSITION[3];
+
+                }
+                
+            }
+
+            else {
+                
+                if(isSupporter(myIndex)) {
+
+                    myPosition=SUPPORTER_POSITION[3];
+
+                }
+
+                if(isDps(myIndex)) {
+
+                    myPosition=DPS_POSITION[0];
+
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="门神_细胞附身_末期_连环有害细胞α_指路_阶段2";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=7200000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 连环有害细胞α (指路 阶段2 清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46239"],
+            suppress:1000,
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_连环有害细胞α_指路_阶段2_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段1_1");
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段1_2");
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段1_.*");
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段2");
         
         }
         
