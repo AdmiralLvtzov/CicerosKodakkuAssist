@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.12",
+        version:"0.0.0.13",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -3179,6 +3179,96 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
                 
             }
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 引爆细胞与致死细胞 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4761|4763)$"])]
+    
+        public void 门神_细胞附身_末期_引爆细胞与致死细胞_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            durationMilliseconds-=7875;
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"门神_细胞附身_末期_引爆细胞与致死细胞_范围_{targetId}";
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=7875;
+            currentProperties.DestoryAt=durationMilliseconds;
+
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 细胞附身·末期 引爆细胞与致死细胞 (清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:regex:^(4761|4763)$"],
+            userControl:false)]
+    
+        public void 门神_细胞附身_末期_引爆细胞与致死细胞_清除(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                accessory.Method.RemoveDraw("^门神_细胞附身_末期_引爆细胞与致死细胞_范围_.*");
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"门神_细胞附身_末期_引爆细胞与致死细胞_范围_{targetId}");
         
         }
         
