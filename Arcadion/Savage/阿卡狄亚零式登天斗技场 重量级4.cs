@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.14",
+        version:"0.0.1.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -601,7 +601,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"门神 致命灾变 (范围)",
+        [ScriptMethod(name:"门神 致命灾变 (范围) !!!未完工,不生效!!!",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:46229"])]
     
@@ -653,7 +653,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"门神 致命灾变 (指路)",
+        [ScriptMethod(name:"门神 致命灾变 (指路) !!!未完工,不生效!!!",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:46229"])]
     
@@ -4340,11 +4340,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"门神 喋血 (范围)",
+        [ScriptMethod(name:"门神 喋血 灾变吐息与追猎重击 (范围与击退指示)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:regex:^(46283|46285|46284|46286)$"])]
     
-        public void 门神_喋血_范围(Event @event,ScriptAccessory accessory) {
+        public void 门神_喋血_灾变吐息与追猎重击_范围与击退指示(Event @event,ScriptAccessory accessory) {
 
             if(!isInMajorPhase1) {
 
@@ -4437,9 +4437,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
-                currentProperties.Scale=new(2,21.095f);
+                currentProperties.Scale=new(2,30);
                 currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X+1,0,LEFT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4448,7 +4448,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
-                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Scale=new(11.314f,4.243f);
                 currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
                 currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X-1,0,LEFT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
@@ -4458,10 +4458,34 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetObject=accessory.Data.Me;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
                 
-                currentProperties.Scale=new(2,21.095f);
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2,30);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(2,30);
                 currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X-1,0,RIGHT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4470,7 +4494,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
-                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Scale=new(11.314f,4.243f);
                 currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
                 currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X+1,0,RIGHT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
@@ -4478,6 +4502,30 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties.DestoryAt=4625;
         
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetObject=accessory.Data.Me;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2,30);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
             }
             
@@ -4485,9 +4533,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
-                currentProperties.Scale=new(2,21.095f);
+                currentProperties.Scale=new(2,30);
                 currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X-1,0,RIGHT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4496,7 +4544,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
-                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Scale=new(11.314f,4.243f);
                 currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
                 currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X+1,0,RIGHT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
@@ -4506,10 +4554,34 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetObject=accessory.Data.Me;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
                 
-                currentProperties.Scale=new(2,21.095f);
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2,30);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(2,30);
                 currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X+1,0,LEFT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4518,7 +4590,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
-                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Scale=new(11.314f,4.243f);
                 currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
                 currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X-1,0,LEFT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
@@ -4526,6 +4598,30 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties.DestoryAt=4625;
         
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetObject=accessory.Data.Me;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2,30);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
             }
 
