@@ -98,7 +98,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             Phase 4 - 细胞附身·晚期
             Phase 5 - 细胞附身·末期
             Phase 6 - 致命灾变
-            Phase 7 -
+            Phase 7 - 喋血
+            Phase 8 - 喋血
+            Phase 9 - 喋血
         
         Major Phase 2:
          
@@ -126,15 +128,27 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         private volatile int act4PartyCount=0;
         private bool[] isRottingFlesh=Enumerable.Range(0,8).Select(i=>false).ToArray();
-        private List<Vector3> fleshPile=new List<Vector3>();
+        private List<Vector3> act4FleshPile=new List<Vector3>();
         private bool areNorthwestAndSoutheast=true;
+
+        private System.Threading.ManualResetEvent slaughtershedInitializationSemaphore=new ManualResetEvent(false);
+        private bool isGlobalInitialization=false;
+        private List<Vector3> slaughtershedFleshPile=new List<Vector3>();
+        private bool isStackOnLeft=false;
+        private System.Threading.AutoResetEvent slaughtershedBurstSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int slaughtershedIconCount=0;
+        private TargetIconsOfSlaughtershed[] targetIconOfSlaughtershed=Enumerable.Range(0,8).Select(i=>TargetIconsOfSlaughtershed.NONE).ToArray();
+        private System.Threading.AutoResetEvent slaughtershedIconSemaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent slaughtershedIconSemaphore2=new System.Threading.AutoResetEvent(false);
         
         #endregion
         
         #region Constants_And_Locks
 
         private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
-        // ± 15 vertically, ± 20 horizontally.
+        // The arena is ± 15 vertically, ± 20 horizontally.
+        // The pattern squares on the arena are all 5x5.
+        // Therefore, many mechanism positions could be calculated without precise geometric construction.
         
         private static readonly Vector3 LEFT_WHEN_NORMAL_PAIR=new Vector3(96,0,87);
         private static readonly Vector3 RIGHT_WHEN_NORMAL_PAIR=new Vector3(104,0,87);
@@ -166,6 +180,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static ImmutableList<Vector3> SUPPORTER_POSITION=[new Vector3(81,0,86),new Vector3(81,0,95),new Vector3(81,0,105),new Vector3(81,0,114)];
         private static ImmutableList<Vector3> DPS_POSITION=[new Vector3(119,0,86),new Vector3(119,0,95),new Vector3(119,0,105),new Vector3(119,0,114)];
 
+        private static readonly Vector3 STACK_ON_LEFT=new Vector3(81,0,86);
+        private static readonly Vector3 STACK_ON_RIGHT=new Vector3(119,0,86);
+        private static ImmutableList<Vector3> SPREAD_ON_LEFT=[new Vector3(89.267f,0,86),new Vector3(87.836f,0,92.969f),new Vector3(81,0,86),new Vector3(81,0,94.120f)];
+        private static ImmutableList<Vector3> SPREAD_ON_RIGHT=[new Vector3(110.733f,0,86),new Vector3(112.164f,0,92.969f),new Vector3(119,0,86),new Vector3(119,0,94.120f)];
+        // The link to the related geometric constructions: https://www.geogebra.org/calculator/pgc9s43t
+        // It's in Chinese, since I completed the Chinese version of the script first, unlike M8S.
+        
+        private static readonly Vector3 LEFT_ARENA_CENTER=new Vector3(90,0,100);
+        private static readonly Vector3 RIGHT_ARENA_CENTER=new Vector3(110,0,100);
+        private static readonly Vector3 LEFT_KNOCK_BACK_CENTER=new Vector3(82,0,89);
+        private static readonly Vector3 RIGHT_KNOCK_BACK_CENTER=new Vector3(118,0,89);
+        
         #endregion
         
         #region Enumerations_And_Classes
@@ -201,6 +227,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             WEST,
             EAST,
             UNKNOWN
+            
+        }
+
+        public enum TargetIconsOfSlaughtershed {
+            
+            NONE,
+            STACK,
+            SPREAD
             
         }
         
@@ -245,8 +279,22 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             act4PartyCount=0;
             for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
-            fleshPile.Clear();
+            act4FleshPile.Clear();
             areNorthwestAndSoutheast=true;
+
+            isGlobalInitialization=true;
+            slaughtershedInitializationSemaphore.Set();
+            System.Threading.Tasks.Task.Delay(1000).ContinueWith(_=> {
+                slaughtershedInitializationSemaphore.Reset();
+                isGlobalInitialization=false;
+            });
+            slaughtershedFleshPile.Clear();
+            isStackOnLeft=false;
+            slaughtershedBurstSemaphore.Reset();
+            slaughtershedIconCount=0;
+            for(int i=0;i<targetIconOfSlaughtershed.Length;++i)targetIconOfSlaughtershed[i]=TargetIconsOfSlaughtershed.NONE;
+            slaughtershedIconSemaphore1.Reset();
+            slaughtershedIconSemaphore2.Reset();
 
         }
 
@@ -1075,6 +1123,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
             
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             currentProperties.Scale=new(6);
@@ -1111,7 +1165,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -3026,7 +3093,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             act4PartyCount=0;
             for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
-            fleshPile.Clear();
+            act4FleshPile.Clear();
             areNorthwestAndSoutheast=true;
 
             Interlocked.Increment(ref currentPhase);
@@ -3484,7 +3551,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(fleshPile.Count>=5) {
+            if(act4FleshPile.Count>=5) {
 
                 return;
 
@@ -3504,17 +3571,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            lock(fleshPile) {
+            lock(act4FleshPile) {
                 
-                fleshPile.Add(sourcePosition);
+                act4FleshPile.Add(sourcePosition);
 
-                if(fleshPile.Count==5) {
+                if(act4FleshPile.Count==5) {
 
                     areNorthwestAndSoutheast=true;
 
-                    for(int i=0;i<fleshPile.Count;++i) {
+                    for(int i=0;i<act4FleshPile.Count;++i) {
 
-                        if(Vector3.Distance(fleshPile[i],new Vector3(81,0,86))<12) {
+                        if(Vector3.Distance(act4FleshPile[i],new Vector3(81,0,86))<12) {
                             
                             areNorthwestAndSoutheast=false;
                             
@@ -3524,7 +3591,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                     if(enableDebugLogging) {
                         
-                        accessory.Log.Debug($"areNorthwestAndSoutheast={areNorthwestAndSoutheast}");
+                        accessory.Log.Debug($"""
+                                             areNorthwestAndSoutheast={areNorthwestAndSoutheast}
+                                             act4FleshPile:{string.Join(",",act4FleshPile)}
+                                             """);
                         
                     }
 
@@ -3868,6 +3938,597 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             accessory.Method.RemoveDraw($"门神_细胞附身_末期_连环有害细胞α_指路_阶段2");
         
+        }
+        
+        [ScriptMethod(name:"门神 喋血 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46275|46276|46277|46278)$"],
+            userControl:false)]
+    
+        public void 门神_喋血_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(!(6<=currentPhase&&currentPhase<9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            slaughtershedInitializationSemaphore.Reset();
+            slaughtershedFleshPile.Clear();
+            isStackOnLeft=false;
+            slaughtershedBurstSemaphore.Reset();
+            slaughtershedIconCount=0;
+            for(int i=0;i<targetIconOfSlaughtershed.Length;++i)targetIconOfSlaughtershed[i]=TargetIconsOfSlaughtershed.NONE;
+            slaughtershedIconSemaphore1.Reset();
+            slaughtershedIconSemaphore2.Reset();
+
+            Interlocked.Increment(ref currentPhase);
+            
+            slaughtershedInitializationSemaphore.Set();
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 喋血 大爆炸 (数据收集)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2015017"],
+            userControl:false)]
+    
+        public void 门神_喋血_大爆炸_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            bool isinitialized=slaughtershedInitializationSemaphore.WaitOne(3000);
+
+            if(!isinitialized) {
+
+                return;
+
+            }
+
+            if(isGlobalInitialization) {
+
+                return;
+
+            }
+            
+            if(!(7<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+
+            if(slaughtershedFleshPile.Count>=5) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            lock(slaughtershedFleshPile) {
+                
+                slaughtershedFleshPile.Add(sourcePosition);
+
+                if(slaughtershedFleshPile.Count==5) {
+
+                    slaughtershedInitializationSemaphore.Reset();
+
+                    isStackOnLeft=false;
+
+                    for(int i=0;i<slaughtershedFleshPile.Count;++i) {
+
+                        if(Vector3.Distance(slaughtershedFleshPile[i],new Vector3(83,0,88))<12) {
+                            
+                            isStackOnLeft=true;
+                            
+                        }
+                        
+                    }
+
+                    slaughtershedBurstSemaphore.Set();
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             isStackOnLeft={isStackOnLeft}
+                                             slaughtershedFleshPile:{string.Join(",",slaughtershedFleshPile)}
+                                             """);
+                        
+                    }
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神 喋血 大爆炸 (范围)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2015017"])]
+    
+        public void 门神_喋血_大爆炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(!(7<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(12);
+            currentProperties.Position=sourcePosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=14250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"门神 喋血 细胞轰炸与细胞爆炸 (数据收集)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:regex:^(0177|013D)$"],
+            userControl:false)]
+    
+        public void 门神_喋血_细胞轰炸与细胞爆炸_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(!(7<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(slaughtershedIconCount>=5) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(targetIconOfSlaughtershed) {
+
+                if(string.Equals(@event["Id"],"013D")) {
+
+                    targetIconOfSlaughtershed[targetIndex]=TargetIconsOfSlaughtershed.STACK;
+
+                }
+                
+                if(string.Equals(@event["Id"],"0177")) {
+
+                    targetIconOfSlaughtershed[targetIndex]=TargetIconsOfSlaughtershed.SPREAD;
+
+                }
+                
+                Interlocked.Increment(ref slaughtershedIconCount);
+
+                if(slaughtershedIconCount==5) {
+
+                    slaughtershedIconSemaphore1.Set();
+                    slaughtershedIconSemaphore2.Set();
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             targetIconOfSlaughtershed:{string.Join(",",targetIconOfSlaughtershed.Select(t=>t.ToString()))}
+                                             """);
+                        
+                    }
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"门神 喋血 细胞轰炸 (范围)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:013D"])]
+    
+        public void 门神_喋血_细胞轰炸_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(!(7<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            slaughtershedIconSemaphore2.WaitOne();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=accessory.Data.PartyList[targetIndex];
+            currentProperties.Color=((targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.SPREAD)?(accessory.Data.DefaultDangerColor):(accessory.Data.DefaultSafeColor));
+            currentProperties.DestoryAt=7125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 喋血 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46275|46276|46277|46278)$"])]
+    
+        public void 门神_喋血_指路(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+            
+            if(!(6<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            slaughtershedBurstSemaphore.WaitOne();
+            slaughtershedIconSemaphore1.WaitOne();
+
+            if(!(7<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(isStackOnLeft) {
+
+                if(targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.STACK
+                   ||
+                   targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.NONE) {
+
+                    myPosition=STACK_ON_LEFT;
+
+                }
+
+                if(targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.SPREAD) {
+
+                    myPosition=SPREAD_ON_RIGHT[myIndex%4];
+
+                }
+                
+            }
+
+            else {
+                
+                if(targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.STACK
+                   ||
+                   targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.NONE) {
+
+                    myPosition=STACK_ON_RIGHT;
+
+                }
+
+                if(targetIconOfSlaughtershed[myIndex]==TargetIconsOfSlaughtershed.SPREAD) {
+
+                    myPosition=SPREAD_ON_LEFT[myIndex%4];
+
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=7125;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"门神 喋血 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(46283|46285|46284|46286)$"])]
+    
+        public void 门神_喋血_范围(Event @event,ScriptAccessory accessory) {
+
+            if(!isInMajorPhase1) {
+
+                return;
+
+            }
+            
+            if(!(7<=currentPhase&&currentPhase<=9)&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            // 46283: Left line first
+            // 46285: Right line first
+            // 46284: Left knock-back first
+            // 46286: Right knock-back first
+
+            if(string.Equals(@event["ActionId"],"46283")) {
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=LEFT_ARENA_CENTER;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=RIGHT_ARENA_CENTER;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=RIGHT_ARENA_CENTER;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"46285")) {
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=RIGHT_ARENA_CENTER;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=LEFT_ARENA_CENTER;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20,30);
+                currentProperties.Position=LEFT_ARENA_CENTER;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                
+            }
+
+            if(string.Equals(@event["ActionId"],"46284")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(2,21.095f);
+                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X-1,0,LEFT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(2,21.095f);
+                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X+1,0,RIGHT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"46286")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(2,21.095f);
+                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X+1,0,RIGHT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.Delay=7500;
+                currentProperties.DestoryAt=6125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(2,21.095f);
+                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=ARENA_CENTER;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(8.944f,8.944f);
+                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X-1,0,LEFT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.Delay=13625;
+                currentProperties.DestoryAt=4625;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+            }
+
         }
         
         #endregion
