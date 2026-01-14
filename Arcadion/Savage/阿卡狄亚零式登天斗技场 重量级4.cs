@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.0.13",
+        version:"0.0.0.14",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            门神主要部分已经完工,本体尚未开始施工。作者正在加班加点!
+            门神已经基本完工,本体尚未开始施工。作者正在加班加点!
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
