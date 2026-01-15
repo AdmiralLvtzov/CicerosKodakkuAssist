@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.0",
+        version:"0.0.1.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -58,8 +58,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public bool enableWipeShenanigans { get; set; } = false;
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
-        [UserSetting("调试 忽略所有阶段检查(调试用)")]
+        [UserSetting("调试 忽略所有阶段检查")]
         public bool skipPhaseChecks { get; set; } = false;
+        [UserSetting("调试 从本体开始")]
+        public bool startFromMajorPhase2 { get; set; } = false;
         
         /*
         
@@ -86,6 +88,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         #region Variables_And_Semaphores
         
         private volatile bool isInMajorPhase1=true;
+        private volatile bool initializedMajorPhase1=false;
+        private volatile bool initializedMajorPhase2=false;
         private volatile int currentPhase=0;
         
         /*
@@ -246,15 +250,29 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             accessory.Method.RemoveDraw(".*");
             
-            Variable_And_Semaphore_Initialization();
+            if(startFromMajorPhase2) {
+
+                isInMajorPhase1=false;
+
+            }
+
+            else {
+
+                isInMajorPhase1=true;
+
+            }
+            
+            initializedMajorPhase1=false;
+            initializedMajorPhase2=false;
+            
+            VariableAndSemaphoreInitialization();
             
             targetIconBaseId=null;
 
         }
 
-        private void Variable_And_Semaphore_Initialization() {
+        private void VariableAndSemaphoreInitialization() {
             
-            isInMajorPhase1=true;
             currentPhase=0;
             
             sphere.Clear();
@@ -4625,6 +4643,68 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
 
+        }
+        
+        #endregion
+        
+        #region Major_Phase_Control
+
+        [ScriptMethod(name:"门神本体切换控制 门神识别 补天之手",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46295"],
+            userControl:false)]
+    
+        public void 门神本体切换控制_门神识别_补天之手(Event @event,ScriptAccessory accessory) {
+
+            if(initializedMajorPhase1) {
+
+                return;
+
+            }
+
+            else {
+                
+                initializedMajorPhase1=true;
+                isInMajorPhase1=true;
+                VariableAndSemaphoreInitialization();
+
+                if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}");
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"门神本体切换控制 本体识别 境中奇焰",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46376"],
+            userControl:false)]
+    
+        public void 门神本体切换控制_本体识别_境中奇焰(Event @event,ScriptAccessory accessory) {
+
+            if(initializedMajorPhase2) {
+
+                return;
+
+            }
+
+            else {
+                
+                initializedMajorPhase2=true;
+                isInMajorPhase1=false;
+                VariableAndSemaphoreInitialization();
+
+                if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}");
+                    
+                }
+
+            }
+        
         }
         
         #endregion
