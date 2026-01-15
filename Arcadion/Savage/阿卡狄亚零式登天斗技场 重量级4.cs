@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.1",
+        version:"0.0.1.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -82,6 +82,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public bool onlyMyMitoticPhase { get; set; } = true;
         [UserSetting("门神 细胞附身·晚期 滴液灾变范围绘制延迟(秒,默认7.25,最大9.75)")]
         public double venomousScourgeDelay { get; set; } = 7.25; // 7.25 by default.
+        [UserSetting("本体 强力魔法的颜色")]
+        public ScriptColor colourOfMightyMagic { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
+        [UserSetting("本体 天顶猛击的颜色")]
+        public ScriptColor colourOfTopTierSlam { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
 
         #endregion
         
@@ -107,6 +111,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             Phase 9 - 喋血
         
         Major Phase 2:
+        
+            Phase 1 - 自我复制
+            Phase 2 -
          
         */
 
@@ -144,6 +151,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private TargetIconsOfSlaughtershed[] targetIconOfSlaughtershed=Enumerable.Range(0,8).Select(i=>TargetIconsOfSlaughtershed.NONE).ToArray();
         private System.Threading.AutoResetEvent slaughtershedIconSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent slaughtershedIconSemaphore2=new System.Threading.AutoResetEvent(false);
+
+        private bool? isFrontAndBackDuringReplication=null;
+        private volatile int replicationLindschratCount=0; // Its read-write lock is replicationLindschratCountLock.
         
         #endregion
         
@@ -195,6 +205,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 RIGHT_ARENA_CENTER=new Vector3(110,0,100);
         private static readonly Vector3 LEFT_KNOCK_BACK_CENTER=new Vector3(82,0,89);
         private static readonly Vector3 RIGHT_KNOCK_BACK_CENTER=new Vector3(118,0,89);
+        
+        private readonly object replicationLindschratCountLock=new object();
         
         #endregion
         
@@ -313,6 +325,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             for(int i=0;i<targetIconOfSlaughtershed.Length;++i)targetIconOfSlaughtershed[i]=TargetIconsOfSlaughtershed.NONE;
             slaughtershedIconSemaphore1.Reset();
             slaughtershedIconSemaphore2.Reset();
+
+            isFrontAndBackDuringReplication=null;
+            replicationLindschratCount=0;
 
         }
 
@@ -4711,7 +4726,553 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         #region Major_Phase_2
 
+        [ScriptMethod(name:"本体 自我复制 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46296"],
+            userControl:false)]
+    
+        public void 本体_自我复制_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=0&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+
+            isFrontAndBackDuringReplication=null;
+            replicationLindschratCount=0;
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
         
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 有翼灾变 (数据收集)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46298|46299)$"],
+            userControl:false)]
+    
+        public void 本体_自我复制_有翼灾变_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(isFrontAndBackDuringReplication!=null) {
+
+                return;
+
+            }
+            
+            // 46298: Front and back
+            // 46299: Left and right
+
+            if(string.Equals(@event["ActionId"],"46298")) {
+
+                isFrontAndBackDuringReplication=true;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"46299")) {
+                
+                isFrontAndBackDuringReplication=false;
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 有翼灾变 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46298|46299)$"])]
+    
+        public void 本体_自我复制_有翼灾变_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(string.Equals(@event["ActionId"],"46298")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(50);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi/6;
+                currentProperties.Rotation=0;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(50);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi/6;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"46299")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(50);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi/6;
+                currentProperties.Rotation=float.Pi/2;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(50);
+                currentProperties.Owner=sourceId;
+                currentProperties.Radian=float.Pi/6;
+                currentProperties.Rotation=-float.Pi/2;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 强力魔法 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46303"])]
+    
+        public void 本体_自我复制_强力魔法_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfMightyMagic.V4.WithW(1);
+            currentProperties.DestoryAt=4250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=2;
+            currentProperties.Color=colourOfMightyMagic.V4.WithW(1);
+            currentProperties.DestoryAt=4250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 天顶猛击 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46301"])]
+    
+        public void 本体_自我复制_天顶猛击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfTopTierSlam.V4.WithW(1);
+            currentProperties.DestoryAt=3250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 蛇踢 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46375"])]
+    
+        public void 本体_自我复制_蛇踢_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(50);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+
+        [ScriptMethod(name:"本体 自我复制 双重飞踢 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46368|46373)$"])]
+
+        public void 本体_自我复制_双重飞踢_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+
+                return;
+
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+
+            if(string.Equals(@event["ActionId"],"46368")) {
+
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=5500;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"46373")) {
+
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4500;
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 魔力连击 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46368"])]
+    
+        public void 本体_自我复制_魔力连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=10125;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=2;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=10125;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 自我复制 人形分身 (类型指示)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46297"])]
+    
+        public void 本体_自我复制_人形分身_类型指示(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["SourceDataId"],"19204")) {
+
+                return;
+
+            }
+
+            if(replicationLindschratCount>=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            lock(replicationLindschratCountLock) {
+
+                Interlocked.Increment(ref replicationLindschratCount);
+
+                if(replicationLindschratCount<=4) {
+                    
+                    double sourceRotation=0;
+
+                    try {
+                        
+                        sourceRotation=JsonConvert.DeserializeObject<double>(@event["SourceRotation"]);
+
+                    } catch(Exception e) {
+                
+                        accessory.Log.Error("SourceRotation deserialization failed.");
+
+                        return;
+
+                    }
+
+                    if(Math.Abs(sourceRotation-0)>0.005) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                        currentProperties.Scale=new(1);
+                        currentProperties.Owner=sourceId;
+                        currentProperties.Color=colourOfTopTierSlam.V4.WithW(1);
+                        currentProperties.DestoryAt=7375;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+
+                    else {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                        currentProperties.Scale=new(1);
+                        currentProperties.Owner=sourceId;
+                        currentProperties.Color=colourOfMightyMagic.V4.WithW(1);
+                        currentProperties.DestoryAt=8500;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+                    
+                }
+
+                if(5<=replicationLindschratCount&&replicationLindschratCount<=8) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(1);
+                    currentProperties.Owner=sourceId;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=7125;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                     
+                     if(isFrontAndBackDuringReplication==null) {
+
+                        return;
+
+                    }
+
+                    else {
+
+                        if((bool)isFrontAndBackDuringReplication) {
+                            
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(50);
+                            currentProperties.Owner=sourceId;
+                            currentProperties.Radian=float.Pi/6;
+                            currentProperties.FixRotation=true;
+                            currentProperties.Rotation=0;
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                            currentProperties.Delay=1000;
+                            currentProperties.DestoryAt=2500;
+        
+                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(50);
+                            currentProperties.Owner=sourceId;
+                            currentProperties.Radian=float.Pi/6;
+                            currentProperties.FixRotation=true;
+                            currentProperties.Rotation=float.Pi;
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                            currentProperties.Delay=1000;
+                            currentProperties.DestoryAt=2500;
+        
+                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                            
+                        }
+
+                        else {
+                            
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(50);
+                            currentProperties.Owner=sourceId;
+                            currentProperties.Radian=float.Pi/6;
+                            currentProperties.FixRotation=true;
+                            currentProperties.Rotation=float.Pi/2;
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                            currentProperties.Delay=1000;
+                            currentProperties.DestoryAt=2500;
+        
+                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(50);
+                            currentProperties.Owner=sourceId;
+                            currentProperties.Radian=float.Pi/6;
+                            currentProperties.FixRotation=true;
+                            currentProperties.Rotation=-float.Pi/2;
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                            currentProperties.Delay=1000;
+                            currentProperties.DestoryAt=2500;
+        
+                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                            
+                        }
+                        
+                    }
+                    
+                }
+
+            }
+            
+        }
         
         #endregion
         
