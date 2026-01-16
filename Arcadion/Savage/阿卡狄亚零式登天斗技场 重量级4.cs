@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.3",
+        version:"0.0.1.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            门神已经基本完工,目前正在加班加点施工本体!
+            门神已经基本完工,正在加班加点施工本体。目前正在施工二运。
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
@@ -63,6 +63,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         [UserSetting("调试 从本体开始")]
         public bool startFromMajorPhase2 { get; set; } = false;
         
+        // ----- Major Phase 1 -----
+        
         /*
         
         [UserSetting("致命灾变引导顺序")]
@@ -82,10 +84,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public bool onlyMyMitoticPhase { get; set; } = true;
         [UserSetting("门神 细胞附身·晚期 滴液灾变范围绘制延迟(秒,默认7.25,最大9.75)")]
         public double venomousScourgeDelay { get; set; } = 7.25; // 7.25 by default.
+        
+        // ----- End Of Major Phase 1 -----
+        
+        // ----- Major Phase 2 -----
+        
         [UserSetting("本体 强力魔法的颜色")]
         public ScriptColor colourOfMightyMagic { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
         [UserSetting("本体 天顶猛击的颜色")]
         public ScriptColor colourOfTopTierSlam { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
+        
+        // ----- End Of Major Phase 2 -----
 
         #endregion
         
@@ -112,10 +121,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         Major Phase 2:
         
-            Phase 1 - 自我复制
-            Phase 2 -
+            Phase 1 - 自我复制(一运)
+            Phase 2 - 模仿细胞(二运)
+            Phase 3 -
          
         */
+        
+        // ----- Major Phase 1 -----
 
         private List<sphereType> sphere=new List<sphereType>();
         private List<int> leftOrder=new List<int>();
@@ -152,17 +164,28 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent slaughtershedIconSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent slaughtershedIconSemaphore2=new System.Threading.AutoResetEvent(false);
 
-        private bool? isFrontAndBackDuringReplication=null;
-        private volatile int replicationLindschratCount=0; // Its read-write lock is replicationLindschratCountLock.
+        // ----- End Of Major Phase 1 -----
+        
+        // ----- Major Phase 2 -----
+        
+        private bool? isFrontAndBackInPhase1=null;
+        private volatile int phase1LindschratCount=0; // Its read-write lock is phase1LindschratCountLock.
+        
+        private int[] phase2Staging=Enumerable.Range(0,8).Select(i=>-1).ToArray();
+        
+        // ----- End Of Major Phase 2 -----
         
         #endregion
         
         #region Constants_And_Locks
 
         private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
-        // The arena is ± 15 vertically, ± 20 horizontally.
-        // The pattern squares on the arena are all 5x5.
-        // Therefore, many mechanism positions could be calculated without precise geometric construction.
+        // The arena during Major Phase 1 is a rectangle, ± 15 vertically and ± 20 horizontally.
+        // All the pattern squares on it are 5×5.
+        // Therefore, many positions during Major Phase 1 could be calculated without precise geometric construction.
+        // The arena during Major Phase 2 is a circle with a radius of 20.
+        
+        // ----- Major Phase 1 -----
         
         private static readonly Vector3 LEFT_WHEN_NORMAL_PAIR=new Vector3(96,0,87);
         private static readonly Vector3 RIGHT_WHEN_NORMAL_PAIR=new Vector3(104,0,87);
@@ -206,7 +229,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 LEFT_KNOCK_BACK_CENTER=new Vector3(82,0,89);
         private static readonly Vector3 RIGHT_KNOCK_BACK_CENTER=new Vector3(118,0,89);
         
-        private readonly object replicationLindschratCountLock=new object();
+        // ----- End Of Major Phase 1 -----
+        
+        // ----- Major Phase 2 -----
+        
+        private readonly object phase1LindschratCountLock=new object();
+        
+        // ----- End Of Major Phase 2 -----
         
         #endregion
         
@@ -287,6 +316,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             currentPhase=0;
             
+            // ----- Major Phase 1 -----
+            
             sphere.Clear();
             leftOrder.Clear();
             rightOrder.Clear();
@@ -326,8 +357,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             slaughtershedIconSemaphore1.Reset();
             slaughtershedIconSemaphore2.Reset();
 
-            isFrontAndBackDuringReplication=null;
-            replicationLindschratCount=0;
+            // ----- End Of Major Phase 1 -----
+            
+            // ----- Major Phase 2 -----
+
+            isFrontAndBackInPhase1=null;
+            phase1LindschratCount=0;
+            
+            for(int i=0;i<phase2Staging.Length;++i)phase2Staging[i]=-1;
+            
+            // ----- End Of Major Phase 2 -----
 
         }
 
@@ -4747,8 +4786,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
 
-            isFrontAndBackDuringReplication=null;
-            replicationLindschratCount=0;
+            isFrontAndBackInPhase1=null;
+            phase1LindschratCount=0;
 
             Interlocked.Increment(ref currentPhase);
 
@@ -4779,7 +4818,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(isFrontAndBackDuringReplication!=null) {
+            if(isFrontAndBackInPhase1!=null) {
 
                 return;
 
@@ -4790,13 +4829,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             if(string.Equals(@event["ActionId"],"46298")) {
 
-                isFrontAndBackDuringReplication=true;
+                isFrontAndBackInPhase1=true;
 
             }
             
             if(string.Equals(@event["ActionId"],"46299")) {
                 
-                isFrontAndBackDuringReplication=false;
+                isFrontAndBackInPhase1=false;
                 
             }
             
@@ -5125,7 +5164,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(replicationLindschratCount>=8) {
+            if(phase1LindschratCount>=8) {
 
                 return;
 
@@ -5139,11 +5178,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            lock(replicationLindschratCountLock) {
+            lock(phase1LindschratCountLock) {
 
-                Interlocked.Increment(ref replicationLindschratCount);
+                Interlocked.Increment(ref phase1LindschratCount);
 
-                if(replicationLindschratCount<=4) {
+                if(phase1LindschratCount<=4) {
                     
                     double sourceRotation=0;
 
@@ -5223,7 +5262,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                     
                 }
 
-                if(5<=replicationLindschratCount&&replicationLindschratCount<=8) {
+                if(5<=phase1LindschratCount&&phase1LindschratCount<=8) {
                     
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
@@ -5234,7 +5273,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                      
-                     if(isFrontAndBackDuringReplication==null) {
+                     if(isFrontAndBackInPhase1==null) {
 
                         return;
 
@@ -5242,7 +5281,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                     else {
 
-                        if((bool)isFrontAndBackDuringReplication) {
+                        if((bool)isFrontAndBackInPhase1) {
                             
                             currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -5308,6 +5347,39 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46305"],
+            userControl:false)]
+    
+        public void 本体_模仿细胞_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            for(int i=0;i<phase2Staging.Length;++i)phase2Staging[i]=-1;
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
         }
         
         #endregion
