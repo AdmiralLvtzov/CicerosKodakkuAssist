@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.4",
+        version:"0.0.1.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -220,9 +220,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 STACK_ON_LEFT=new Vector3(81,0,86);
         private static readonly Vector3 STACK_ON_RIGHT=new Vector3(119,0,86);
         private static ImmutableList<Vector3> SPREAD_ON_LEFT=[new Vector3(89.267f,0,86),new Vector3(87.836f,0,92.969f),new Vector3(81,0,86),new Vector3(81,0,94.120f)];
-        private static ImmutableList<Vector3> SPREAD_ON_RIGHT=[new Vector3(110.733f,0,86),new Vector3(112.164f,0,92.969f),new Vector3(119,0,86),new Vector3(119,0,94.120f)];
-        // The link to the related geometric constructions: https://www.geogebra.org/calculator/pgc9s43t
-        // It's in Chinese, since I completed the Chinese version of the script first, unlike M8S.
+        private static ImmutableList<Vector3> SPREAD_ON_RIGHT=[new Vector3(111.477f,0,85.5f),new Vector3(112.944f,0,94.963f),new Vector3(119.5f,0,85.5f),new Vector3(119.5f,0,93.700f)];
+        // The two cases are not mirror images! The links to the related geometric constructions:
+        // Spread on left: https://www.geogebra.org/calculator/pgc9s43t
+        // Spread on right: https://www.geogebra.org/calculator/wkyqdy4y
+        // They're both in Simplified Chinese, since I completed the Simplified Chinese version of the script first, unlike M8S.
         
         private static readonly Vector3 LEFT_ARENA_CENTER=new Vector3(90,0,100);
         private static readonly Vector3 RIGHT_ARENA_CENTER=new Vector3(110,0,100);
@@ -471,6 +473,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
+            accessory.Method.RemoveDraw(".*");
+            
             sphere.Clear();
             leftOrder.Clear();
             rightOrder.Clear();
@@ -657,19 +661,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             currentProperties.Scale=new(1);
             currentProperties.Position=new Vector3(leftX,0,88+2.5f*currentRound);
-            currentProperties.Color=((sphere[leftSphere].isGreen)?(colourOfGreenSpheres.V4.WithW(3)):(colourOfPurpleSpheres.V4.WithW(3)));
+            currentProperties.Color=((sphere[leftSphere].isGreen)?(colourOfGreenSpheres.V4.WithW(1)):(colourOfPurpleSpheres.V4.WithW(1)));
             currentProperties.DestoryAt=10750+625*currentRound;
         
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
             currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
             currentProperties.Scale=new(1);
             currentProperties.Position=new Vector3(rightX,0,88+2.5f*currentRound);
-            currentProperties.Color=((sphere[rightSphere].isGreen)?(colourOfGreenSpheres.V4.WithW(3)):(colourOfPurpleSpheres.V4.WithW(3)));
+            currentProperties.Color=((sphere[rightSphere].isGreen)?(colourOfGreenSpheres.V4.WithW(1)):(colourOfPurpleSpheres.V4.WithW(1)));
             currentProperties.DestoryAt=10750+625*currentRound;
         
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
         
         }
         
@@ -840,6 +844,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Method.RemoveDraw(".*");
 
             Interlocked.Increment(ref currentPhase);
 
@@ -1283,6 +1289,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Method.RemoveDraw(".*");
             
             act2PartyCount=0;
             for(int i=0;i<act2Party.Length;++i)act2Party[i]=new act2PartyType();
@@ -2425,6 +2433,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
+            accessory.Method.RemoveDraw(".*");
+            
             act3PartyCount=0;
             for(int i=0;i<directionOfMitoticPhase.Length;++i)directionOfMitoticPhase[i]=DirectionsOfMitoticPhase.UNKNOWN;
             mitoticPhaseSemaphore.Reset();
@@ -3162,6 +3172,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             System.Threading.Thread.MemoryBarrier();
+            
+            accessory.Method.RemoveDraw(".*");
             
             act4PartyCount=0;
             for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
@@ -4033,6 +4045,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
+            accessory.Method.RemoveDraw(".*");
+            
             slaughtershedInitializationSemaphore.Reset();
             slaughtershedFleshPile.Clear();
             isStackOnLeft=false;
@@ -4785,6 +4799,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             System.Threading.Thread.MemoryBarrier();
+            
+            // accessory.Method.RemoveDraw(".*");
 
             isFrontAndBackInPhase1=null;
             phase1LindschratCount=0;
@@ -5369,6 +5385,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             System.Threading.Thread.MemoryBarrier();
+            
+            // accessory.Method.RemoveDraw(".*");
             
             for(int i=0;i<phase2Staging.Length;++i)phase2Staging[i]=-1;
 
