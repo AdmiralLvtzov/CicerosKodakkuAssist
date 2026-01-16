@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.2",
+        version:"0.0.1.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            门神已经基本完工,本体尚未开始施工。作者正在加班加点!
+            门神已经基本完工,目前正在加班加点施工本体!
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
@@ -5159,7 +5159,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                     }
 
-                    if(Math.Abs(sourceRotation-0)>0.005) {
+                    if(Math.Abs(sourceRotation-0)>0.00001) {
                         
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
@@ -5169,6 +5169,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         currentProperties.DestoryAt=7375;
         
                         accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=sourceId;
+                        currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                        currentProperties.CentreOrderIndex=1;
+                        currentProperties.Color=colourOfTopTierSlam.V4.WithW(1);
+                        currentProperties.Delay=1000;
+                        currentProperties.DestoryAt=3625;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
                         
                     }
 
@@ -5182,6 +5194,30 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         currentProperties.DestoryAt=8500;
         
                         accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=sourceId;
+                        currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                        currentProperties.CentreOrderIndex=1;
+                        currentProperties.Color=colourOfMightyMagic.V4.WithW(1);
+                        currentProperties.Delay=1000;
+                        currentProperties.DestoryAt=3625;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=sourceId;
+                        currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                        currentProperties.CentreOrderIndex=2;
+                        currentProperties.Color=colourOfMightyMagic.V4.WithW(1);
+                        currentProperties.Delay=1000;
+                        currentProperties.DestoryAt=3625;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
                         
                     }
                     
