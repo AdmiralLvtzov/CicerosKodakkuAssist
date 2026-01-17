@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.5",
+        version:"0.0.1.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -60,6 +60,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public bool enableDebugLogging { get; set; } = false;
         [UserSetting("调试 忽略所有阶段检查")]
         public bool skipPhaseChecks { get; set; } = false;
+        [UserSetting("调试 在阶段切换时保留绘制")]
+        public bool preserveDrawingsWhileSwitchingPhase { get; set; } = false;
         [UserSetting("调试 从本体开始")]
         public bool startFromMajorPhase2 { get; set; } = false;
         
@@ -171,7 +173,17 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private bool? isFrontAndBackInPhase1=null;
         private volatile int phase1LindschratCount=0; // Its read-write lock is phase1LindschratCountLock.
         
-        private int[] phase2Staging=Enumerable.Range(0,8).Select(i=>-1).ToArray();
+        private ulong phase2BossId=0;
+        private volatile int phase2PlayerStagingCount=0;
+        private int[] phase2PlayerStaging=Enumerable.Range(0,8).Select(i=>-1).ToArray();
+        private volatile int phase2LindschratCount=0;
+        private Phase2TetherActions[] phase2Lindschrat=Enumerable.Range(0,6).Select(i=>Phase2TetherActions.UNKNOWN).ToArray();
+        private System.Threading.AutoResetEvent phase2LindschratSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase2StagingActionCount=0;
+        private List<Phase2TetherActions>[] phase2StagingActions=Enumerable.Range(0,8).Select(i=>new List<Phase2TetherActions>()).ToArray();
+        private volatile bool phase2DisableGuidance=false;
+        private System.Threading.AutoResetEvent phase2StagingActionSemaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2StagingActionSemaphore2=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -285,6 +297,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
         }
         
+        public enum Phase2TetherActions {
+            
+            FAN,
+            STACK,
+            DEFAMATION,
+            BOSS_COMBO,
+            UNKNOWN
+            
+        }
+        
         #endregion
         
         #region Initialization
@@ -366,8 +388,18 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             isFrontAndBackInPhase1=null;
             phase1LindschratCount=0;
             
-            for(int i=0;i<phase2Staging.Length;++i)phase2Staging[i]=-1;
-            
+            phase2BossId=0;
+            phase2PlayerStagingCount=0;
+            for(int i=0;i<phase2PlayerStaging.Length;++i)phase2PlayerStaging[i]=-1;
+            phase2LindschratCount=0;
+            for(int i=0;i<phase2Lindschrat.Length;++i)phase2Lindschrat[i]=Phase2TetherActions.UNKNOWN;
+            phase2LindschratSemaphore.Reset();
+            phase2StagingActionCount=0;
+            for(int i=0;i<phase2StagingActions.Length;++i)phase2StagingActions[i].Clear();
+            phase2DisableGuidance=false;
+            phase2StagingActionSemaphore1.Reset();
+            phase2StagingActionSemaphore2.Reset();
+
             // ----- End Of Major Phase 2 -----
 
         }
@@ -472,8 +504,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             System.Threading.Thread.MemoryBarrier();
-            
-            accessory.Method.RemoveDraw(".*");
+
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
             
             sphere.Clear();
             leftOrder.Clear();
@@ -845,7 +881,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
 
             Interlocked.Increment(ref currentPhase);
 
@@ -1290,7 +1330,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
             
             act2PartyCount=0;
             for(int i=0;i<act2Party.Length;++i)act2Party[i]=new act2PartyType();
@@ -2433,7 +2477,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
             
             act3PartyCount=0;
             for(int i=0;i<directionOfMitoticPhase.Length;++i)directionOfMitoticPhase[i]=DirectionsOfMitoticPhase.UNKNOWN;
@@ -3173,7 +3221,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
             
             act4PartyCount=0;
             for(int i=0;i<isRottingFlesh.Length;++i)isRottingFlesh[i]=false;
@@ -4045,7 +4097,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
             
             slaughtershedInitializationSemaphore.Reset();
             slaughtershedFleshPile.Clear();
@@ -4318,6 +4374,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 return;
 
             }
+
+            slaughtershedIconSemaphore2.WaitOne();
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
 
@@ -4326,8 +4384,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 return;
 
             }
-
-            slaughtershedIconSemaphore2.WaitOne();
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -4800,7 +4856,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            // accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
 
             isFrontAndBackInPhase1=null;
             phase1LindschratCount=0;
@@ -5386,9 +5446,31 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             System.Threading.Thread.MemoryBarrier();
             
-            // accessory.Method.RemoveDraw(".*");
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+
+            phase2BossId=0;
+            phase2PlayerStagingCount=0;
+            for(int i=0;i<phase2PlayerStaging.Length;++i)phase2PlayerStaging[i]=-1;
+            phase2LindschratCount=0;
+            for(int i=0;i<phase2Lindschrat.Length;++i)phase2Lindschrat[i]=Phase2TetherActions.UNKNOWN;
+            phase2LindschratSemaphore.Reset();
+            phase2StagingActionCount=0;
+            for(int i=0;i<phase2StagingActions.Length;++i)phase2StagingActions[i].Clear();
+            phase2DisableGuidance=false;
+            phase2StagingActionSemaphore1.Reset();
+            phase2StagingActionSemaphore2.Reset();
             
-            for(int i=0;i<phase2Staging.Length;++i)phase2Staging[i]=-1;
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            phase2BossId=sourceId;
 
             Interlocked.Increment(ref currentPhase);
 
@@ -5398,6 +5480,759 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
         
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 模仿细胞 (数据收集)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0175"],
+            userControl:false)]
+    
+        public void 本体_模仿细胞_模仿细胞_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2PlayerStagingCount>=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=19210) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
+
+            if(discretizedPosition<0||discretizedPosition>7) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(phase2PlayerStaging) {
+
+                phase2PlayerStaging[targetIndex]=discretizedPosition;
+
+                Interlocked.Increment(ref phase2PlayerStagingCount);
+
+                if(phase2PlayerStagingCount==8) {
+
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             phase2PlayerStaging:{string.Join(",",phase2PlayerStaging)}
+                                             """);
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 模仿细胞 (分身指示)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0175"])]
+    
+        public void 本体_模仿细胞_模仿细胞_分身指示(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=19210) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=sourcePosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=12625;
+                
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 人形分身 (数据收集)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(016F|0171|0170)$"],
+            userControl:false)]
+    
+        public void 本体_模仿细胞_人形分身_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2LindschratCount>=6) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=19204) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,6);
+
+            if(discretizedPosition<0||discretizedPosition>5) {
+
+                return;
+
+            }
+
+            lock(phase2Lindschrat) {
+                
+                if(phase2Lindschrat[discretizedPosition]!=Phase2TetherActions.UNKNOWN) {
+
+                    return;
+
+                }
+                
+                // 016F: Fan
+                // 0171: Stack
+                // 0170: Defamation
+                // 0176: Boss combo
+
+                if(string.Equals(@event["Id"],"016F")) {
+
+                    phase2Lindschrat[discretizedPosition]=Phase2TetherActions.FAN;
+
+                }
+                
+                if(string.Equals(@event["Id"],"0171")) {
+
+                    phase2Lindschrat[discretizedPosition]=Phase2TetherActions.STACK;
+
+                }
+                
+                if(string.Equals(@event["Id"],"0170")) {
+
+                    phase2Lindschrat[discretizedPosition]=Phase2TetherActions.DEFAMATION;
+
+                }
+
+                Interlocked.Increment(ref phase2LindschratCount);
+
+                if(phase2LindschratCount==6) {
+
+                    phase2LindschratSemaphore.Set();
+
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             phase2Lindschrat:{string.Join(",",phase2Lindschrat.Select(p=>p.ToString()))}
+                                             """);
+                        
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 人形分身 (接线指路)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["Id:7750"],
+            suppress:1000)]
+    
+        public void 本体_模仿细胞_人形分身_接线指路(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["SourceDataId"],"19204")) {
+
+                return;
+
+            }
+
+            phase2LindschratSemaphore.WaitOne();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(phase2PlayerStaging[myIndex]==4) {
+
+                for(int i=0;i<6;++i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Position=rotatePosition(new Vector3(100,0,90),ARENA_CENTER,Math.PI/3*i);
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=8000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=new Vector3(100,0,119);
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=8000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            }
+
+            if(phase2PlayerStaging[myIndex]==0) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetObject=phase2BossId;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=8000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=phase2BossId;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=8000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+            if(phase2PlayerStaging[myIndex]!=4&&phase2PlayerStaging[myIndex]!=0) {
+                
+                int myDiscretizedPosition=-1;
+                Vector3 myPosition=ARENA_CENTER;
+
+                Phase2TetherActions myAction=phase2PlayerStaging[myIndex] switch {
+                    
+                    1 => Phase2TetherActions.FAN,
+                    2 => Phase2TetherActions.STACK,
+                    3 => Phase2TetherActions.DEFAMATION,
+                    4 => Phase2TetherActions.BOSS_COMBO,
+                    5 => Phase2TetherActions.DEFAMATION,
+                    6 => Phase2TetherActions.STACK,
+                    7 => Phase2TetherActions.FAN,
+                    _ => Phase2TetherActions.UNKNOWN
+                    
+                };
+
+                if(myAction==Phase2TetherActions.UNKNOWN||myAction==Phase2TetherActions.BOSS_COMBO) {
+
+                    return;
+
+                }
+
+                if(1<=phase2PlayerStaging[myIndex]&&phase2PlayerStaging[myIndex]<=3) {
+
+                    for(int i=0;i<6;++i) {
+
+                        if(phase2Lindschrat[i]==myAction) {
+
+                            myDiscretizedPosition=i;
+
+                            break;
+
+                        }
+                        
+                    }
+                    
+                }
+                
+                if(5<=phase2PlayerStaging[myIndex]&&phase2PlayerStaging[myIndex]<=7) {
+
+                    for(int i=5;i>=0;--i) {
+
+                        if(phase2Lindschrat[i]==myAction) {
+
+                            myDiscretizedPosition=i;
+
+                            break;
+
+                        }
+                        
+                    }
+                    
+                }
+
+                if(myDiscretizedPosition<0||myDiscretizedPosition>5) {
+
+                    return;
+
+                }
+                
+                myPosition=rotatePosition(new Vector3(100,0,90),ARENA_CENTER,Math.PI/3*myDiscretizedPosition);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=8000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Position=myPosition;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=8000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+            }
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"myIndex={myIndex}\nphase2PlayerStaging[{myIndex}]={phase2PlayerStaging[myIndex]}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 模仿细胞 (技能记录)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0175"],
+            userControl:false)]
+    
+        public void 本体_模仿细胞_模仿细胞_技能记录(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2StagingActionCount>=7) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=19204&&sourceObject.DataId!=19202) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            int targetStaging=phase2PlayerStaging[targetIndex];
+
+            if(targetStaging<0||targetStaging>7) {
+
+                return;
+
+            }
+
+            lock(phase2StagingActions) {
+
+                /*if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"""
+                                         targetIndex={targetIndex}
+                                         targetStaging={targetStaging}
+                                         """);
+                    
+                }*/
+
+                if(sourceObject.DataId==19202) {
+                    
+                    phase2StagingActions[targetStaging].Add(Phase2TetherActions.BOSS_COMBO);
+
+                    Interlocked.Increment(ref phase2StagingActionCount);
+
+                }
+
+                if(sourceObject.DataId==19204) {
+                    
+                    Vector3 sourcePosition=ARENA_CENTER;
+
+                    try {
+
+                        sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+                    } catch(Exception e) {
+                
+                        accessory.Log.Error("SourcePosition deserialization failed.");
+
+                        return;
+
+                    }
+            
+                    int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,6);
+
+                    if(discretizedPosition<0||discretizedPosition>5) {
+
+                        return;
+
+                    }
+
+                    if(phase2Lindschrat[discretizedPosition]==Phase2TetherActions.UNKNOWN||phase2Lindschrat[discretizedPosition]==Phase2TetherActions.BOSS_COMBO) {
+
+                        return;
+
+                    }
+
+                    phase2StagingActions[targetStaging].Add(phase2Lindschrat[discretizedPosition]);
+                    
+                    Interlocked.Increment(ref phase2StagingActionCount);
+
+                }
+
+                if(phase2StagingActionCount==7) {
+
+                    phase2DisableGuidance=false;
+
+                    if(phase2StagingActions[0].Count!=1||phase2StagingActions[0][0]!=Phase2TetherActions.BOSS_COMBO) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[1].Count!=1||phase2StagingActions[1][0]!=Phase2TetherActions.FAN) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[2].Count!=1||phase2StagingActions[2][0]!=Phase2TetherActions.STACK) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[3].Count!=1||phase2StagingActions[3][0]!=Phase2TetherActions.DEFAMATION) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[4].Count!=0) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[5].Count!=1||phase2StagingActions[5][0]!=Phase2TetherActions.DEFAMATION) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[6].Count!=1||phase2StagingActions[6][0]!=Phase2TetherActions.STACK) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+                    
+                    if(phase2StagingActions[7].Count!=1||phase2StagingActions[7][0]!=Phase2TetherActions.FAN) {
+
+                        phase2DisableGuidance=true;
+
+                    }
+
+                    phase2StagingActionSemaphore1.Set();
+                    phase2StagingActionSemaphore2.Set();
+
+                    if(enableDebugLogging) {
+
+                        string log=string.Empty;
+
+                        for(int i=0;i<phase2StagingActions.Length;++i) {
+
+                            log+=$"""
+                                  phase2StagingActions[{i}].Count={phase2StagingActions[i].Count}
+                                  phase2StagingActions[{i}]:{string.Join(",",phase2StagingActions[i].Select(p=>p.ToString()))}
+                                  """;
+
+                            log+="\n";
+
+                        }
+
+                        log+=$"phase2DisableGuidance={phase2DisableGuidance}";
+                        
+                        accessory.Log.Debug(log);
+
+                    }
+
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 因接线处理错误禁用指路 (文字提示与TTS)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0175"],
+            suppress:1000)]
+    
+        public void 本体_模仿细胞_因接线处理错误禁用指路_文字提示与TTS(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=19202) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            phase2StagingActionSemaphore2.WaitOne();
+
+            if(phase2DisableGuidance) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo("接线处理错误,指路已禁用。",2500,true);
+                    
+                }
+                
+                accessory.tts("接线处理错误,指路已禁用。",enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+
         }
         
         #endregion
