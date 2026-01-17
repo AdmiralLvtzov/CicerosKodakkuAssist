@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.8",
+        version:"0.0.1.9",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -1572,6 +1572,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         [ScriptMethod(name:"门神 细胞附身·中期 (轮次控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:46268"],
+            suppress:4000,
             userControl:false)]
     
         public void 门神_细胞附身_中期_轮次控制(Event @event,ScriptAccessory accessory) {
@@ -2562,6 +2563,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             lock(directionOfMitoticPhase) {
+
+                if(directionOfMitoticPhase[targetIndex]!=DirectionsOfMitoticPhase.UNKNOWN) {
+
+                    return;
+
+                }
 
                 if(string.Equals(@event["Param"],"1078")) {
 
