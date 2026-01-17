@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.6",
+        version:"0.0.1.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -95,6 +95,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public ScriptColor colourOfMightyMagic { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
         [UserSetting("本体 天顶猛击的颜色")]
         public ScriptColor colourOfTopTierSlam { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
+        [UserSetting("本体 魔力爆发的颜色")]
+        public ScriptColor colourOfManaBurst { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
+        [UserSetting("本体 落火飞溅的颜色")]
+        public ScriptColor colourOfFirefallSplash { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         
         // ----- End Of Major Phase 2 -----
 
@@ -184,6 +188,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private volatile bool phase2DisableGuidance=false;
         private System.Threading.AutoResetEvent phase2StagingActionSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2StagingActionSemaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2StagingActionSemaphore3=new System.Threading.AutoResetEvent(false);
+        private volatile bool isRecordingScaldingWaves=false;
+        private List<int> phase2ScaldingWavesPlayers=new List<int>();
+        private volatile bool isRecordingManaBurst=false;
         
         // ----- End Of Major Phase 2 -----
         
@@ -248,6 +256,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         // ----- Major Phase 2 -----
         
         private readonly object phase1LindschratCountLock=new object();
+
+        private static ImmutableList<Vector3> PHASE2_TETHER_POSITION=[new Vector3(100,0,87),new Vector3(102.296f,0,81.457f),new Vector3(105.543f,0,84.704f),new Vector3(117.502f,0,107.395f),
+                                                                      new Vector3(100,0,119),new Vector3(82.498f,0,107.395f),new Vector3(94.457f,0,84.704f),new Vector3(97.704f,0,81.457f)];
+        private static readonly Vector3 PHASE2_STAGING2_STACK_POSITION=new Vector3(104.243f,0,91.243f);
+        private static readonly Vector3 PHASE2_STAGING6_STACK_POSITION=new Vector3(95.757f,0,91.243f);
+        // The link to the related geometric constructions:
+        // https://www.geogebra.org/calculator/xpke2dmn
         
         // ----- End Of Major Phase 2 -----
         
@@ -399,6 +414,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase2DisableGuidance=false;
             phase2StagingActionSemaphore1.Reset();
             phase2StagingActionSemaphore2.Reset();
+            phase2StagingActionSemaphore3.Reset();
+            isRecordingScaldingWaves=false;
+            phase2ScaldingWavesPlayers.Clear();
+            isRecordingManaBurst=false;
 
             // ----- End Of Major Phase 2 -----
 
@@ -5463,6 +5482,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase2DisableGuidance=false;
             phase2StagingActionSemaphore1.Reset();
             phase2StagingActionSemaphore2.Reset();
+            phase2StagingActionSemaphore3.Reset();
+            isRecordingScaldingWaves=true;
+            phase2ScaldingWavesPlayers.Clear();
+            isRecordingManaBurst=true;
             
             if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
                 
@@ -6138,6 +6161,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                     phase2StagingActionSemaphore1.Set();
                     phase2StagingActionSemaphore2.Set();
+                    phase2StagingActionSemaphore3.Set();
 
                     if(enableDebugLogging) {
 
@@ -6219,7 +6243,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            phase2StagingActionSemaphore2.WaitOne();
+            phase2StagingActionSemaphore3.WaitOne();
 
             if(phase2DisableGuidance) {
 
@@ -6235,6 +6259,529 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"本体 模仿细胞 Boss连击与人形分身连击 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46307"])]
+
+        public void 本体_模仿细胞_Boss连击与人形分身连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase2StagingActionSemaphore2.WaitOne();
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<8;++i) {
+
+                if(phase2StagingActions[i].Contains(Phase2TetherActions.BOSS_COMBO)) {
+
+                    int currentIndex=Array.IndexOf(phase2PlayerStaging,i);
+
+                    if(!isLegalPartyIndex(currentIndex)) {
+
+                        continue;
+
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(5);
+                    currentProperties.Owner=accessory.Data.PartyList[currentIndex];
+                    currentProperties.Color=colourOfFirefallSplash.V4.WithW(1);
+                    currentProperties.DestoryAt=5875;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                    for(uint j=1;j<=4;++j) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(50);
+                        currentProperties.Owner=accessory.Data.PartyList[currentIndex];
+                        currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                        currentProperties.TargetOrderIndex=j;
+                        currentProperties.Radian=float.Pi/12;
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.DestoryAt=6500;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                        
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(20);
+                    currentProperties.Owner=accessory.Data.PartyList[currentIndex];
+                    currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+                    currentProperties.CentreOrderIndex=1;
+                    currentProperties.Color=colourOfManaBurst.V4.WithW(1);
+                    currentProperties.DestoryAt=8000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                }
+                
+            }
+
+            for(int i=0;i<8;++i) {
+
+                if(phase2StagingActions[i].Contains(Phase2TetherActions.DEFAMATION)) {
+                    
+                    int currentIndex=Array.IndexOf(phase2PlayerStaging,i);
+                    
+                    if(!isLegalPartyIndex(currentIndex)) {
+
+                        continue;
+
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(20);
+                    currentProperties.Owner=accessory.Data.PartyList[currentIndex];
+                    currentProperties.Color=colourOfManaBurst.V4.WithW(1);
+                    currentProperties.DestoryAt=8000;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+            }
+            
+            for(int i=0;i<8;++i) {
+
+                if(phase2StagingActions[i].Contains(Phase2TetherActions.STACK)) {
+                    
+                    int currentIndex=Array.IndexOf(phase2PlayerStaging,i);
+                    
+                    if(!isLegalPartyIndex(currentIndex)) {
+
+                        continue;
+
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(5);
+                    currentProperties.Owner=accessory.Data.PartyList[currentIndex];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=5500;
+                    
+                    /*
+
+                    if(phase2DisableGuidance) {
+                        
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        
+                    }
+
+                    else {
+                        
+                        int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+                        if(!isLegalPartyIndex(myIndex)) {
+
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+                        }
+
+                        else {
+
+                            int currentStaging=i;
+                            int myStaging=phase2PlayerStaging[myIndex];
+                            
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+                            if((0<=currentStaging&&currentStaging<=3)
+                               &&
+                               (0<=myStaging&&myStaging<=3)) {
+                                
+                                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                                
+                            }
+                            
+                            if((4<=currentStaging&&currentStaging<=7)
+                               &&
+                               (4<=myStaging&&myStaging<=7)) {
+                                
+                                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                                
+                            }
+
+                        }
+                        
+                    }
+                    
+                    // I abandoned the idea of introducing dynamic colours for stack,
+                    // since I just realized users would be unable to turn it off when they turned off the guidance feature,
+                    // and it wasn't worth a dedicated configuration option either.
+                    
+                    */
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+            }
+            
+            for(int i=0;i<8;++i) {
+
+                if(phase2StagingActions[i].Contains(Phase2TetherActions.FAN)) {
+                    
+                    int currentIndex=Array.IndexOf(phase2PlayerStaging,i);
+                    
+                    if(!isLegalPartyIndex(currentIndex)) {
+
+                        continue;
+
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(50);
+                    currentProperties.Owner=accessory.Data.PartyList[currentIndex];
+                    currentProperties.Radian=float.Pi/6;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=7750;
+
+                    if(accessory.Data.PartyList[currentIndex]==accessory.Data.Me) {
+
+                        currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+
+                    }
+
+                    else {
+                        
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        
+                    }
+                    
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 Boss连击与人形分身连击 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46307"])]
+
+        public void 本体_模仿细胞_Boss连击与人形分身连击_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase2StagingActionSemaphore1.WaitOne();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            int myStaging=phase2PlayerStaging[myIndex];
+
+            if(myStaging<0||myStaging>7) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=PHASE2_TETHER_POSITION[myStaging];
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=8000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(myStaging==2||myStaging==6) {
+
+                myPosition=ARENA_CENTER;
+
+                if(myStaging==2) {
+
+                    myPosition=PHASE2_STAGING2_STACK_POSITION;
+
+                }
+                
+                if(myStaging==6) {
+
+                    myPosition=PHASE2_STAGING6_STACK_POSITION;
+
+                }
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=8000;
+                currentProperties.DestoryAt=5500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            }
+
+            else {
+
+                int targetIndex=-1;
+
+                if(0<=myStaging&&myStaging<=3) {
+
+                    targetIndex=Array.IndexOf(phase2PlayerStaging,2);
+
+                }
+                
+                if(4<=myStaging&&myStaging<=7) {
+                    
+                    targetIndex=Array.IndexOf(phase2PlayerStaging,6);
+                    
+                }
+
+                if(!isLegalPartyIndex(targetIndex)) {
+
+                    return;
+
+                }
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetObject=accessory.Data.PartyList[targetIndex];
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=8000;
+                currentProperties.DestoryAt=5500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 炎波 (数据收集)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46309"],
+            userControl:false)]
+
+        public void 本体_模仿细胞_炎波_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!isRecordingScaldingWaves) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["SourceDataId"],"9020")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(phase2ScaldingWavesPlayers) {
+                
+                phase2ScaldingWavesPlayers.Add(targetIndex);
+
+                if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"targetIndex={targetIndex}\n{targetIndex} was hit by Scalding Waves.");
+                    
+                }
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 魔力爆发 (数据收集)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46311"],
+            userControl:false)]
+
+        public void 本体_模仿细胞_魔力爆发_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!isRecordingManaBurst) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["SourceDataId"],"9020")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            int targetStaging=phase2PlayerStaging[targetIndex];
+
+            if(targetStaging<0||targetStaging>7) {
+
+                return;
+
+            }
+
+            lock(phase2StagingActions) {
+
+                if(!phase2StagingActions[targetStaging].Contains(Phase2TetherActions.DEFAMATION)) {
+                    
+                    phase2StagingActions[targetStaging].Add(Phase2TetherActions.DEFAMATION);
+
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"targetIndex={targetIndex}\ntargetStaging={targetStaging}\n{Phase2TetherActions.DEFAMATION.ToString()} was added to phase2StagingActions[{targetStaging}].");
+
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 炎波与魔力爆发 (数据收集控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46316"],
+            userControl:false)]
+
+        public void 本体_模仿细胞_炎波与魔力爆发_数据收集控制(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            isRecordingScaldingWaves=false;
+            isRecordingManaBurst=false;
+
+        }
+        
+        [ScriptMethod(name:"本体 模仿细胞 蛇踢 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46375"])]
+    
+        public void 本体_模仿细胞_蛇踢_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(50);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+
         #endregion
         
         #region Commons
