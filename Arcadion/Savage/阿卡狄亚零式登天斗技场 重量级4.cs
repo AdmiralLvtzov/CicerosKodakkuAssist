@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.11",
+        version:"0.0.1.12",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            门神已经基本完工,正在加班加点施工本体。目前正在施工三运。
+            门神已经基本完工,正在加班加点施工本体。目前正在施工四运。
             
             如果脚本中的指路不适配你采用的攻略,可以在方法设置中将指路关闭。所有指路方法名称中均标注有"指路"一词。
 
@@ -304,12 +304,40 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             public float x=100;
             public bool isGreen=true;
 
+            public sphereType() {
+
+                this.x=100;
+                this.isGreen=true;
+
+            }
+
+            public sphereType(sphereType original) {
+                
+                this.x=original.x;
+                this.isGreen=original.isGreen;
+                
+            }
+
         }
 
         public class act2PartyType {
 
             public bool isAlpha=true;
             public int rawOrder=0;
+
+            public act2PartyType() {
+
+                this.isAlpha=true;
+                this.rawOrder=0;
+
+            }
+            
+            public act2PartyType(act2PartyType original) {
+                
+                this.isAlpha=original.isAlpha;
+                this.rawOrder=original.rawOrder;
+                
+            }
 
         }
 
@@ -345,6 +373,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             public Vector3 position=ARENA_CENTER;
             public string dataId=string.Empty;
+
+            public manaSphereType() {
+
+                this.position=ARENA_CENTER;
+                this.dataId=string.Empty;
+
+            }
+
+            public manaSphereType(manaSphereType original) {
+
+                this.position=original.position;
+                this.dataId=original.dataId;
+
+            }
 
         }
         
@@ -687,6 +729,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 return;
 
             }
+            
+            System.Threading.Thread.Sleep(1375);
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             
@@ -6536,6 +6580,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
+            if(phase2DisableGuidance) {
+
+                return;
+
+            }
+
             phase2StagingActionSemaphore1.WaitOne();
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
@@ -7347,6 +7397,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
+            if(phase2DisableGuidance) {
+
+                return;
+
+            }
+            
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
             if(!isLegalPartyIndex(myIndex)) {
@@ -7656,13 +7712,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                                 if(phase3RightManaSphere[i].position.Z<100) {
 
-                                    phase3UpperSphereToBeDelayed=phase3RightManaSphere[i];
+                                    phase3UpperSphereToBeDelayed=new manaSphereType(phase3RightManaSphere[i]);
 
                                 }
                                 
                                 if(phase3RightManaSphere[i].position.Z>100) {
 
-                                    phase3LowerSphereToBeDelayed=phase3RightManaSphere[i];
+                                    phase3LowerSphereToBeDelayed=new manaSphereType(phase3RightManaSphere[i]);
 
                                 }
 
@@ -7696,13 +7752,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                                 if(phase3LeftManaSphere[i].position.Z<100) {
 
-                                    phase3UpperSphereToBeDelayed=phase3LeftManaSphere[i];
+                                    phase3UpperSphereToBeDelayed=new manaSphereType(phase3LeftManaSphere[i]);
 
                                 }
                                 
                                 if(phase3LeftManaSphere[i].position.Z>100) {
 
-                                    phase3LowerSphereToBeDelayed=phase3LeftManaSphere[i];
+                                    phase3LowerSphereToBeDelayed=new manaSphereType(phase3LeftManaSphere[i]);
 
                                 }
 
@@ -8003,6 +8059,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
+            if(phase3DisableDrawings) {
+
+                return;
+
+            }
+
             for(int i=0;i<phase3LeftManaSphere.Count;++i) {
 
                 if(isNaturalXOnLeftInPhase3) {
@@ -8015,9 +8077,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         
                     }
                     
-                    if(phase3LeftManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId
-                       ||
-                       phase3LeftManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
+                    else {
                         
                         DrawInPhase3(accessory,phase3LeftManaSphere[i].dataId,true,2);
                         
@@ -8055,9 +8115,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         
                     }
                     
-                    if(phase3RightManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId
-                       ||
-                       phase3RightManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
+                    else {
                         
                         DrawInPhase3(accessory,phase3RightManaSphere[i].dataId,false,2);
                         
@@ -8162,6 +8220,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             currentProperties.Scale=new(60);
             currentProperties.InnerScale=new(5);
+            currentProperties.Radian=float.Pi*2;
             currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
             currentProperties.Color=accessory.Data.DefaultDangerColor;
 
