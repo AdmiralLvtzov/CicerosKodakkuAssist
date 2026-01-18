@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.9",
+        version:"0.0.1.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -99,6 +99,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public ScriptColor colourOfManaBurst { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
         [UserSetting("本体 落火飞溅的颜色")]
         public ScriptColor colourOfFirefallSplash { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
+        [UserSetting("本体 变异细胞(三运) 坦克单独撞球")]
+        public bool tankStackSoloDuringMutatingCells { get; set; } = false;
         
         // ----- End Of Major Phase 2 -----
 
@@ -129,7 +131,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
             Phase 1 - 自我复制(一运)
             Phase 2 - 模仿细胞(二运)
-            Phase 3 -
+            Phase 3 - 变异细胞(三运)
+            Phase 4 -
          
         */
         
@@ -189,9 +192,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent phase2StagingActionSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2StagingActionSemaphore2=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2StagingActionSemaphore3=new System.Threading.AutoResetEvent(false);
-        private volatile bool isRecordingScaldingWaves=false;
+        private volatile bool isRecordingScaldingWavesInPhase2=false;
         private List<int> phase2ScaldingWavesPlayers=new List<int>();
-        private volatile bool isRecordingManaBurst=false;
+        private volatile bool isRecordingManaBurstInPhase2=false;
+
+        private volatile int phase3PartyCount=0;
+        private bool[] isVulnerableInPhase3=Enumerable.Range(0,8).Select(i=>true).ToArray();
+        private List<manaSphereType> phase3LeftManaSphere=new List<manaSphereType>(); // Its read-write lock is phase3ManaSphereLock.
+        private List<manaSphereType> phase3RightManaSphere=new List<manaSphereType>(); // Its read-write lock is phase3ManaSphereLock.
+        private volatile bool isNaturalXOnLeftInPhase3=false;
+        private manaSphereType phase3UpperSphereToBeDelayed=null;
+        private manaSphereType phase3LowerSphereToBeDelayed=null;
+        private System.Threading.AutoResetEvent phase3GuidanceSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile bool phase3DisableDrawings=false;
         
         // ----- End Of Major Phase 2 -----
         
@@ -268,6 +281,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         // The link to the related geometric constructions:
         // https://www.geogebra.org/calculator/zx3rpyxa
         
+        private readonly object phase3ManaSphereLock=new object();
+        
         // ----- End Of Major Phase 2 -----
         
         #endregion
@@ -324,6 +339,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             BOSS_COMBO,
             UNKNOWN
             
+        }
+
+        public class manaSphereType {
+            
+            public Vector3 position=ARENA_CENTER;
+            public string dataId=string.Empty;
+
         }
         
         #endregion
@@ -419,9 +441,19 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase2StagingActionSemaphore1.Reset();
             phase2StagingActionSemaphore2.Reset();
             phase2StagingActionSemaphore3.Reset();
-            isRecordingScaldingWaves=false;
+            isRecordingScaldingWavesInPhase2=false;
             phase2ScaldingWavesPlayers.Clear();
-            isRecordingManaBurst=false;
+            isRecordingManaBurstInPhase2=false;
+            
+            phase3PartyCount=0;
+            for(int i=0;i<isVulnerableInPhase3.Length;++i)isVulnerableInPhase3[i]=true;
+            phase3LeftManaSphere.Clear();
+            phase3RightManaSphere.Clear();
+            isNaturalXOnLeftInPhase3=false;
+            phase3UpperSphereToBeDelayed=null;
+            phase3LowerSphereToBeDelayed=null;
+            phase3GuidanceSemaphore.Reset();
+            phase3DisableDrawings=false;
 
             // ----- End Of Major Phase 2 -----
 
@@ -5494,9 +5526,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase2StagingActionSemaphore1.Reset();
             phase2StagingActionSemaphore2.Reset();
             phase2StagingActionSemaphore3.Reset();
-            isRecordingScaldingWaves=true;
+            isRecordingScaldingWavesInPhase2=true;
             phase2ScaldingWavesPlayers.Clear();
-            isRecordingManaBurst=true;
+            isRecordingManaBurstInPhase2=true;
             
             if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
                 
@@ -6622,7 +6654,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(!isRecordingScaldingWaves) {
+            if(!isRecordingScaldingWavesInPhase2) {
 
                 return;
 
@@ -6681,7 +6713,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(!isRecordingManaBurst) {
+            if(!isRecordingManaBurstInPhase2) {
 
                 return;
 
@@ -6752,8 +6784,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            isRecordingScaldingWaves=false;
-            isRecordingManaBurst=false;
+            isRecordingScaldingWavesInPhase2=false;
+            isRecordingManaBurstInPhase2=false;
 
         }
         
@@ -7386,6 +7418,530 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46341"],
+            userControl:false)]
+    
+        public void 本体_变异细胞_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+            
+            phase3PartyCount=0;
+            for(int i=0;i<isVulnerableInPhase3.Length;++i)isVulnerableInPhase3[i]=true;
+            phase3LeftManaSphere.Clear();
+            phase3RightManaSphere.Clear();
+            isNaturalXOnLeftInPhase3=false;
+            phase3UpperSphereToBeDelayed=null;
+            phase3LowerSphereToBeDelayed=null;
+            phase3GuidanceSemaphore.Reset();
+            phase3DisableDrawings=false;
+
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 变异细胞 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4769|4771)$"],
+            userControl:false)]
+    
+        public void 本体_变异细胞_变异细胞_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase3PartyCount>=8) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(isVulnerableInPhase3) {
+
+                if(string.Equals(@event["StatusID"],"4769")) {
+
+                    isVulnerableInPhase3[targetIndex]=true;
+
+                }
+                
+                if(string.Equals(@event["StatusID"],"4771")) {
+
+                    isVulnerableInPhase3[targetIndex]=false;
+
+                }
+
+                Interlocked.Increment(ref phase3PartyCount);
+
+                if(phase3PartyCount==8) {
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             isVulnerableInPhase3:{string.Join(",",isVulnerableInPhase3)}
+                                             """);
+                        
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (数据收集)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46333"],
+            userControl:false)]
+    
+        public void 本体_变异细胞_魔力晶球_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase3LeftManaSphere.Count+phase3RightManaSphere.Count>=8) {
+
+                return;
+
+            }
+
+            if(!(new[]{"19206","19207","19208","19209"}.Contains(@event["SourceDataId"]))) {
+
+                return;
+
+            }
+            
+            // 19206: Circle
+            // 19207: Donut
+            // 19208: Front and back
+            // 19209: Left and right
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            bool isOnLeft=false;
+
+            if(sourcePosition.X<100) {
+
+                isOnLeft=true;
+
+            }
+
+            else {
+
+                isOnLeft=false;
+
+            }
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            manaSphereType currentSphere=new manaSphereType();
+
+            currentSphere.position=effectPosition;
+            currentSphere.dataId=@event["SourceDataId"];
+
+            lock(phase3ManaSphereLock) {
+                
+                if(isOnLeft) {
+                    
+                    phase3LeftManaSphere.Add(currentSphere);
+                    
+                }
+
+                else {
+                    
+                    phase3RightManaSphere.Add(currentSphere);
+                    
+                }
+
+                if(phase3LeftManaSphere.Count+phase3RightManaSphere.Count==8) {
+
+                    isNaturalXOnLeftInPhase3=true;
+
+                    for(int i=0;i<phase3LeftManaSphere.Count;++i) {
+
+                        if(Math.Abs(phase3LeftManaSphere[i].position.Z-100)<7) {
+
+                            isNaturalXOnLeftInPhase3=false;
+
+                            break;
+
+                        }
+                        
+                    }
+
+                    if(isNaturalXOnLeftInPhase3) {
+                        
+                        for(int i=0;i<phase3RightManaSphere.Count;++i) {
+
+                            if(Math.Abs(phase3RightManaSphere[i].position.Z-100)<7) {
+
+                                if(phase3RightManaSphere[i].position.Z<100) {
+
+                                    phase3UpperSphereToBeDelayed=phase3RightManaSphere[i];
+
+                                }
+                                
+                                if(phase3RightManaSphere[i].position.Z>100) {
+
+                                    phase3LowerSphereToBeDelayed=phase3RightManaSphere[i];
+
+                                }
+
+                            }
+                        
+                        }
+
+                        for(int i=0;i<phase3LeftManaSphere.Count;++i) {
+
+                            if(phase3LeftManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId) {
+
+                                phase3UpperSphereToBeDelayed.position=phase3LeftManaSphere[i].position;
+
+                            }
+                            
+                            if(phase3LeftManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
+
+                                phase3LowerSphereToBeDelayed.position=phase3LeftManaSphere[i].position;
+
+                            }
+                            
+                        }
+
+                    }
+
+                    else {
+                        
+                        for(int i=0;i<phase3LeftManaSphere.Count;++i) {
+
+                            if(Math.Abs(phase3LeftManaSphere[i].position.Z-100)<7) {
+
+                                if(phase3LeftManaSphere[i].position.Z<100) {
+
+                                    phase3UpperSphereToBeDelayed=phase3LeftManaSphere[i];
+
+                                }
+                                
+                                if(phase3LeftManaSphere[i].position.Z>100) {
+
+                                    phase3LowerSphereToBeDelayed=phase3LeftManaSphere[i];
+
+                                }
+
+                            }
+                            
+                        }
+                        
+                        for(int i=0;i<phase3RightManaSphere.Count;++i) {
+
+                            if(phase3RightManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId) {
+
+                                phase3UpperSphereToBeDelayed.position=phase3RightManaSphere[i].position;
+
+                            }
+                            
+                            if(phase3RightManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
+
+                                phase3LowerSphereToBeDelayed.position=phase3RightManaSphere[i].position;
+
+                            }
+                            
+                        }
+                        
+                    }
+
+                    if(phase3UpperSphereToBeDelayed.position.Z>phase3LowerSphereToBeDelayed.position.Z) {
+
+                        (phase3UpperSphereToBeDelayed,phase3LowerSphereToBeDelayed)=(phase3LowerSphereToBeDelayed,phase3UpperSphereToBeDelayed);
+
+                    }
+
+                    phase3GuidanceSemaphore.Set();
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             phase3LeftManaSphere.position:{string.Join(",",phase3LeftManaSphere.Select(p=>p.position))}
+                                             phase3LeftManaSphere.dataId:{string.Join(",",phase3LeftManaSphere.Select(p=>p.dataId))}
+                                             phase3RightManaSphere.position:{string.Join(",",phase3RightManaSphere.Select(p=>p.position))}
+                                             phase3RightManaSphere.dataId:{string.Join(",",phase3RightManaSphere.Select(p=>p.dataId))}
+                                             isNaturalXOnLeftInPhase3={isNaturalXOnLeftInPhase3}
+                                             phase3UpperSphereToBeDelayed.position={phase3UpperSphereToBeDelayed.position}
+                                             phase3UpperSphereToBeDelayed.dataId={phase3UpperSphereToBeDelayed.dataId}
+                                             phase3LowerSphereToBeDelayed.position={phase3LowerSphereToBeDelayed.position}
+                                             phase3LowerSphereToBeDelayed.dataId={phase3LowerSphereToBeDelayed.dataId}
+                                             """);
+                        
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46333"],
+            suppress:1000)]
+    
+        public void 本体_变异细胞_魔力晶球_指路(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!(new[]{"19206","19207","19208","19209"}.Contains(@event["SourceDataId"]))) {
+
+                return;
+
+            }
+
+            phase3GuidanceSemaphore.WaitOne();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(isVulnerableInPhase3[myIndex]) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(isTank(myIndex)) {
+
+                myPosition=phase3UpperSphereToBeDelayed.position;
+
+            }
+            
+            if(isHealer(myIndex)) {
+
+                if(tankStackSoloDuringMutatingCells) {
+                    
+                    myPosition=phase3LowerSphereToBeDelayed.position;
+                    
+                }
+
+                else {
+                    
+                    myPosition=phase3UpperSphereToBeDelayed.position;
+                    
+                }
+
+            }
+
+            if(isDps(myIndex)) {
+                
+                myPosition=phase3LowerSphereToBeDelayed.position;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="本体_变异细胞_魔力晶球_指路";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=7200000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46334"],
+            userControl:false)]
+    
+        public void 本体_变异细胞_魔力晶球_清除(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+
+            accessory.Method.RemoveDraw("本体_变异细胞_魔力晶球_指路");
+        
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (犯错监测)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46334"],
+            userControl:false)]
+    
+        public void 本体_变异细胞_魔力晶球_犯错监测(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            Vector3 targetPosition=ARENA_CENTER;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(targetPosition,phase3UpperSphereToBeDelayed.position)>5
+               &&
+               Vector3.Distance(targetPosition,phase3LowerSphereToBeDelayed.position)>5) {
+
+                phase3DisableDrawings=true;
+
+                if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"targetPosition={targetPosition}\nphase3DisableDrawings={phase3DisableDrawings}");
+                    
+                }
+
             }
         
         }
