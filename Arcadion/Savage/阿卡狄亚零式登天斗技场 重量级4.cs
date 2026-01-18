@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.10",
+        version:"0.0.1.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -7571,11 +7571,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
-            // 19206: Circle
-            // 19207: Donut
-            // 19208: Front and back
-            // 19209: Left and right
-            
             Vector3 sourcePosition=ARENA_CENTER;
 
             try {
@@ -7944,6 +7939,533 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
         
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 因分摊处理错误禁用绘制 (文字提示与TTS)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46336"])]
+    
+        public void 本体_变异细胞_因分摊处理错误禁用绘制_文字提示与TTS(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["TargetDataId"],"19202")) {
+
+                return;
+
+            }
+
+            if(phase3DisableDrawings) {
+
+                if(enablePrompts) {
+                    
+                    accessory.Method.TextInfo("分摊处理错误,绘制已禁用。",2500,true);
+                    
+                }
+                
+                accessory.tts("分摊处理错误,绘制已禁用。",enableVanillaTts,enableDailyRoutinesTts);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力球苏醒 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46336"])]
+    
+        public void 本体_变异细胞_魔力球苏醒_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["TargetDataId"],"19202")) {
+
+                return;
+
+            }
+
+            for(int i=0;i<phase3LeftManaSphere.Count;++i) {
+
+                if(isNaturalXOnLeftInPhase3) {
+
+                    if(phase3LeftManaSphere[i].dataId!=phase3UpperSphereToBeDelayed.dataId
+                       &&
+                       phase3LeftManaSphere[i].dataId!=phase3LowerSphereToBeDelayed.dataId) {
+                        
+                        DrawInPhase3(accessory,phase3LeftManaSphere[i].dataId,true,1);
+                        
+                    }
+                    
+                    if(phase3LeftManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId
+                       ||
+                       phase3LeftManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
+                        
+                        DrawInPhase3(accessory,phase3LeftManaSphere[i].dataId,true,2);
+                        
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(Math.Abs(phase3LeftManaSphere[i].position.Z-100)<7) {
+                        
+                        DrawInPhase3(accessory,phase3LeftManaSphere[i].dataId,true,1);
+                        
+                    }
+
+                    else {
+                        
+                        DrawInPhase3(accessory,phase3LeftManaSphere[i].dataId,true,2);
+                        
+                    }
+                    
+                }
+
+            }
+            
+            for(int i=0;i<phase3RightManaSphere.Count;++i) {
+
+                if(!isNaturalXOnLeftInPhase3) {
+
+                    if(phase3RightManaSphere[i].dataId!=phase3UpperSphereToBeDelayed.dataId
+                       &&
+                       phase3RightManaSphere[i].dataId!=phase3LowerSphereToBeDelayed.dataId) {
+                        
+                        DrawInPhase3(accessory,phase3RightManaSphere[i].dataId,false,1);
+                        
+                    }
+                    
+                    if(phase3RightManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId
+                       ||
+                       phase3RightManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
+                        
+                        DrawInPhase3(accessory,phase3RightManaSphere[i].dataId,false,2);
+                        
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(Math.Abs(phase3RightManaSphere[i].position.Z-100)<7) {
+                        
+                        DrawInPhase3(accessory,phase3RightManaSphere[i].dataId,false,1);
+                        
+                    }
+
+                    else {
+                        
+                        DrawInPhase3(accessory,phase3RightManaSphere[i].dataId,false,2);
+                        
+                    }
+                    
+                }
+
+            }
+
+        }
+
+        public void DrawInPhase3(ScriptAccessory accessory,string dataId,bool isLeft,int round) {
+            
+            // 19206: Circle
+            // 19207: Donut
+            // 19208: Front and back
+            // 19209: Left and right
+
+            if(string.Equals(dataId,"19206")) {
+                
+                DrawCircleInPhase3(accessory,isLeft,round);
+                
+            }
+            
+            if(string.Equals(dataId,"19207")) {
+                
+                DrawDonutInPhase3(accessory,isLeft,round);
+                
+            }
+            
+            if(string.Equals(dataId,"19208")) {
+                
+                DrawFrontAndBackInPhase3(accessory,isLeft,round);
+                
+            }
+            
+            if(string.Equals(dataId,"19209")) {
+                
+                DrawLeftAndRightInPhase3(accessory,isLeft,round);
+                
+            }
+            
+        }
+
+        private void DrawCircleInPhase3(ScriptAccessory accessory,bool isLeft,int round) {
+
+            if(round!=1&&round!=2) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(8);
+            currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(round==1) {
+
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=4750;
+
+            }
+
+            if(round==2) {
+                
+                currentProperties.Delay=4750;
+                currentProperties.DestoryAt=5000;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        private void DrawDonutInPhase3(ScriptAccessory accessory,bool isLeft,int round) {
+
+            if(round!=1&&round!=2) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(60);
+            currentProperties.InnerScale=new(5);
+            currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(round==1) {
+
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=4750;
+
+            }
+
+            if(round==2) {
+                
+                currentProperties.Delay=4750;
+                currentProperties.DestoryAt=5000;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+            
+        }
+        
+        private void DrawFrontAndBackInPhase3(ScriptAccessory accessory,bool isLeft,int round) {
+
+            if(round!=1&&round!=2) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(40);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Rotation=0;
+            currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(round==1) {
+
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=4750;
+
+            }
+
+            if(round==2) {
+                
+                currentProperties.Delay=4750;
+                currentProperties.DestoryAt=5000;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(40);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Rotation=float.Pi;
+            currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(round==1) {
+
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=4750;
+
+            }
+
+            if(round==2) {
+                
+                currentProperties.Delay=4750;
+                currentProperties.DestoryAt=5000;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+        
+        private void DrawLeftAndRightInPhase3(ScriptAccessory accessory,bool isLeft,int round) {
+
+            if(round!=1&&round!=2) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(40);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Rotation=float.Pi/2;
+            currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(round==1) {
+
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=4750;
+
+            }
+
+            if(round==2) {
+                
+                currentProperties.Delay=4750;
+                currentProperties.DestoryAt=5000;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(40);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Rotation=-float.Pi/2;
+            currentProperties.Position=((isLeft)?(new Vector3(90,0,100)):new Vector3(110,0,100));
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            if(round==1) {
+
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=4750;
+
+            }
+
+            if(round==2) {
+                
+                currentProperties.Delay=4750;
+                currentProperties.DestoryAt=5000;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 阴界近景与阴界远景 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46379|46380)$"])]
+    
+        public void 本体_变异细胞_阴界近景与阴界远景_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.DestoryAt=6250;
+
+            if(string.Equals(@event["ActionId"],"46379")) {
+                
+                currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"46380")) {
+                
+                currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+                
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+            }
+
+            else {
+
+                if(isVulnerableInPhase3[myIndex]) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    
+                }
+
+                else {
+                    
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                    
+                }
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 双重飞踢 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46368|46373)$"])]
+
+        public void 本体_变异细胞_双重飞踢_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+
+                return;
+
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+
+            if(string.Equals(@event["ActionId"],"46368")) {
+
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=5500;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"46373")) {
+
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4500;
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力连击 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46368"])]
+    
+        public void 本体_变异细胞_魔力连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=10125;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=2;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=10125;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
         }
 
         #endregion
