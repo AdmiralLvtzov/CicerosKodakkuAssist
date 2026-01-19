@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.12",
+        version:"0.0.1.13",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -738,7 +738,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.Scale=new(0.25f,30);
             currentProperties.Position=ARENA_CENTER;
             currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-            currentProperties.DestoryAt=23500;
+            currentProperties.DestoryAt=22125;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
         
@@ -7195,7 +7195,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                             currentProperties.Radian=float.Pi/6;
                             currentProperties.Color=accessory.Data.DefaultDangerColor;
                             currentProperties.Delay=delay;
-                            currentProperties.DestoryAt=4500;
+                            currentProperties.DestoryAt=4550;
                     
                             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
