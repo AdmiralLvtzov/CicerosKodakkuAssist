@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.13",
+        version:"0.0.1.14",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -2623,6 +2623,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 return;
 
             }
+
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
             
             if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
                 
@@ -2639,12 +2645,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             lock(directionOfMitoticPhase) {
-
-                if(directionOfMitoticPhase[targetIndex]!=DirectionsOfMitoticPhase.UNKNOWN) {
-
-                    return;
-
-                }
 
                 if(string.Equals(@event["Param"],"1078")) {
 
