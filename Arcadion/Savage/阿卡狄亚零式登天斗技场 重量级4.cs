@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.15",
+        version:"0.0.1.16",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -220,6 +220,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent phase4LindschratSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int phase4StagingActionCount=0;
         private bool[] isStagingDefamationInPhase4=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private int[] phase4PlayerOrder=Enumerable.Range(0,8).Select(i=>-1).ToArray();
         private volatile bool phase4DisableGuidance=false;
         private System.Threading.AutoResetEvent phase4StagingActionSemaphore=new System.Threading.AutoResetEvent(false);
         
@@ -527,6 +528,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4LindschratSemaphore.Reset();
             phase4StagingActionCount=0;
             for(int i=0;i<isStagingDefamationInPhase4.Length;++i)isStagingDefamationInPhase4[i]=false;
+            for(int i=0;i<phase4PlayerOrder.Length;++i)phase4PlayerOrder[i]=-1;
             phase4DisableGuidance=false;
             phase4StagingActionSemaphore.Reset();
 
@@ -8589,6 +8591,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4LindschratSemaphore.Reset();
             phase4StagingActionCount=0;
             for(int i=0;i<isStagingDefamationInPhase4.Length;++i)isStagingDefamationInPhase4[i]=false;
+            for(int i=0;i<phase4PlayerOrder.Length;++i)phase4PlayerOrder[i]=-1;
             phase4DisableGuidance=false;
             phase4StagingActionSemaphore.Reset();
             
@@ -9378,6 +9381,44 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                     }
 
+                    if(!phase4DisableGuidance) {
+
+                        for(int i=0;i<phase4PlayerOrder.Length;i+=2) {
+                            
+                            int cardinalPlayer=Array.IndexOf(phase4PlayerStaging,i);
+
+                            if(!isLegalPartyIndex(cardinalPlayer)) {
+
+                                continue;
+
+                            }
+                                
+                            int intercardinalPlayer=Array.IndexOf(phase4PlayerStaging,i+1);
+
+                            if(!isLegalPartyIndex(intercardinalPlayer)) {
+
+                                continue;
+
+                            }
+
+                            if(((bool)isLindschratDefamationInPhase4[i])!=isStagingDefamationInPhase4[i]) {
+
+                                phase4PlayerOrder[cardinalPlayer]=i+1;
+                                phase4PlayerOrder[intercardinalPlayer]=i;
+
+                            }
+
+                            else {
+                                
+                                phase4PlayerOrder[cardinalPlayer]=i;
+                                phase4PlayerOrder[intercardinalPlayer]=i+1;
+                                
+                            }
+                            
+                        }
+                        
+                    }
+
                     phase4StagingActionSemaphore.Set();
 
                     if(enableDebugLogging) {
@@ -9385,6 +9426,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         accessory.Log.Debug($"""
                                              isStagingDefamationInPhase4:{string.Join(",",isStagingDefamationInPhase4)}
                                              phase4DisableGuidance={phase4DisableGuidance}
+                                             phase4PlayerOrder:{string.Join(",",phase4PlayerOrder)}
                                              """);
 
                     }
