@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.16",
+        version:"0.0.1.17",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -213,7 +213,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private int[] phase4PlayerStaging=Enumerable.Range(0,8).Select(i=>-1).ToArray();
         private bool? isCardinalFirstInPhase4=null; // Its read-write lock is isCardinalFirstInPhase4Lock.
         private int phase4TwistedVisionCount=0;
-        private System.Threading.AutoResetEvent phase4TwistedVision3Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision3Semaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision3Semaphore2=new System.Threading.AutoResetEvent(false);
         private List<KeyValuePair<ulong,string>> phase4LindschratCombo=new List<KeyValuePair<ulong,string>>();
         private volatile int phase4LindschratCount=0;
         private bool?[] isLindschratDefamationInPhase4=Enumerable.Range(0,8).Select(i=>((bool?)null)).ToArray();
@@ -223,6 +224,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private int[] phase4PlayerOrder=Enumerable.Range(0,8).Select(i=>-1).ToArray();
         private volatile bool phase4DisableGuidance=false;
         private System.Threading.AutoResetEvent phase4StagingActionSemaphore=new System.Threading.AutoResetEvent(false);
+        private int phase4TowerCount=0;
+        private Phase4Towers[] phase4Tower=Enumerable.Range(0,8).Select(i=>Phase4Towers.UNKNOWN).ToArray();
+        private int phase4HitCount=0;
+        private bool[] wasHitInPhase4=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private bool[] swapsWithPartnerInPhase4=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private System.Threading.AutoResetEvent phase4TowerPreviewSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore2=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -277,10 +286,10 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         // Spread on right: https://www.geogebra.org/calculator/wkyqdy4y
         // They're both in Simplified Chinese, since I completed the Simplified Chinese version of the script first, unlike M8S.
         
-        private static readonly Vector3 LEFT_ARENA_CENTER=new Vector3(90,0,100);
-        private static readonly Vector3 RIGHT_ARENA_CENTER=new Vector3(110,0,100);
-        private static readonly Vector3 LEFT_KNOCK_BACK_CENTER=new Vector3(82,0,89);
-        private static readonly Vector3 RIGHT_KNOCK_BACK_CENTER=new Vector3(118,0,89);
+        private static readonly Vector3 SLAUGHTERSHED_LEFT_ARENA_CENTER=new Vector3(90,0,100);
+        private static readonly Vector3 SLAUGHTERSHED_RIGHT_ARENA_CENTER=new Vector3(110,0,100);
+        private static readonly Vector3 SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER=new Vector3(82,0,89);
+        private static readonly Vector3 SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER=new Vector3(118,0,89);
         
         // ----- End Of Major Phase 1 -----
         
@@ -302,6 +311,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private readonly object phase3ManaSphereLock=new object();
         
         private readonly object isCardinalFirstInPhase4Lock=new object();
+        private static readonly Vector3 PHASE4_LEFT_ARENA_CENTER=new Vector3(86,0,100);
+        private static readonly Vector3 PHASE4_RIGHT_ARENA_CENTER=new Vector3(114,0,100); 
+        // The sub-arena radius is 10.
+        private static ImmutableList<Vector3> PHASE4_DEFAULT_TOWER=[new Vector3(90.24f,0,95.76f),new Vector3(109.76f,0,104.24f),new Vector3(81.76f,0,95.76f),new Vector3(118.24f,0,104.24f),
+                                                                    new Vector3(90.24f,0,104.24f),new Vector3(109.76f,0,95.76f),new Vector3(81.76f,0,104.24f),new Vector3(118.24f,0,95.76f)];
+        private static ImmutableList<Vector3> PHASE4_STANDBY_POSITION=[new Vector3(92.364f,0,93.636f),new Vector3(107.636f,0,106.364f),new Vector3(79.636f,0,93.636f),new Vector3(120.364f,0,106.364f),
+                                                                       new Vector3(92.364f,0,106.364f),new Vector3(107.636f,0,93.636f),new Vector3(79.636f,0,106.364f),new Vector3(120.364f,0,93.636f)];
+        // The link to the related geometric constructions:
+        // https://www.geogebra.org/calculator/p7wjjkvf
+        // The distance from a tower to its arena center is 6.
         
         // ----- End Of Major Phase 2 -----
         
@@ -408,6 +427,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
+        }
+        
+        public enum Phase4Towers {
+            
+            EARTH,
+            FIRE,
+            WIND_TRILOGY,
+            DARKNESS_TRILOGY,
+            UNKNOWN
+            
         }
         
         #endregion
@@ -521,7 +550,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             for(int i=0;i<phase4PlayerStaging.Length;++i)phase4PlayerStaging[i]=-1;
             isCardinalFirstInPhase4=null;
             phase4TwistedVisionCount=0;
-            phase4TwistedVision3Semaphore.Reset();
+            phase4TwistedVision3Semaphore1.Reset();
+            phase4TwistedVision3Semaphore2.Reset();
             phase4LindschratCombo.Clear();
             phase4LindschratCount=0;
             for(int i=0;i<isLindschratDefamationInPhase4.Length;++i)isLindschratDefamationInPhase4[i]=null;
@@ -531,6 +561,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             for(int i=0;i<phase4PlayerOrder.Length;++i)phase4PlayerOrder[i]=-1;
             phase4DisableGuidance=false;
             phase4StagingActionSemaphore.Reset();
+            phase4TowerCount=0;
+            for(int i=0;i<phase4Tower.Length;++i)phase4Tower[i]=Phase4Towers.UNKNOWN;
+            phase4HitCount=0;
+            for(int i=0;i<wasHitInPhase4.Length;++i)wasHitInPhase4[i]=false;
+            for(int i=0;i<swapsWithPartnerInPhase4.Length;++i)swapsWithPartnerInPhase4[i]=false;
+            phase4TowerPreviewSemaphore.Reset();
+            phase4TwistedVision4Semaphore1.Reset();
+            phase4TwistedVision4Semaphore2.Reset();
 
             // ----- End Of Major Phase 2 -----
 
@@ -4653,7 +4691,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(20,30);
-                currentProperties.Position=LEFT_ARENA_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_LEFT_ARENA_CENTER;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4663,7 +4701,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(20,30);
-                currentProperties.Position=RIGHT_ARENA_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_ARENA_CENTER;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4673,7 +4711,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(20,30);
-                currentProperties.Position=RIGHT_ARENA_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_ARENA_CENTER;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4687,7 +4725,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(20,30);
-                currentProperties.Position=RIGHT_ARENA_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_ARENA_CENTER;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4697,7 +4735,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(20,30);
-                currentProperties.Position=LEFT_ARENA_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_LEFT_ARENA_CENTER;
                 currentProperties.Color=accessory.Data.DefaultSafeColor;
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4707,7 +4745,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(20,30);
-                currentProperties.Position=LEFT_ARENA_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_LEFT_ARENA_CENTER;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4721,8 +4759,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(2,30);
-                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X+1,0,LEFT_KNOCK_BACK_CENTER.Z+1);
+                currentProperties.Position=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.X+1,0,SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4732,8 +4770,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(11.314f,4.243f);
-                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X-1,0,LEFT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Position=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.X-1,0,SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4743,7 +4781,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(2);
-                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
                 currentProperties.TargetObject=accessory.Data.Me;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
@@ -4756,7 +4794,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 currentProperties.Scale=new(2,30);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
                 currentProperties.Rotation=float.Pi;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=7500;
@@ -4767,8 +4805,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(2,30);
-                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X-1,0,RIGHT_KNOCK_BACK_CENTER.Z+1);
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.X-1,0,SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4778,8 +4816,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(11.314f,4.243f);
-                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X+1,0,RIGHT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.X+1,0,SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4789,7 +4827,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(2);
-                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
                 currentProperties.TargetObject=accessory.Data.Me;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
@@ -4802,7 +4840,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 currentProperties.Scale=new(2,30);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
                 currentProperties.Rotation=float.Pi;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=13625;
@@ -4817,8 +4855,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(2,30);
-                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X-1,0,RIGHT_KNOCK_BACK_CENTER.Z+1);
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.X-1,0,SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4828,8 +4866,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(11.314f,4.243f);
-                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(RIGHT_KNOCK_BACK_CENTER.X+1,0,RIGHT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.X+1,0,SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 currentProperties.Delay=7500;
                 currentProperties.DestoryAt=6125;
@@ -4839,7 +4877,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(2);
-                currentProperties.Position=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
                 currentProperties.TargetObject=accessory.Data.Me;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
@@ -4852,7 +4890,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 currentProperties.Scale=new(2,30);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=RIGHT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=SLAUGHTERSHED_RIGHT_KNOCK_BACK_CENTER;
                 currentProperties.Rotation=float.Pi;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=7500;
@@ -4863,8 +4901,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(2,30);
-                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X+1,0,LEFT_KNOCK_BACK_CENTER.Z+1);
+                currentProperties.Position=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.X+1,0,SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.Z+1);
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4874,8 +4912,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
                 
                 currentProperties.Scale=new(11.314f,4.243f);
-                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
-                currentProperties.TargetPosition=new Vector3(LEFT_KNOCK_BACK_CENTER.X-1,0,LEFT_KNOCK_BACK_CENTER.Z-1);
+                currentProperties.Position=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=new Vector3(SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.X-1,0,SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER.Z-1);
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 currentProperties.Delay=13625;
                 currentProperties.DestoryAt=4625;
@@ -4885,7 +4923,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                 currentProperties.Scale=new(2);
-                currentProperties.Position=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.Position=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
                 currentProperties.TargetObject=accessory.Data.Me;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
@@ -4898,7 +4936,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 currentProperties.Scale=new(2,30);
                 currentProperties.Owner=accessory.Data.Me;
-                currentProperties.TargetPosition=LEFT_KNOCK_BACK_CENTER;
+                currentProperties.TargetPosition=SLAUGHTERSHED_LEFT_KNOCK_BACK_CENTER;
                 currentProperties.Rotation=float.Pi;
                 currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                 currentProperties.Delay=13625;
@@ -8584,7 +8622,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             for(int i=0;i<phase4PlayerStaging.Length;++i)phase4PlayerStaging[i]=-1;
             isCardinalFirstInPhase4=null;
             phase4TwistedVisionCount=0;
-            phase4TwistedVision3Semaphore.Reset();
+            phase4TwistedVision3Semaphore1.Reset();
+            phase4TwistedVision3Semaphore2.Reset();
             phase4LindschratCombo.Clear();
             phase4LindschratCount=0;
             for(int i=0;i<isLindschratDefamationInPhase4.Length;++i)isLindschratDefamationInPhase4[i]=null;
@@ -8594,6 +8633,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             for(int i=0;i<phase4PlayerOrder.Length;++i)phase4PlayerOrder[i]=-1;
             phase4DisableGuidance=false;
             phase4StagingActionSemaphore.Reset();
+            phase4TowerCount=0;
+            for(int i=0;i<phase4Tower.Length;++i)phase4Tower[i]=Phase4Towers.UNKNOWN;
+            phase4HitCount=0;
+            for(int i=0;i<wasHitInPhase4.Length;++i)wasHitInPhase4[i]=false;
+            for(int i=0;i<swapsWithPartnerInPhase4.Length;++i)swapsWithPartnerInPhase4[i]=false;
+            phase4TowerPreviewSemaphore.Reset();
+            phase4TwistedVision4Semaphore1.Reset();
+            phase4TwistedVision4Semaphore2.Reset();
             
             Interlocked.Increment(ref currentPhase);
 
@@ -8888,13 +8935,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             if(phase4TwistedVisionCount==3) {
 
-                phase4TwistedVision3Semaphore.Set();
-
-            }
-            
-            if(phase4TwistedVisionCount==4) {
-
-                phase4LindschratCombo.Clear();
+                phase4TwistedVision3Semaphore1.Set();
+                phase4TwistedVision3Semaphore2.Set();
 
             }
             
@@ -9530,7 +9572,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            bool isTheRound=phase4TwistedVision3Semaphore.WaitOne(4000);
+            bool isTheRound=phase4TwistedVision3Semaphore1.WaitOne(4000);
 
             if(!isTheRound) {
 
@@ -9550,7 +9592,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             // 46352: Bode, front and back
             // 46353: Bode, circle
             // ID +4: Corresponding actual action
-            
 
             for(int i=0;i<phase4LindschratCombo.Count;++i) {
 
@@ -9623,6 +9664,434 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
         
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影3 塔预站位 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
+    
+        public void 本体_境中奇梦_心象投影3_塔预站位_指路(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision3Semaphore2.WaitOne(4000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=3) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            Vector3 myPosition1=((isInLeftGroup(myIndex))?(PHASE4_LEFT_ARENA_CENTER):(PHASE4_RIGHT_ARENA_CENTER));
+            Vector3 myPosition2=PHASE4_STANDBY_POSITION[myIndex];
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition1;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=4625;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10);
+            currentProperties.Position=myPosition1;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=4000;
+            currentProperties.DestoryAt=4625;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition2;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=8625;
+            currentProperties.DestoryAt=17500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影3 境中奇奥 (范围)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:regex:^(2015013|2015014|2015015|2015016)$"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影3_境中奇奥_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=3) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<8;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(6);
+                currentProperties.Owner=accessory.Data.PartyList[i];
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=10125;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影3 塔 (数据收集)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:regex:^(2015013|2015014|2015015|2015016)$"],
+            userControl:false)]
+    
+        public void 本体_境中奇梦_心象投影3_塔_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=3) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+            
+            if(phase4TowerCount>=8) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            int towerOwner=-1;
+
+            for(int i=0;i<PHASE4_DEFAULT_TOWER.Count;++i) {
+
+                if(Vector3.Distance(PHASE4_DEFAULT_TOWER[i],sourcePosition)<0.05) {
+
+                    towerOwner=i;
+
+                    break;
+
+                }
+                
+            }
+
+            if(!isLegalPartyIndex(towerOwner)) {
+
+                return;
+
+            }
+
+            lock(phase4Tower) {
+                
+                // 2015013: Wind the trilogy
+                // 2015014: Darkness the trilogy
+                // 2015015: Earth
+                // 2015016: Fire
+                
+                if(string.Equals(@event["DataId"],"2015013")) {
+
+                    phase4Tower[towerOwner]=Phase4Towers.WIND_TRILOGY;
+
+                }
+                
+                if(string.Equals(@event["DataId"],"2015014")) {
+
+                    phase4Tower[towerOwner]=Phase4Towers.DARKNESS_TRILOGY;
+
+                }
+                
+                if(string.Equals(@event["DataId"],"2015015")) {
+
+                    phase4Tower[towerOwner]=Phase4Towers.EARTH;
+
+                }
+                
+                if(string.Equals(@event["DataId"],"2015016")) {
+
+                    phase4Tower[towerOwner]=Phase4Towers.FIRE;
+
+                }
+
+                if(phase4Tower[towerOwner]==Phase4Towers.UNKNOWN) {
+
+                    return;
+
+                }
+
+                Interlocked.Increment(ref phase4TowerCount);
+
+                if(phase4TowerCount==8) {
+
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             phase4Tower:{string.Join(",",phase4Tower.Select(p=>p.ToString()))}
+                                             """);
+                        
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影3 境中奇奥 (数据收集)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:47577"],
+            userControl:false)]
+    
+        public void 本体_境中奇梦_心象投影3_境中奇奥_数据收集(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!(3<=phase4TwistedVisionCount&&phase4TwistedVisionCount<5)) {
+
+                return;
+
+            }
+            
+            if(phase4HitCount>=4) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(wasHitInPhase4) {
+
+                wasHitInPhase4[targetIndex]=true;
+
+                Interlocked.Increment(ref phase4HitCount);
+
+                if(phase4HitCount==4) {
+
+                    for(int i=0;i<4;++i) {
+
+                        if((wasHitInPhase4[i]&&(phase4Tower[i]==Phase4Towers.WIND_TRILOGY||phase4Tower[i]==Phase4Towers.DARKNESS_TRILOGY))
+                           ||
+                           (!wasHitInPhase4[i]&&(phase4Tower[i]==Phase4Towers.EARTH||phase4Tower[i]==Phase4Towers.FIRE))) {
+
+                            swapsWithPartnerInPhase4[i]=true;
+                            swapsWithPartnerInPhase4[i+4]=true;
+
+                        }
+                        
+                    }
+
+                    phase4TowerPreviewSemaphore.Set();
+
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             wasHitInPhase4:{string.Join(",",wasHitInPhase4)}
+                                             swapsWithPartnerInPhase4:{string.Join(",",swapsWithPartnerInPhase4)}
+                                             """);
+                        
+                    }
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影3 境中奇奥 (塔指示)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:47577"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影3_境中奇奥_塔指示(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!(3<=phase4TwistedVisionCount&&phase4TwistedVisionCount<5)) {
+
+                return;
+
+            }
+
+            phase4TowerPreviewSemaphore.WaitOne();
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            int partnersIndex=-1;
+
+            if(isSupporter(myIndex)) {
+
+                partnersIndex=myIndex+4;
+
+            }
+
+            if(isDps(myIndex)) {
+
+                partnersIndex=myIndex-4;
+
+            }
+
+            if(!isLegalPartyIndex(partnersIndex)) {
+
+                return;
+
+            }
+            
+            Vector3 myTower=ARENA_CENTER;
+            Vector3 partnersTower=ARENA_CENTER;
+
+            if(swapsWithPartnerInPhase4[myIndex]) {
+                
+                myTower=PHASE4_DEFAULT_TOWER[partnersIndex];
+                partnersTower=PHASE4_DEFAULT_TOWER[myIndex];
+                
+            }
+
+            else {
+
+                myTower=PHASE4_DEFAULT_TOWER[myIndex];
+                partnersTower=PHASE4_DEFAULT_TOWER[partnersIndex];
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(3);
+            currentProperties.Position=myTower;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=6750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(3);
+            currentProperties.Position=partnersTower;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=6750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
         }
 
         #endregion
