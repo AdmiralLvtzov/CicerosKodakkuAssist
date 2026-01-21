@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.17",
+        version:"0.0.1.18",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -284,7 +284,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         // The two cases are not mirror images! The links to the related geometric constructions:
         // Spread on left: https://www.geogebra.org/calculator/pgc9s43t
         // Spread on right: https://www.geogebra.org/calculator/wkyqdy4y
-        // They're both in Simplified Chinese, since I completed the Simplified Chinese version of the script first, unlike M8S.
+        // All the geometric constructions in the comments are in Simplified Chinese, since I completed the Simplified Chinese version of the script first, unlike M8S.
         
         private static readonly Vector3 SLAUGHTERSHED_LEFT_ARENA_CENTER=new Vector3(90,0,100);
         private static readonly Vector3 SLAUGHTERSHED_RIGHT_ARENA_CENTER=new Vector3(110,0,100);
@@ -321,6 +321,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         // The link to the related geometric constructions:
         // https://www.geogebra.org/calculator/p7wjjkvf
         // The distance from a tower to its arena center is 6.
+        private static readonly Vector3 PHASE4_C3D4_STACK_POSITION=new Vector3(90.101f,0,90.101f);
+        private static readonly Vector3 PHASE4_A1B2_STACK_POSITION=new Vector3(109.899f,0,90.101f);
+        private static readonly Vector3 PHASE4_C3D4_DEFAMATION_POSITION=new Vector3(89.102f,0,115.564f);
+        private static readonly Vector3 PHASE4_A1B2_DEFAMATION_POSITION=new Vector3(110.898f,0,115.564f);
+        // The link to the related geometric constructions:
+        // https://www.geogebra.org/calculator/dfcenfhu
         
         // ----- End Of Major Phase 2 -----
         
@@ -8939,6 +8945,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 phase4TwistedVision3Semaphore2.Set();
 
             }
+
+            if(phase4TwistedVisionCount==4) {
+
+                phase4TwistedVision4Semaphore1.Set();
+                phase4TwistedVision4Semaphore2.Set();
+
+            }
             
             if(enableDebugLogging) {
                 
@@ -10092,6 +10105,357 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
 
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影4 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影4_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision4Semaphore2.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=4) {
+
+                return;
+
+            }
+
+            int delay=1500;
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int round=0;round<4;++round) {
+
+                int upperPlayer=Array.IndexOf(phase4PlayerOrder,round);
+
+                if(!isLegalPartyIndex(upperPlayer)) {
+
+                    continue;
+
+                }
+                
+                int lowerPlayer=Array.IndexOf(phase4PlayerOrder,round+4);
+                
+                if(!isLegalPartyIndex(upperPlayer)) {
+
+                    continue;
+
+                }
+                
+                bool isUpperPlayerDefamation=isStagingDefamationInPhase4[phase4PlayerStaging[upperPlayer]];
+                bool isLowerPlayerDefamation=isStagingDefamationInPhase4[phase4PlayerStaging[lowerPlayer]];
+
+                if(isUpperPlayerDefamation) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(20);
+                    currentProperties.Owner=accessory.Data.PartyList[upperPlayer];
+                    currentProperties.Color=colourOfManaBurst.V4.WithW(1);
+                    currentProperties.Delay=delay;
+                    currentProperties.DestoryAt=6250;
+
+                    if(round==0) {
+
+                        currentProperties.Delay=0;
+                        currentProperties.DestoryAt+=delay;
+
+                    }
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                else {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(5);
+                    currentProperties.Owner=accessory.Data.PartyList[upperPlayer];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=delay;
+                    currentProperties.DestoryAt=5000;
+
+                    if(round==0) {
+
+                        currentProperties.Delay=0;
+                        currentProperties.DestoryAt+=delay;
+
+                    }
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                if(isLowerPlayerDefamation) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(20);
+                    currentProperties.Owner=accessory.Data.PartyList[lowerPlayer];
+                    currentProperties.Color=colourOfManaBurst.V4.WithW(1);
+                    currentProperties.Delay=delay;
+                    currentProperties.DestoryAt=6250;
+
+                    if(round==0) {
+
+                        currentProperties.Delay=0;
+                        currentProperties.DestoryAt+=delay;
+
+                    }
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                else {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(5);
+                    currentProperties.Owner=accessory.Data.PartyList[lowerPlayer];
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=delay;
+                    currentProperties.DestoryAt=5000;
+
+                    if(round==0) {
+
+                        currentProperties.Delay=0;
+                        currentProperties.DestoryAt+=delay;
+
+                    }
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+                
+                delay+=5000;
+
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影4 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影4_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase4DisableGuidance) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision4Semaphore1.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=4) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            bool isInA1B2Group=false;
+
+            if(0<=phase4PlayerOrder[myIndex]&&phase4PlayerOrder[myIndex]<=3) {
+
+                isInA1B2Group=true;
+
+            }
+            
+            if(4<=phase4PlayerOrder[myIndex]&&phase4PlayerOrder[myIndex]<=7) {
+
+                isInA1B2Group=false;
+
+            }
+
+            bool isLastActionDefamation=false;
+            int delay=1500;
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int round=0;round<4;++round) {
+
+                int upperPlayer=Array.IndexOf(phase4PlayerOrder,round);
+
+                if(!isLegalPartyIndex(upperPlayer)) {
+
+                    continue;
+
+                }
+                
+                int lowerPlayer=Array.IndexOf(phase4PlayerOrder,round+4);
+                
+                if(!isLegalPartyIndex(upperPlayer)) {
+
+                    continue;
+
+                }
+                
+                bool isUpperPlayerDefamation=isStagingDefamationInPhase4[phase4PlayerStaging[upperPlayer]];
+                bool isLowerPlayerDefamation=isStagingDefamationInPhase4[phase4PlayerStaging[lowerPlayer]];
+
+                if(myIndex!=upperPlayer&&myIndex!=lowerPlayer) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.TargetPosition=((isInA1B2Group)?(PHASE4_A1B2_STACK_POSITION):(PHASE4_C3D4_STACK_POSITION));
+                    currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Delay=delay;
+                    currentProperties.DestoryAt=5000;
+
+                    if(round==0) {
+
+                        currentProperties.Delay=0;
+                        currentProperties.DestoryAt+=delay;
+
+                    }
+
+                    if(isLastActionDefamation) {
+
+                        isLastActionDefamation=false;
+                        
+                        currentProperties.Delay+=1250;
+                        currentProperties.DestoryAt-=1250;
+
+                    }
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                }
+
+                else {
+
+                    if(myIndex==upperPlayer) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(2);
+                        currentProperties.Owner=accessory.Data.Me;
+                        currentProperties.TargetPosition=((isUpperPlayerDefamation)?(PHASE4_A1B2_DEFAMATION_POSITION):(PHASE4_A1B2_STACK_POSITION));
+                        currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        currentProperties.Delay=delay;
+                        currentProperties.DestoryAt=((isUpperPlayerDefamation)?(6250):(5000));
+
+                        if(round==0) {
+
+                            currentProperties.Delay=0;
+                            currentProperties.DestoryAt+=delay;
+
+                        }
+                        
+                        if(isLastActionDefamation) {
+
+                            isLastActionDefamation=false;
+                        
+                            currentProperties.Delay+=1250;
+                            currentProperties.DestoryAt-=1250;
+
+                        }
+            
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+                        if(isUpperPlayerDefamation) {
+
+                            isLastActionDefamation=true;
+
+                        }
+                        
+                    }
+                    
+                    if(myIndex==lowerPlayer) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(2);
+                        currentProperties.Owner=accessory.Data.Me;
+                        currentProperties.TargetPosition=((isLowerPlayerDefamation)?(PHASE4_C3D4_DEFAMATION_POSITION):(PHASE4_C3D4_STACK_POSITION));
+                        currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                        currentProperties.Color=accessory.Data.DefaultSafeColor;
+                        currentProperties.Delay=delay;
+                        currentProperties.DestoryAt=((isLowerPlayerDefamation)?(6250):(5000));
+
+                        if(round==0) {
+
+                            currentProperties.Delay=0;
+                            currentProperties.DestoryAt+=delay;
+
+                        }
+                        
+                        if(isLastActionDefamation) {
+
+                            isLastActionDefamation=false;
+                        
+                            currentProperties.Delay+=1250;
+                            currentProperties.DestoryAt-=1250;
+
+                        }
+            
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                        
+                        if(isLowerPlayerDefamation) {
+
+                            isLastActionDefamation=true;
+
+                        }
+                        
+                    }
+                    
+                }
+                
+                delay+=5000;
+
+            }
+            
         }
 
         #endregion
