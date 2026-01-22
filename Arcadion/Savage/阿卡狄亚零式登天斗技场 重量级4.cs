@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.18",
+        version:"0.0.1.19",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -232,6 +232,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent phase4TowerPreviewSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore2=new System.Threading.AutoResetEvent(false);
+        private ulong phase4HiddenLindschrat=0;
         
         // ----- End Of Major Phase 2 -----
         
@@ -327,6 +330,16 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 PHASE4_A1B2_DEFAMATION_POSITION=new Vector3(110.898f,0,115.564f);
         // The link to the related geometric constructions:
         // https://www.geogebra.org/calculator/dfcenfhu
+        private static readonly Vector3 PHASE4_LEFT_WIND_POSITION=new Vector3(106.206f,0,95.5f);
+        private static readonly Vector3 PHASE4_RIGHT_WIND_POSITION=new Vector3(93.794f,0,104.5f);
+        private static readonly Vector3 PHASE4_LEFT_DARK_POSITION=new Vector3(95,0,100);
+        private static readonly Vector3 PHASE4_RIGHT_DARK_POSITION=new Vector3(105,0,100);
+        private static readonly Vector3 PHASE4_LEFT_MELEE_POSITION=new Vector3(93.5f,0,100);
+        private static readonly Vector3 PHASE4_RIGHT_MELEE_POSITION=new Vector3(106.5f,0,100);
+        private static readonly Vector3 PHASE4_LEFT_RANGED_POSITION=new Vector3(86,0,91);
+        private static readonly Vector3 PHASE4_RIGHT_RANGED_POSITION=new Vector3(114,0,109);
+        // The link to the related geometric constructions:
+        // https://www.geogebra.org/calculator/ywabxmmk
         
         // ----- End Of Major Phase 2 -----
         
@@ -575,6 +588,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4TowerPreviewSemaphore.Reset();
             phase4TwistedVision4Semaphore1.Reset();
             phase4TwistedVision4Semaphore2.Reset();
+            phase4TwistedVision5Semaphore1.Reset();
+            phase4TwistedVision5Semaphore2.Reset();
+            phase4HiddenLindschrat=0;
 
             // ----- End Of Major Phase 2 -----
 
@@ -8647,6 +8663,9 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4TowerPreviewSemaphore.Reset();
             phase4TwistedVision4Semaphore1.Reset();
             phase4TwistedVision4Semaphore2.Reset();
+            phase4TwistedVision5Semaphore1.Reset();
+            phase4TwistedVision5Semaphore2.Reset();
+            phase4HiddenLindschrat=0;
             
             Interlocked.Increment(ref currentPhase);
 
@@ -8951,6 +8970,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 phase4TwistedVision4Semaphore1.Set();
                 phase4TwistedVision4Semaphore2.Set();
 
+            }
+
+            if(phase4TwistedVisionCount==5) {
+                
+                phase4TwistedVision5Semaphore1.Set();
+                phase4TwistedVision5Semaphore2.Set();
+                
             }
             
             if(enableDebugLogging) {
@@ -10456,6 +10482,679 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 来自塔的技能 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
+    
+        public void 本体_境中奇梦_心象投影5_来自塔的技能_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision5Semaphore2.WaitOne(4000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+
+            bool enableBothWindTrilogyTower=false;
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                enableBothWindTrilogyTower=true;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<phase4Tower.Length;++i) {
+
+                int currentOwner=i;
+
+                if(!isLegalPartyIndex(currentOwner)) {
+
+                    continue;
+
+                }
+                
+                int currentPartner=-1;
+
+                if(isSupporter(currentOwner)) {
+
+                    currentPartner=currentOwner+4;
+
+                }
+
+                if(isDps(currentOwner)) {
+
+                    currentPartner=currentOwner-4;
+
+                }
+
+                if(!isLegalPartyIndex(currentPartner)) {
+
+                    continue;
+
+                }
+                
+                if(swapsWithPartnerInPhase4[currentOwner]) {
+
+                    (currentOwner,currentPartner)=(currentPartner,currentOwner);
+
+                }
+
+                switch(phase4Tower[i]) {
+
+                    case Phase4Towers.WIND_TRILOGY: {
+
+                        if(currentOwner!=myIndex&&!enableBothWindTrilogyTower) {
+
+                            continue;
+
+                        }
+
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(2);
+                        currentProperties.Position=PHASE4_DEFAULT_TOWER[i];
+                        currentProperties.TargetObject=accessory.Data.PartyList[currentOwner];
+                        currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                        currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                        currentProperties.DestoryAt=8375;
+                
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(2,23);
+                        currentProperties.Owner=accessory.Data.PartyList[currentOwner];
+                        currentProperties.TargetPosition=PHASE4_DEFAULT_TOWER[i];
+                        currentProperties.Rotation=float.Pi;
+                        currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                        currentProperties.DestoryAt=8375;
+                
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+                        break;
+
+                    }
+                    
+                    case Phase4Towers.DARKNESS_TRILOGY: {
+
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(10,50);
+                        currentProperties.Owner=accessory.Data.PartyList[currentOwner];
+                        currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                        currentProperties.DestoryAt=9375;
+        
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+                        break;
+
+                    }
+                    
+                    case Phase4Towers.EARTH: {
+
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(5);
+                        currentProperties.Position=PHASE4_DEFAULT_TOWER[i];
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.Delay=8375;
+                        currentProperties.DestoryAt=5625;
+                            
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+                        break;
+
+                    }
+                    
+                    case Phase4Towers.FIRE: {
+
+                        break;
+
+                    }
+
+                    default: {
+
+                        break;
+
+                    }
+                    
+                }
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 塔 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
+    
+        public void 本体_境中奇梦_心象投影5_塔_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision5Semaphore1.WaitOne(4000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            int partnersIndex=-1;
+
+            if(isSupporter(myIndex)) {
+
+                partnersIndex=myIndex+4;
+
+            }
+
+            if(isDps(myIndex)) {
+
+                partnersIndex=myIndex-4;
+
+            }
+
+            if(!isLegalPartyIndex(partnersIndex)) {
+
+                return;
+
+            }
+            
+            Vector3 myTower=ARENA_CENTER;
+            Vector3 partnersTower=ARENA_CENTER;
+
+            if(swapsWithPartnerInPhase4[myIndex]) {
+                
+                myTower=PHASE4_DEFAULT_TOWER[partnersIndex];
+                partnersTower=PHASE4_DEFAULT_TOWER[myIndex];
+                
+            }
+
+            else {
+
+                myTower=PHASE4_DEFAULT_TOWER[myIndex];
+                partnersTower=PHASE4_DEFAULT_TOWER[partnersIndex];
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myTower;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=8375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(3);
+            currentProperties.Position=myTower;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=8375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(3);
+            currentProperties.Position=partnersTower;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=8375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 大蛇的魔力 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(4767|4766)$"])]
+    
+        public void 本体_境中奇梦_心象投影5_大蛇的魔力_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(60);
+            currentProperties.Owner=targetId;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Radian=float.Pi/6;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=durationMilliseconds;
+
+            if(string.Equals(@event["StatusID"],"4767")) {
+                
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                
+            }
+            
+            if(string.Equals(@event["StatusID"],"4766")) {
+                
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 战火热病 (文字提示与TTS)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:4768"])]
+    
+        public void 本体_境中奇梦_心象投影5_战火热病_文字提示与TTS(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>=7200000) {
+
+                return;
+
+            }
+            
+            if(enablePrompts) {
+                    
+                accessory.Method.TextInfo("停止移动,直到这行提示消失。",durationMilliseconds,true);
+                    
+            }
+                
+            accessory.tts("停止移动,直到这行提示消失。",enableVanillaTts,enableDailyRoutinesTts);
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 大蛇的魔力 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46324"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影5_大蛇的魔力_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            int partnersIndex=-1;
+
+            if(isSupporter(myIndex)) {
+
+                partnersIndex=myIndex+4;
+
+            }
+
+            if(isDps(myIndex)) {
+
+                partnersIndex=myIndex-4;
+
+            }
+
+            if(!isLegalPartyIndex(partnersIndex)) {
+
+                return;
+
+            }
+            
+            int myTowerIndex=-1;
+            int partnersTowerIndex=-1;
+
+            if(swapsWithPartnerInPhase4[myIndex]) {
+                
+                myTowerIndex=partnersIndex;
+                partnersTowerIndex=myIndex;
+                
+            }
+
+            else {
+
+                myTowerIndex=myIndex;
+                partnersTowerIndex=partnersIndex;
+
+            }
+
+            if((myTowerIndex<0||myTowerIndex>7)
+               ||
+               (partnersTowerIndex<0||partnersTowerIndex>7)) {
+
+                return;
+
+            }
+
+            Phase4Towers myTowerType=phase4Tower[myTowerIndex];
+
+            if(myTowerType==Phase4Towers.UNKNOWN) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(isInLeftGroup(myIndex)) {
+
+                if(myTowerType==Phase4Towers.WIND_TRILOGY) {
+
+                    myPosition=PHASE4_LEFT_WIND_POSITION;
+
+                }
+                
+                if(myTowerType==Phase4Towers.DARKNESS_TRILOGY) {
+
+                    myPosition=PHASE4_LEFT_DARK_POSITION;
+
+                }
+
+                if(myTowerType==Phase4Towers.EARTH
+                   ||
+                   myTowerType==Phase4Towers.FIRE) {
+
+                    if(isMelee(myIndex)) {
+                        
+                        myPosition=PHASE4_LEFT_MELEE_POSITION;
+                        
+                    }
+                    
+                    if(isRanged(myIndex)) {
+                        
+                        myPosition=PHASE4_LEFT_RANGED_POSITION;
+                        
+                    }
+                    
+                } 
+                
+            }
+            
+            if(isInRightGroup(myIndex)) {
+                
+                if(myTowerType==Phase4Towers.WIND_TRILOGY) {
+
+                    myPosition=PHASE4_RIGHT_WIND_POSITION;
+
+                }
+                
+                if(myTowerType==Phase4Towers.DARKNESS_TRILOGY) {
+
+                    myPosition=PHASE4_RIGHT_DARK_POSITION;
+
+                }
+                
+                if(myTowerType==Phase4Towers.EARTH
+                   ||
+                   myTowerType==Phase4Towers.FIRE) {
+
+                    if(isMelee(myIndex)) {
+                        
+                        myPosition=PHASE4_RIGHT_MELEE_POSITION;
+                        
+                    }
+                    
+                    if(isRanged(myIndex)) {
+                        
+                        myPosition=PHASE4_RIGHT_RANGED_POSITION;
+                        
+                    }
+                    
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=10625;
+
+            if(myTowerType==Phase4Towers.FIRE) {
+
+                currentProperties.Delay=5500;
+                currentProperties.DestoryAt=5125;
+
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            if(myTowerType==Phase4Towers.FIRE) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=5500;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 隐藏的人形分身 (数据收集)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46365"],
+            suppress:1000,
+            userControl:false)]
+    
+        public void 本体_境中奇梦_心象投影5_隐藏的人形分身_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["SourceDataId"],"19204")) {
+
+                return;
+
+            }
+
+            if(phase4HiddenLindschrat!=0) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            phase4HiddenLindschrat=sourceId;
+
+            if(enableDebugLogging) {
+                
+                Vector3 sourcePosition=ARENA_CENTER;
+
+                try {
+
+                    sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+                } catch(Exception e) {
+                
+                    accessory.Log.Error("SourcePosition deserialization failed.");
+
+                    return;
+
+                }
+                
+                accessory.Log.Debug($"phase4HiddenLindschrat={phase4HiddenLindschrat}\nsourcePosition={sourcePosition}");
+                
+            }
+
         }
 
         #endregion
