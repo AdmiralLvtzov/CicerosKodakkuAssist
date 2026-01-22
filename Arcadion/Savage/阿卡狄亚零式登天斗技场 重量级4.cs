@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.19",
+        version:"0.0.1.20",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -235,6 +235,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore2=new System.Threading.AutoResetEvent(false);
         private ulong phase4HiddenLindschrat=0;
+        private System.Threading.AutoResetEvent phase4TwistedVision6Semaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision6Semaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision7Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision8Semaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision8Semaphore2=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -340,6 +345,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private static readonly Vector3 PHASE4_RIGHT_RANGED_POSITION=new Vector3(114,0,109);
         // The link to the related geometric constructions:
         // https://www.geogebra.org/calculator/ywabxmmk
+        private static readonly Vector3 PHASE4_LEFT_GROUP_STACK_WHEN_CARDINAL=new Vector3(101.768f,0,84.232f);
+        private static readonly Vector3 PHASE4_RIGHT_GROUP_STACK_WHEN_CARDINAL=new Vector3(115.768f,0,98.232f);
+        // The link to the related geometric constructions:
+        // https://www.geogebra.org/calculator/fnr5yuys
+        private static readonly Vector3 PHASE4_LEFT_GROUP_STACK_WHEN_INTERCARDINAL=new Vector3(87.601f,0,90.101f);
+        private static readonly Vector3 PHASE4_RIGHT_GROUP_STACK_WHEN_INTERCARDINAL=new Vector3(87.601f,0,109.899f);
+        // The link to the related geometric constructions:
+        // https://www.geogebra.org/calculator/xtvf4h44
         
         // ----- End Of Major Phase 2 -----
         
@@ -591,6 +604,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4TwistedVision5Semaphore1.Reset();
             phase4TwistedVision5Semaphore2.Reset();
             phase4HiddenLindschrat=0;
+            phase4TwistedVision6Semaphore1.Reset();
+            phase4TwistedVision6Semaphore2.Reset();
+            phase4TwistedVision7Semaphore.Reset();
+            phase4TwistedVision8Semaphore1.Reset();
+            phase4TwistedVision8Semaphore2.Reset();
 
             // ----- End Of Major Phase 2 -----
 
@@ -8666,6 +8684,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4TwistedVision5Semaphore1.Reset();
             phase4TwistedVision5Semaphore2.Reset();
             phase4HiddenLindschrat=0;
+            phase4TwistedVision6Semaphore1.Reset();
+            phase4TwistedVision6Semaphore2.Reset();
+            phase4TwistedVision7Semaphore.Reset();
+            phase4TwistedVision8Semaphore1.Reset();
+            phase4TwistedVision8Semaphore2.Reset();
             
             Interlocked.Increment(ref currentPhase);
 
@@ -8976,6 +8999,26 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 phase4TwistedVision5Semaphore1.Set();
                 phase4TwistedVision5Semaphore2.Set();
+                
+            }
+            
+            if(phase4TwistedVisionCount==6) {
+                
+                phase4TwistedVision6Semaphore1.Set();
+                phase4TwistedVision6Semaphore2.Set();
+                
+            }
+            
+            if(phase4TwistedVisionCount==7) {
+                
+                phase4TwistedVision7Semaphore.Set();
+                
+            }
+            
+            if(phase4TwistedVisionCount==8) {
+                
+                phase4TwistedVision8Semaphore1.Set();
+                phase4TwistedVision8Semaphore2.Set();
                 
             }
             
@@ -11155,6 +11198,384 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
 
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影6 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影6_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision6Semaphore2.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=6) {
+
+                return;
+
+            }
+            
+            if(isCardinalFirstInPhase4==null) {
+
+                return;
+
+            }
+
+            List<int> stagingList=new List<int>();
+
+            if((bool)isCardinalFirstInPhase4) {
+
+                stagingList=[0,2,4,6];
+
+            }
+
+            else {
+                
+                stagingList=[1,3,5,7];
+                
+            }
+
+            if(stagingList.Count!=4) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<stagingList.Count;++i) {
+
+                Vector3 currentPosition=rotatePosition(new Vector3(100,0,86),ARENA_CENTER,float.Pi/4*stagingList[i]);
+
+                if(isStagingDefamationInPhase4[stagingList[i]]) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(20);
+                    currentProperties.Position=currentPosition;
+                    currentProperties.Color=colourOfManaBurst.V4.WithW(1);
+                    currentProperties.DestoryAt=9500;
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                else {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(5);
+                    currentProperties.Position=currentPosition;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=9750;
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影6 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影6_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision6Semaphore1.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=6) {
+
+                return;
+
+            }
+            
+            if(isCardinalFirstInPhase4==null) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if((bool)isCardinalFirstInPhase4) {
+
+                if(isInLeftGroup(myIndex)) {
+
+                    myPosition=PHASE4_LEFT_GROUP_STACK_WHEN_CARDINAL;
+
+                }
+                
+                if(isInRightGroup(myIndex)) {
+
+                    myPosition=PHASE4_RIGHT_GROUP_STACK_WHEN_CARDINAL;
+
+                }
+                
+            }
+
+            else {
+                
+                if(isInLeftGroup(myIndex)) {
+
+                    myPosition=PHASE4_LEFT_GROUP_STACK_WHEN_INTERCARDINAL;
+
+                }
+                
+                if(isInRightGroup(myIndex)) {
+
+                    myPosition=PHASE4_RIGHT_GROUP_STACK_WHEN_INTERCARDINAL;
+
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=9750;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影8 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影8_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision8Semaphore2.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=8) {
+
+                return;
+
+            }
+            
+            if(isCardinalFirstInPhase4==null) {
+
+                return;
+
+            }
+
+            List<int> stagingList=new List<int>();
+
+            if(!((bool)isCardinalFirstInPhase4)) {
+
+                stagingList=[0,2,4,6];
+
+            }
+
+            else {
+                
+                stagingList=[1,3,5,7];
+                
+            }
+
+            if(stagingList.Count!=4) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<stagingList.Count;++i) {
+
+                Vector3 currentPosition=rotatePosition(new Vector3(100,0,86),ARENA_CENTER,float.Pi/4*stagingList[i]);
+
+                if(isStagingDefamationInPhase4[stagingList[i]]) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(20);
+                    currentProperties.Position=currentPosition;
+                    currentProperties.Color=colourOfManaBurst.V4.WithW(1);
+                    currentProperties.DestoryAt=7625;
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+                else {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(5);
+                    currentProperties.Position=currentPosition;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=8000;
+                            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+            }
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影8 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影8_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision8Semaphore1.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=8) {
+
+                return;
+
+            }
+            
+            if(isCardinalFirstInPhase4==null) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(!((bool)isCardinalFirstInPhase4)) {
+
+                if(isInLeftGroup(myIndex)) {
+
+                    myPosition=PHASE4_LEFT_GROUP_STACK_WHEN_CARDINAL;
+
+                }
+                
+                if(isInRightGroup(myIndex)) {
+
+                    myPosition=PHASE4_RIGHT_GROUP_STACK_WHEN_CARDINAL;
+
+                }
+                
+            }
+
+            else {
+                
+                if(isInLeftGroup(myIndex)) {
+
+                    myPosition=PHASE4_LEFT_GROUP_STACK_WHEN_INTERCARDINAL;
+
+                }
+                
+                if(isInRightGroup(myIndex)) {
+
+                    myPosition=PHASE4_RIGHT_GROUP_STACK_WHEN_INTERCARDINAL;
+
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=8000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
         }
 
         #endregion
