@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.0",
+        version:"0.0.2.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -449,11 +449,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         public class manaSphereType {
             
+            public ulong objectId=0;
             public Vector3 position=ARENA_CENTER;
             public string dataId=string.Empty;
 
             public manaSphereType() {
 
+                this.objectId=0;
                 this.position=ARENA_CENTER;
                 this.dataId=string.Empty;
 
@@ -461,6 +463,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             public manaSphereType(manaSphereType original) {
 
+                this.objectId=original.objectId;
                 this.position=original.position;
                 this.dataId=original.dataId;
 
@@ -7740,6 +7743,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
             
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
             Vector3 sourcePosition=ARENA_CENTER;
 
             try {
@@ -7784,6 +7793,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             manaSphereType currentSphere=new manaSphereType();
 
+            currentSphere.objectId=sourceId;
             currentSphere.position=effectPosition;
             currentSphere.dataId=@event["SourceDataId"];
 
@@ -7843,12 +7853,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                             if(phase3LeftManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId) {
 
+                                phase3UpperSphereToBeDelayed.objectId=phase3LeftManaSphere[i].objectId;
                                 phase3UpperSphereToBeDelayed.position=phase3LeftManaSphere[i].position;
 
                             }
                             
                             if(phase3LeftManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
 
+                                phase3LowerSphereToBeDelayed.objectId=phase3LeftManaSphere[i].objectId;
                                 phase3LowerSphereToBeDelayed.position=phase3LeftManaSphere[i].position;
 
                             }
@@ -7883,12 +7895,14 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                             if(phase3RightManaSphere[i].dataId==phase3UpperSphereToBeDelayed.dataId) {
 
+                                phase3UpperSphereToBeDelayed.objectId=phase3RightManaSphere[i].objectId;
                                 phase3UpperSphereToBeDelayed.position=phase3RightManaSphere[i].position;
 
                             }
                             
                             if(phase3RightManaSphere[i].dataId==phase3LowerSphereToBeDelayed.dataId) {
 
+                                phase3LowerSphereToBeDelayed.objectId=phase3RightManaSphere[i].objectId;
                                 phase3LowerSphereToBeDelayed.position=phase3RightManaSphere[i].position;
 
                             }
@@ -7927,12 +7941,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (指路)",
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (指路与危险指示)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:46333"],
             suppress:1000)]
     
-        public void 本体_变异细胞_魔力晶球_指路(Event @event,ScriptAccessory accessory) {
+        public void 本体_变异细胞_魔力晶球_指路与危险指示(Event @event,ScriptAccessory accessory) {
 
             if(isInMajorPhase1) {
 
@@ -7962,17 +7976,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(isVulnerableInPhase3[myIndex]) {
-
-                return;
-
-            }
-
-            Vector3 myPosition=ARENA_CENTER;
+            ulong mySphere=0;
 
             if(isTank(myIndex)) {
 
-                myPosition=phase3UpperSphereToBeDelayed.position;
+                mySphere=phase3UpperSphereToBeDelayed.objectId;
 
             }
             
@@ -7980,13 +7988,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 if(tankStackSoloDuringMutatingCells) {
                     
-                    myPosition=phase3LowerSphereToBeDelayed.position;
+                    mySphere=phase3LowerSphereToBeDelayed.objectId;
                     
                 }
 
                 else {
                     
-                    myPosition=phase3UpperSphereToBeDelayed.position;
+                    mySphere=phase3UpperSphereToBeDelayed.objectId;
                     
                 }
 
@@ -7994,30 +8002,102 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             if(isDps(myIndex)) {
                 
-                myPosition=phase3LowerSphereToBeDelayed.position;
+                mySphere=phase3LowerSphereToBeDelayed.objectId;
                 
+            }
+            
+            if(isVulnerableInPhase3[myIndex]) {
+
+                mySphere=0;
+
             }
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Name="本体_变异细胞_魔力晶球_指路";
-            currentProperties.Scale=new(2);
-            currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetPosition=myPosition;
-            currentProperties.ScaleMode|=ScaleMode.YByDistance;
-            currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.DestoryAt=7200000;
+            if(mySphere!=0) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="本体_变异细胞_魔力晶球_指路";
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetObject=mySphere;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=7200000;
             
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            }
+
+            for(int i=0;i<phase3LeftManaSphere.Count;++i) {
+
+                ulong currentSphere=phase3LeftManaSphere[i].objectId;
+
+                if(currentSphere!=mySphere) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Name=$"本体_变异细胞_魔力晶球_危险指示_范围_{currentSphere}";
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=currentSphere;
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=72000000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                    currentProperties.Name=$"本体_变异细胞_魔力晶球_危险指示_箭头_{currentSphere}";
+                    currentProperties.Scale=new(1,4);
+                    currentProperties.Owner=currentSphere;
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=72000000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+
+            }
+            
+            for(int i=0;i<phase3RightManaSphere.Count;++i) {
+
+                ulong currentSphere=phase3RightManaSphere[i].objectId;
+
+                if(currentSphere!=mySphere) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Name=$"本体_变异细胞_魔力晶球_危险指示_范围_{currentSphere}";
+                    currentProperties.Scale=new(2);
+                    currentProperties.Owner=currentSphere;
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=72000000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                    currentProperties.Name=$"本体_变异细胞_魔力晶球_危险指示_箭头_{currentSphere}";
+                    currentProperties.Scale=new(1,4);
+                    currentProperties.Owner=currentSphere;
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                    currentProperties.DestoryAt=72000000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+                    
+                }
+
+            }
 
         }
         
-        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (清除)",
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (指路清除)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:46334"],
             userControl:false)]
     
-        public void 本体_变异细胞_魔力晶球_清除(Event @event,ScriptAccessory accessory) {
+        public void 本体_变异细胞_魔力晶球_指路清除(Event @event,ScriptAccessory accessory) {
             
             if(isInMajorPhase1) {
 
@@ -8044,6 +8124,112 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             accessory.Method.RemoveDraw("本体_变异细胞_魔力晶球_指路");
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            if(isVulnerableInPhase3[myIndex]) {
+
+                return;
+
+            }
+
+            ulong mySphere=0;
+
+            if(isTank(myIndex)) {
+
+                mySphere=phase3UpperSphereToBeDelayed.objectId;
+
+            }
+            
+            if(isHealer(myIndex)) {
+
+                if(tankStackSoloDuringMutatingCells) {
+                    
+                    mySphere=phase3LowerSphereToBeDelayed.objectId;
+                    
+                }
+
+                else {
+                    
+                    mySphere=phase3UpperSphereToBeDelayed.objectId;
+                    
+                }
+
+            }
+
+            if(isDps(myIndex)) {
+                
+                mySphere=phase3LowerSphereToBeDelayed.objectId;
+                
+            }
+
+            if(mySphere==0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Name=$"本体_变异细胞_魔力晶球_危险指示_范围_{mySphere}";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=mySphere;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=72000000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                    
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Name=$"本体_变异细胞_魔力晶球_危险指示_箭头_{mySphere}";
+            currentProperties.Scale=new(1,4);
+            currentProperties.Owner=mySphere;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=72000000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 魔力晶球 (危险指示清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46335"],
+            userControl:false)]
+    
+        public void 本体_变异细胞_魔力晶球_危险指示清除(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!(new[]{"19206","19207","19208","19209"}.Contains(@event["SourceDataId"]))) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            accessory.Method.RemoveDraw($"本体_变异细胞_魔力晶球_危险指示_范围_{sourceId}");
+            accessory.Method.RemoveDraw($"本体_变异细胞_魔力晶球_危险指示_箭头_{sourceId}");
         
         }
         
@@ -8540,6 +8726,127 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
             
+        }
+        
+        [ScriptMethod(name:"本体 变异细胞 阴界近景与阴界远景 (安全区指示)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46379|46380)$"])]
+    
+        public void 本体_变异细胞_阴界近景与阴界远景_安全区指示(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            bool isStackNearest=false;
+
+            if(string.Equals(@event["ActionId"],"46379")) {
+                
+                isStackNearest=true;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"46380")) {
+                
+                isStackNearest=false;
+                
+            }
+
+            bool shouldStack=false;
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            else {
+
+                if(isVulnerableInPhase3[myIndex]) {
+                    
+                    shouldStack=true;
+
+                }
+
+                else {
+                    
+                    shouldStack=false;
+                    
+                }
+                
+            }
+
+            bool shouldGetIn=false;
+
+            if(isStackNearest) {
+
+                if(shouldStack) {
+
+                    shouldGetIn=true;
+
+                }
+
+                else {
+
+                    shouldGetIn=false;
+
+                }
+                    
+            }
+
+            else {
+                
+                if(shouldStack) {
+
+                    shouldGetIn=false;
+
+                }
+
+                else {
+
+                    shouldGetIn=true;
+
+                }
+                
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(7);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=((shouldGetIn)?(accessory.Data.DefaultSafeColor):(accessory.Data.DefaultDangerColor));
+            currentProperties.DestoryAt=6250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(40);
+            currentProperties.InnerScale=new(7);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=((shouldGetIn)?(accessory.Data.DefaultDangerColor):(accessory.Data.DefaultSafeColor));
+            currentProperties.DestoryAt=6250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+
         }
         
         [ScriptMethod(name:"本体 变异细胞 双重飞踢 (范围)",
