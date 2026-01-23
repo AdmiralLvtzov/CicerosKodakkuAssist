@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.1",
+        version:"0.0.2.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -11729,6 +11729,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 return;
 
             }
+            
+            if(phase4DisableGuidance) {
+
+                return;
+
+            }
 
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -12117,6 +12123,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
             
             if(isCardinalFirstInPhase4==null) {
+
+                return;
+
+            }
+            
+            if(phase4DisableGuidance) {
 
                 return;
 
