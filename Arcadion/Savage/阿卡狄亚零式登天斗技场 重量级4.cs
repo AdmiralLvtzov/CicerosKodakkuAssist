@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.1.20",
+        version:"0.0.2.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            门神已经基本完工,正在加班加点施工本体。目前正在施工四运。
+            脚本已经基本完工,目前正在进行少量精修。
             
             此脚本适配的攻略是M12S整合文档攻略,本体境中奇梦(四运)适配的攻略是文档中提及的盗火改。
             M12S整合文档攻略 - 门神: https://docs.qq.com/doc/DUHZiZU54ZGx5eGZV
@@ -94,16 +94,20 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         // ----- Major Phase 2 -----
         
-        [UserSetting("本体 强力魔法的颜色")]
-        public ScriptColor colourOfMightyMagic { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
-        [UserSetting("本体 天顶猛击的颜色")]
-        public ScriptColor colourOfTopTierSlam { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("本体 魔力爆发的颜色")]
         public ScriptColor colourOfManaBurst { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
-        [UserSetting("本体 落火飞溅的颜色")]
+        [UserSetting("本体 自我复制(一运) 强力魔法的颜色")]
+        public ScriptColor colourOfMightyMagic { get; set; } = new() { V4 = new Vector4(0.5f,0,0.5f,1) }; // Purple by default.
+        [UserSetting("本体 自我复制(一运) 天顶猛击的颜色")]
+        public ScriptColor colourOfTopTierSlam { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
+        [UserSetting("本体 模仿细胞(二运) 落火飞溅的颜色")]
         public ScriptColor colourOfFirefallSplash { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("本体 变异细胞(三运) 坦克单独撞球")]
         public bool tankStackSoloDuringMutatingCells { get; set; } = false;
+        [UserSetting("本体 境中奇梦(四运) 场地指北针")]
+        public bool northIndicatorDuringIdyllicDream { get; set; } = true;
+        [UserSetting("本体 境中奇梦(四运) 场地指北针的颜色")]
+        public ScriptColor colourOfNorthIndicator { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
         
         // ----- End Of Major Phase 2 -----
 
@@ -136,6 +140,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             Phase 2 - 模仿细胞(二运)
             Phase 3 - 变异细胞(三运)
             Phase 4 - 境中奇梦(四运)
+            Phase 5 - 狂暴
          
         */
         
@@ -237,9 +242,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private ulong phase4HiddenLindschrat=0;
         private System.Threading.AutoResetEvent phase4TwistedVision6Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision6Semaphore2=new System.Threading.AutoResetEvent(false);
-        private System.Threading.AutoResetEvent phase4TwistedVision7Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision7Semaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision7Semaphore2=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision8Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision8Semaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision8Semaphore3=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -606,9 +613,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4HiddenLindschrat=0;
             phase4TwistedVision6Semaphore1.Reset();
             phase4TwistedVision6Semaphore2.Reset();
-            phase4TwistedVision7Semaphore.Reset();
+            phase4TwistedVision7Semaphore1.Reset();
+            phase4TwistedVision7Semaphore2.Reset();
             phase4TwistedVision8Semaphore1.Reset();
             phase4TwistedVision8Semaphore2.Reset();
+            phase4TwistedVision8Semaphore3.Reset();
 
             // ----- End Of Major Phase 2 -----
 
@@ -8686,9 +8695,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4HiddenLindschrat=0;
             phase4TwistedVision6Semaphore1.Reset();
             phase4TwistedVision6Semaphore2.Reset();
-            phase4TwistedVision7Semaphore.Reset();
+            phase4TwistedVision7Semaphore1.Reset();
+            phase4TwistedVision7Semaphore2.Reset();
             phase4TwistedVision8Semaphore1.Reset();
             phase4TwistedVision8Semaphore2.Reset();
+            phase4TwistedVision8Semaphore3.Reset();
             
             Interlocked.Increment(ref currentPhase);
 
@@ -8697,6 +8708,82 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
                 
             }
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 场地指北针",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46345"])]
+    
+        public void 本体_境中奇梦_场地指北针(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if((!(3<=currentPhase&&currentPhase<=4))&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase4TwistedVisionCount!=0) {
+
+                return;
+
+            }
+
+            if(!northIndicatorDuringIdyllicDream) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.Sleep(1000);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Name="本体_境中奇梦_场地指北针";
+            currentProperties.Scale=new(2,14);
+            currentProperties.Position=new Vector3(100,0,107);
+            currentProperties.TargetPosition=new Vector3(100,0,93);
+            currentProperties.Color=colourOfNorthIndicator.V4.WithW(1);
+            currentProperties.DestoryAt=72000000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 场地指北针 (清除)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46345"],
+            userControl:false)]
+    
+        public void 本体_境中奇梦_场地指北针_清除(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase4TwistedVisionCount<8) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.Sleep(5000);
+            
+            accessory.Method.RemoveDraw("本体_境中奇梦_场地指北针");
         
         }
         
@@ -9011,7 +9098,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             if(phase4TwistedVisionCount==7) {
                 
-                phase4TwistedVision7Semaphore.Set();
+                phase4TwistedVision7Semaphore1.Set();
+                phase4TwistedVision7Semaphore2.Set();
                 
             }
             
@@ -9019,7 +9107,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 phase4TwistedVision8Semaphore1.Set();
                 phase4TwistedVision8Semaphore2.Set();
-                
+                phase4TwistedVision8Semaphore3.Set();
+
             }
             
             if(enableDebugLogging) {
@@ -11389,6 +11478,209 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
         }
         
+        [ScriptMethod(name:"本体 境中奇梦 心象投影7 人形分身的连击 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
+    
+        public void 本体_境中奇梦_心象投影7_人形分身的连击_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision7Semaphore2.WaitOne(4000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=7) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<phase4LindschratCombo.Count;++i) {
+
+                KeyValuePair<ulong,string> currentLindschrat=phase4LindschratCombo[i];
+
+                if(currentLindschrat.Key==phase4HiddenLindschrat) {
+
+                    continue;
+
+                } 
+
+                if(string.Equals(currentLindschrat.Value,"46351")) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=float.Pi/2;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=8625;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=-float.Pi/2;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=8625;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+                
+                if(string.Equals(currentLindschrat.Value,"46352")) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=0;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=8625;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=float.Pi;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=8625;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+                
+                if(string.Equals(currentLindschrat.Value,"46353")) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(10);
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.DestoryAt=8500;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影7 人形分身的连击 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
+    
+        public void 本体_境中奇梦_心象投影7_人形分身的连击_指路(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision7Semaphore1.WaitOne(4000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=7) {
+
+                return;
+
+            }
+
+            ulong targetLindschrat=0;
+
+            for(int i=0;i<phase4LindschratCombo.Count;++i) {
+
+                KeyValuePair<ulong,string> currentLindschrat=phase4LindschratCombo[i];
+
+                if(currentLindschrat.Key==phase4HiddenLindschrat) {
+
+                    continue;
+
+                }
+
+                if(string.Equals(currentLindschrat.Value,"46353")) {
+
+                    continue;
+
+                }
+
+                if(string.Equals(currentLindschrat.Value,"46351")
+                   ||
+                   string.Equals(currentLindschrat.Value,"46352")) {
+
+                    targetLindschrat=currentLindschrat.Key;
+
+                    break;
+
+                }
+
+            }
+
+            if(targetLindschrat==0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=targetLindschrat;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=8625;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=targetLindschrat;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=8625;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+        
+        }
+        
         [ScriptMethod(name:"本体 境中奇梦 心象投影8 (范围)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:48098"],
@@ -11576,6 +11868,319 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影8 隐藏的人形分身 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影8_隐藏的人形分身_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision8Semaphore3.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=8) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<phase4LindschratCombo.Count;++i) {
+
+                KeyValuePair<ulong,string> currentLindschrat=phase4LindschratCombo[i];
+
+                if(currentLindschrat.Key!=phase4HiddenLindschrat) {
+
+                    continue;
+
+                } 
+
+                if(string.Equals(currentLindschrat.Value,"46351")) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=float.Pi/2;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=4750;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=-float.Pi/2;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=4750;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+                
+                if(string.Equals(currentLindschrat.Value,"46352")) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=0;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=4750;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(60);
+                    currentProperties.Radian=float.Pi/2;
+                    currentProperties.Rotation=float.Pi;
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=4750;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+                
+                if(string.Equals(currentLindschrat.Value,"46353")) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                    currentProperties.Scale=new(10);
+                    currentProperties.Owner=currentLindschrat.Key;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=8000;
+                    currentProperties.DestoryAt=4625;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                }
+
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 狂暴 (初始化与阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46345"],
+            userControl:false)]
+    
+        public void 本体_狂暴_初始化与阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase4TwistedVisionCount<8) {
+
+                return;
+
+            }
+            
+            System.Threading.Thread.MemoryBarrier();
+            
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+            
+            Interlocked.Increment(ref currentPhase);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"isInMajorPhase1={isInMajorPhase1}\ncurrentPhase={currentPhase}");
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"本体 狂暴 双重飞踢 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(46368|46373)$"])]
+
+        public void 本体_狂暴_双重飞踢_范围(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+
+                return;
+
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi;
+
+            if(string.Equals(@event["ActionId"],"46368")) {
+
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=5500;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"46373")) {
+
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=4500;
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 狂暴 魔力连击 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:46368"])]
+    
+        public void 本体_狂暴_魔力连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=10125;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(10);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=2;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=10125;
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 狂暴 (搞怪)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:46188"],
+            suppress:1000,
+            userControl:false)]
+    
+        public void 本体_狂暴_搞怪(Event @event,ScriptAccessory accessory) {
+
+            return; // To be removed in the future.
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!enableWipeShenanigans) {
+
+                return;
+
+            }
+
+            List<string> ChurchillsSpeech=[
+                "我们要坚持到最后! <se.7>",
+                "我们将在海上作战—— <se.9>",
+                "我们将以越来越强大的信心和实力在空中作战—— <se.9>",
+                "我们将保卫我们的岛屿,无论代价如何! <se.7>",
+                "我们将在海滩上战斗—— <se.9>",
+                "我们将在登陆地上战斗—— <se.9>",
+                "我们将在田野和街道上战斗—— <se.9>",
+                "我们将在山丘上战斗—— <se.9>",
+                "我们决不投降! <se.7>",
+                "直到新世界在上帝认为合适的时刻—— <se.9>",
+                "以其所有的力量,站出来拯救并解放这个旧世界! <se.7>",
+                "以及,或许我们还将抡起破酒瓶与他们战斗,因为那时我们就只剩这个了。 <se.11>"
+            ];
+
+            for(int i=0;i<ChurchillsSpeech.Count;++i) {
+                
+                accessory.Method.SendChat("/p "+ChurchillsSpeech[i]);
+                
+                System.Threading.Thread.Sleep(2500);
+                
+            }
+
         }
 
         #endregion
