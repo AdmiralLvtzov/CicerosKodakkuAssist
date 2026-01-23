@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.2",
+        version:"0.0.2.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -108,6 +108,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public bool northIndicatorDuringIdyllicDream { get; set; } = true;
         [UserSetting("本体 境中奇梦(四运) 场地指北针的颜色")]
         public ScriptColor colourOfNorthIndicator { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
+        [UserSetting("本体 境中奇梦(四运) 启用小队指挥")]
+        public bool enablePartyAssistance { get; set; } = false;
         
         // ----- End Of Major Phase 2 -----
 
@@ -223,7 +225,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private List<KeyValuePair<ulong,string>> phase4LindschratCombo=new List<KeyValuePair<ulong,string>>();
         private volatile int phase4LindschratCount=0;
         private bool?[] isLindschratDefamationInPhase4=Enumerable.Range(0,8).Select(i=>((bool?)null)).ToArray();
-        private System.Threading.AutoResetEvent phase4LindschratSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4LindschratSemaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4LindschratSemaphore2=new System.Threading.AutoResetEvent(false);
         private volatile int phase4StagingActionCount=0;
         private bool[] isStagingDefamationInPhase4=Enumerable.Range(0,8).Select(i=>false).ToArray();
         private int[] phase4PlayerOrder=Enumerable.Range(0,8).Select(i=>-1).ToArray();
@@ -237,8 +240,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         private System.Threading.AutoResetEvent phase4TowerPreviewSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore3=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision4Semaphore4=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase4TwistedVision5Semaphore3=new System.Threading.AutoResetEvent(false);
         private ulong phase4HiddenLindschrat=0;
         private System.Threading.AutoResetEvent phase4TwistedVision6Semaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase4TwistedVision6Semaphore2=new System.Threading.AutoResetEvent(false);
@@ -489,6 +495,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
             accessory.Method.RemoveDraw(".*");
             
+            if(enablePartyAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
+            
             if(startFromMajorPhase2) {
 
                 isInMajorPhase1=false;
@@ -597,7 +609,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4LindschratCombo.Clear();
             phase4LindschratCount=0;
             for(int i=0;i<isLindschratDefamationInPhase4.Length;++i)isLindschratDefamationInPhase4[i]=null;
-            phase4LindschratSemaphore.Reset();
+            phase4LindschratSemaphore1.Reset();
+            phase4LindschratSemaphore2.Reset();
             phase4StagingActionCount=0;
             for(int i=0;i<isStagingDefamationInPhase4.Length;++i)isStagingDefamationInPhase4[i]=false;
             for(int i=0;i<phase4PlayerOrder.Length;++i)phase4PlayerOrder[i]=-1;
@@ -611,8 +624,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4TowerPreviewSemaphore.Reset();
             phase4TwistedVision4Semaphore1.Reset();
             phase4TwistedVision4Semaphore2.Reset();
+            phase4TwistedVision4Semaphore3.Reset();
+            phase4TwistedVision4Semaphore4.Reset();
             phase4TwistedVision5Semaphore1.Reset();
             phase4TwistedVision5Semaphore2.Reset();
+            phase4TwistedVision5Semaphore3.Reset();
             phase4HiddenLindschrat=0;
             phase4TwistedVision6Semaphore1.Reset();
             phase4TwistedVision6Semaphore2.Reset();
@@ -8974,6 +8990,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
             
+            if(enablePartyAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
+            
             phase4PlayerStagingCount=0;
             for(int i=0;i<phase4PlayerStaging.Length;++i)phase4PlayerStaging[i]=-1;
             isCardinalFirstInPhase4=null;
@@ -8983,7 +9005,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4LindschratCombo.Clear();
             phase4LindschratCount=0;
             for(int i=0;i<isLindschratDefamationInPhase4.Length;++i)isLindschratDefamationInPhase4[i]=null;
-            phase4LindschratSemaphore.Reset();
+            phase4LindschratSemaphore1.Reset();
+            phase4LindschratSemaphore2.Reset();
             phase4StagingActionCount=0;
             for(int i=0;i<isStagingDefamationInPhase4.Length;++i)isStagingDefamationInPhase4[i]=false;
             for(int i=0;i<phase4PlayerOrder.Length;++i)phase4PlayerOrder[i]=-1;
@@ -8997,8 +9020,11 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             phase4TowerPreviewSemaphore.Reset();
             phase4TwistedVision4Semaphore1.Reset();
             phase4TwistedVision4Semaphore2.Reset();
+            phase4TwistedVision4Semaphore3.Reset();
+            phase4TwistedVision4Semaphore4.Reset();
             phase4TwistedVision5Semaphore1.Reset();
             phase4TwistedVision5Semaphore2.Reset();
+            phase4TwistedVision5Semaphore3.Reset();
             phase4HiddenLindschrat=0;
             phase4TwistedVision6Semaphore1.Reset();
             phase4TwistedVision6Semaphore2.Reset();
@@ -9386,6 +9412,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 phase4TwistedVision4Semaphore1.Set();
                 phase4TwistedVision4Semaphore2.Set();
+                phase4TwistedVision4Semaphore3.Set();
+                phase4TwistedVision4Semaphore4.Set();
 
             }
 
@@ -9393,7 +9421,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
                 phase4TwistedVision5Semaphore1.Set();
                 phase4TwistedVision5Semaphore2.Set();
-                
+                phase4TwistedVision5Semaphore3.Set();
+
             }
             
             if(phase4TwistedVisionCount==6) {
@@ -9577,7 +9606,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
                 if(phase4LindschratCount==8) {
 
-                    phase4LindschratSemaphore.Set();
+                    phase4LindschratSemaphore1.Set();
+                    phase4LindschratSemaphore2.Set();
 
                     if(enableDebugLogging) {
 
@@ -9638,7 +9668,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            phase4LindschratSemaphore.WaitOne();
+            phase4LindschratSemaphore1.WaitOne();
             
             int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
             
@@ -9739,6 +9769,108 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.DestoryAt=8000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影2 人形分身 (接线小队指挥)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:regex:^(0171|0170)$"],
+            suppress:10000)]
+    
+        public void 本体_境中奇梦_心象投影2_人形分身_接线小队指挥(Event @event,ScriptAccessory accessory) {
+
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!(2<=phase4TwistedVisionCount&&phase4TwistedVisionCount<4)) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=19204) {
+
+                return;
+
+            }
+
+            phase4LindschratSemaphore2.WaitOne();
+
+            if(!enablePartyAssistance) {
+
+                return;
+
+            }
+
+            bool[] isExpectedToBeDefamation=[false,true,false,true,true,false,true,false];
+            int[] partyInOrder=[-1,-1,-1,-1,-1,-1,-1,-1];
+
+            for(int i=0;i<8;i+=2) {
+
+                int currentOwner=Array.IndexOf(phase4PlayerStaging,i);
+
+                if(!isLegalPartyIndex(currentOwner)) {
+
+                    continue;
+
+                }
+                
+                int currentPartner=Array.IndexOf(phase4PlayerStaging,i+1);
+
+                if(!isLegalPartyIndex(currentPartner)) {
+
+                    continue;
+
+                }
+
+                if(isLindschratDefamationInPhase4[currentOwner]==null
+                   ||
+                   isLindschratDefamationInPhase4[currentPartner]==null) {
+
+                    continue;
+
+                }
+
+                if(((bool)isLindschratDefamationInPhase4[i])==isExpectedToBeDefamation[i]) {
+
+                    partyInOrder[i]=currentOwner;
+                    partyInOrder[i+1]=currentPartner;
+
+                }
+
+                else {
+                    
+                    partyInOrder[i]=currentPartner;
+                    partyInOrder[i+1]=currentOwner;
+                    
+                }
+
+            }
+            
+            SendTetherInformation(accessory,partyInOrder);
 
         }
         
@@ -10923,6 +11055,208 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             
         }
         
+        [ScriptMethod(name:"本体 境中奇梦 心象投影4 (小队指挥)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影4_小队指挥(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase4DisableGuidance) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision4Semaphore3.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=4) {
+
+                return;
+
+            }
+            
+            if(!enablePartyAssistance) {
+
+                return;
+
+            }
+            
+            int[] partyInOrder=[-1,-1,-1,-1,-1,-1,-1,-1];
+
+            for(int i=0;i<8;++i) {
+
+                int currentPlayer=Array.IndexOf(phase4PlayerStaging,i);
+
+                if(!isLegalPartyIndex(currentPlayer)) {
+
+                    continue;
+
+                }
+
+                else {
+
+                    partyInOrder[i]=currentPlayer;
+
+                }
+
+            }
+            
+            int[] rightDefamation=[-1,-1];
+            
+            rightDefamation[0]=Array.IndexOf(phase4PlayerStaging,1);
+            rightDefamation[1]=Array.IndexOf(phase4PlayerStaging,3);
+            
+            int[] leftDefamation=[-1,-1];
+            
+            leftDefamation[0]=Array.IndexOf(phase4PlayerStaging,4);
+            leftDefamation[1]=Array.IndexOf(phase4PlayerStaging,6);
+            
+            SendLindschratInformation(accessory,partyInOrder,rightDefamation,leftDefamation);
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影4 (小队标记)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:48098"],
+            suppress:1000)]
+    
+        public void 本体_境中奇梦_心象投影4_小队标记(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase4DisableGuidance) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision4Semaphore4.WaitOne(1000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=4) {
+
+                return;
+
+            }
+            
+            if(!enablePartyAssistance) {
+
+                return;
+
+            }
+            
+            int[] rightDefamation=[-1,-1];
+            
+            rightDefamation[0]=Array.IndexOf(phase4PlayerStaging,1);
+
+            if(!isLegalPartyIndex(rightDefamation[0])) {
+
+                return;
+
+            }
+            
+            rightDefamation[1]=Array.IndexOf(phase4PlayerStaging,3);
+            
+            if(!isLegalPartyIndex(rightDefamation[1])) {
+
+                return;
+
+            }
+            
+            int[] leftDefamation=[-1,-1];
+            
+            leftDefamation[0]=Array.IndexOf(phase4PlayerStaging,4);
+            
+            if(!isLegalPartyIndex(leftDefamation[0])) {
+
+                return;
+
+            }
+            
+            leftDefamation[1]=Array.IndexOf(phase4PlayerStaging,6);
+            
+            if(!isLegalPartyIndex(leftDefamation[1])) {
+
+                return;
+
+            }
+
+            string log=string.Empty;
+            
+            accessory.Method.Mark(accessory.Data.PartyList[rightDefamation[0]],MarkType.Stop1);
+
+            if(enableDebugLogging) {
+
+                log+=$"Mark {rightDefamation[0]} as {MarkType.Stop1.ToString()}\n";
+
+            }
+            
+            accessory.Method.Mark(accessory.Data.PartyList[rightDefamation[1]],MarkType.Stop2);
+            
+            if(enableDebugLogging) {
+
+                log+=$"Mark {rightDefamation[1]} as {MarkType.Stop2.ToString()}\n";
+
+            }
+            
+            accessory.Method.Mark(accessory.Data.PartyList[leftDefamation[0]],MarkType.Bind1);
+
+            if(enableDebugLogging) {
+
+                log+=$"Mark {leftDefamation[0]} as {MarkType.Bind1.ToString()}\n";
+
+            }
+            
+            accessory.Method.Mark(accessory.Data.PartyList[leftDefamation[1]],MarkType.Bind2);
+            
+            if(enableDebugLogging) {
+
+                log+=$"Mark {leftDefamation[1]} as {MarkType.Bind2.ToString()}";
+
+            }
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug(log);
+                
+            }
+
+        }
+        
         [ScriptMethod(name:"本体 境中奇梦 心象投影5 来自塔的技能 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:48098"])]
@@ -11193,6 +11527,84 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             currentProperties.DestoryAt=8375;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"本体 境中奇梦 心象投影5 塔 (踩塔小队指挥)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
+    
+        public void 本体_境中奇梦_心象投影5_塔_踩塔小队指挥(Event @event,ScriptAccessory accessory) {
+            
+            if(isInMajorPhase1) {
+
+                return;
+                
+            }
+
+            if(currentPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool isTheRound=phase4TwistedVision5Semaphore3.WaitOne(4000);
+
+            if(!isTheRound) {
+
+                return;
+
+            }
+            
+            if(phase4TwistedVisionCount!=5) {
+
+                return;
+
+            }
+            
+            if(!enablePartyAssistance) {
+
+                return;
+
+            }
+            
+            int[] partyInOrder=[-1,-1,-1,-1,-1,-1,-1,-1];
+
+            for(int i=0;i<4;++i) {
+
+                int currentOwner=i;
+
+                if(!isLegalPartyIndex(currentOwner)) {
+
+                    continue;
+
+                }
+                
+                int currentPartner=i+4;
+
+                if(!isLegalPartyIndex(currentPartner)) {
+
+                    continue;
+
+                }
+
+                if(swapsWithPartnerInPhase4[i]) {
+
+                    partyInOrder[currentOwner]=currentPartner;
+                    partyInOrder[currentPartner]=currentOwner;
+
+                }
+
+                else {
+                    
+                    partyInOrder[currentOwner]=currentOwner;
+                    partyInOrder[currentPartner]=currentPartner;
+                    
+                }
+
+            }
+            
+            SendTowerInformation(accessory,partyInOrder);
             
         }
         
@@ -12340,6 +12752,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 accessory.Method.RemoveDraw(".*");
                 
             }
+
+            if(enablePartyAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
             
             Interlocked.Increment(ref currentPhase);
 
@@ -12456,8 +12874,6 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             userControl:false)]
     
         public void 本体_狂暴_搞怪(Event @event,ScriptAccessory accessory) {
-
-            return; // To be removed in the future.
             
             if(isInMajorPhase1) {
 
@@ -12472,6 +12888,12 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             if(!enableWipeShenanigans) {
+
+                return;
+
+            }
+
+            if(!enablePartyAssistance) {
 
                 return;
 
@@ -12500,6 +12922,253 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 
             }
 
+        }
+        
+        private void SendLindschratInformation(ScriptAccessory accessory,int[] partyInOrder,int[] rightDefamation,int[] leftDefamation) {
+
+            if(partyInOrder==null) {
+
+                return;
+
+            }
+
+            if(partyInOrder.Length!=8) {
+
+                return;
+
+            }
+
+            if(rightDefamation==null) {
+
+                return;
+
+            }
+
+            if(rightDefamation.Length!=2) {
+
+                return;
+
+            }
+            
+            if(leftDefamation==null) {
+
+                return;
+
+            }
+
+            if(leftDefamation.Length!=2) {
+
+                return;
+
+            }
+
+            for(int i=0;i<partyInOrder.Length;++i) {
+
+                if(!isLegalPartyIndex(partyInOrder[i])) {
+
+                    return;
+
+                }
+                
+            }
+            
+            for(int i=0;i<rightDefamation.Length;++i) {
+
+                if(!isLegalPartyIndex(rightDefamation[i])) {
+
+                    return;
+
+                }
+                
+            }
+            
+            for(int i=0;i<leftDefamation.Length;++i) {
+
+                if(!isLegalPartyIndex(leftDefamation[i])) {
+
+                    return;
+
+                }
+                
+            }
+
+            string log=$"""
+
+                                      北
+                        {ConvertIndexToAsianStyleRole(partyInOrder[4])}{ConvertIndexToAsianStyleRole(partyInOrder[5])}         {ConvertIndexToAsianStyleRole(partyInOrder[0])}{ConvertIndexToAsianStyleRole(partyInOrder[1])}
+                        {ConvertIndexToAsianStyleRole(partyInOrder[6])}{ConvertIndexToAsianStyleRole(partyInOrder[7])}         {ConvertIndexToAsianStyleRole(partyInOrder[2])}{ConvertIndexToAsianStyleRole(partyInOrder[3])}
+                        
+                          {ConvertIndexToAsianStyleRole(leftDefamation[0])}  大圈1   {ConvertIndexToAsianStyleRole(rightDefamation[0])}
+                          {ConvertIndexToAsianStyleRole(leftDefamation[1])}  大圈2   {ConvertIndexToAsianStyleRole(rightDefamation[1])}
+                        锁链禁止是大圈
+                        锁链去左西,禁止去右东
+                        1先放圈,2先分摊
+                        <se.1>
+                        """;
+            
+            accessory.Method.SendChat("/p "+log);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug(log);
+                
+            }
+            
+            /*
+
+            accessory.Method.SendChat($"""
+
+                                                     北
+                                       MTH1         STH2
+                                       D1D3         D2D4
+                                       
+                                         MT  大圈1   ST
+                                         D1  大圈2   D2
+                                       """);
+
+            */
+
+        }
+        
+        private void SendTowerInformation(ScriptAccessory accessory,int[] partyInOrder) {
+
+            if(partyInOrder==null) {
+
+                return;
+
+            }
+
+            if(partyInOrder.Length!=8) {
+
+                return;
+
+            }
+
+            for(int i=0;i<partyInOrder.Length;++i) {
+
+                if(!isLegalPartyIndex(partyInOrder[i])) {
+
+                    return;
+
+                }
+                
+            }
+
+            string log=$"""
+
+                                          北
+                        {ConvertIndexToAsianStyleRole(partyInOrder[2])}    {ConvertIndexToAsianStyleRole(partyInOrder[0])}         {ConvertIndexToAsianStyleRole(partyInOrder[5])}    {ConvertIndexToAsianStyleRole(partyInOrder[7])}
+                                       Boss
+                        {ConvertIndexToAsianStyleRole(partyInOrder[6])}    {ConvertIndexToAsianStyleRole(partyInOrder[4])}          {ConvertIndexToAsianStyleRole(partyInOrder[1])}     {ConvertIndexToAsianStyleRole(partyInOrder[3])}
+                        <se.1>
+                        """;
+            
+            accessory.Method.SendChat("/p "+log);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug(log);
+                
+            }
+            
+            /*
+
+            accessory.Method.SendChat($"""
+
+                                                         北
+                                       H1    MT         D2    D4
+                                                      Boss
+                                       D3    D1          ST     H2
+                                       
+                                       """);
+
+            */
+
+        }
+
+        private void SendTetherInformation(ScriptAccessory accessory,int[] partyInOrder) {
+
+            if(partyInOrder==null) {
+
+                return;
+
+            }
+
+            if(partyInOrder.Length!=8) {
+
+                return;
+
+            }
+
+            for(int i=0;i<partyInOrder.Length;++i) {
+
+                if(!isLegalPartyIndex(partyInOrder[i])) {
+
+                    return;
+
+                }
+                
+            }
+
+            string log=$"""
+
+                                 {ConvertIndexToAsianStyleRole(partyInOrder[0])}
+                            {ConvertIndexToAsianStyleRole(partyInOrder[7])}     {ConvertIndexToAsianStyleRole(partyInOrder[1])}
+                        {ConvertIndexToAsianStyleRole(partyInOrder[6])}             {ConvertIndexToAsianStyleRole(partyInOrder[2])}
+                            {ConvertIndexToAsianStyleRole(partyInOrder[5])}     {ConvertIndexToAsianStyleRole(partyInOrder[3])}
+                                 {ConvertIndexToAsianStyleRole(partyInOrder[4])}
+                        <se.1>
+                        """;
+            
+            accessory.Method.SendChat("/p "+log);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug(log);
+                
+            }
+            
+            /*
+            
+            accessory.Method.SendChat($"""
+
+                                                MT
+                                           D3     D4
+                                       H1             H2
+                                           D1     D2
+                                                ST
+                                       """);
+            
+            */
+
+        }
+
+        private string ConvertIndexToAsianStyleRole(int index) {
+
+            if(!isLegalPartyIndex(index)) {
+
+                return string.Empty;
+
+            }
+
+            else {
+
+                return index switch{
+                    
+                    0 => "MT",
+                    1 => "ST",
+                    2 => "H1",
+                    3 => "H2",
+                    4 => "D1",
+                    5 => "D2",
+                    6 => "D3",
+                    7 => "D4",
+                    _ => string.Empty
+                    
+                };
+
+            }
+            
         }
 
         #endregion
