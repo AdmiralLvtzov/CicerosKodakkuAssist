@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.4",
+        version:"0.0.2.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -12998,8 +12998,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                           {ConvertIndexToAsianStyleRole(leftDefamation[1])}  大圈2   {ConvertIndexToAsianStyleRole(rightDefamation[1])}
                         锁链禁止是大圈
                         锁链去左西,禁止去右东
-                        1先放圈,2先分摊
-                        <se.1>
+                        1先放圈
+                        <se.1> <se.1> <se.1>
                         """;
             
             accessory.Method.SendChat("/p "+log);
@@ -13056,7 +13056,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         {ConvertIndexToAsianStyleRole(partyInOrder[2])}    {ConvertIndexToAsianStyleRole(partyInOrder[0])}         {ConvertIndexToAsianStyleRole(partyInOrder[5])}    {ConvertIndexToAsianStyleRole(partyInOrder[7])}
                                        Boss
                         {ConvertIndexToAsianStyleRole(partyInOrder[6])}    {ConvertIndexToAsianStyleRole(partyInOrder[4])}          {ConvertIndexToAsianStyleRole(partyInOrder[1])}     {ConvertIndexToAsianStyleRole(partyInOrder[3])}
-                        <se.1>
+                        <se.1> <se.1> <se.1>
                         """;
             
             accessory.Method.SendChat("/p "+log);
@@ -13113,7 +13113,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         {ConvertIndexToAsianStyleRole(partyInOrder[6])}             {ConvertIndexToAsianStyleRole(partyInOrder[2])}
                             {ConvertIndexToAsianStyleRole(partyInOrder[5])}     {ConvertIndexToAsianStyleRole(partyInOrder[3])}
                                  {ConvertIndexToAsianStyleRole(partyInOrder[4])}
-                        <se.1>
+                        <se.1> <se.1> <se.1>
                         """;
             
             accessory.Method.SendChat("/p "+log);
