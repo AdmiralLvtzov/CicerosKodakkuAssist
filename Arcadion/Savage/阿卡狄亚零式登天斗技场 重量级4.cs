@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.3",
+        version:"0.0.2.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -57,8 +57,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         public ScriptColor colourOfDirectionIndicators { get; set; } = new() { V4 = new Vector4(1,1,0, 1) }; // Yellow by default.
         [UserSetting("通用 高度危险攻击的颜色")]
         public ScriptColor colourOfExtremelyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
-        [UserSetting("通用 启用团灭搞怪")]
-        public bool enableWipeShenanigans { get; set; } = false;
+        [UserSetting("通用 启用搞怪")]
+        public bool enableShenanigans { get; set; } = false;
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
         [UserSetting("调试 忽略所有阶段检查")]
@@ -692,13 +692,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
         [ScriptMethod(name:"Shenanigans",
             eventType:EventTypeEnum.AddCombatant,
-            eventCondition:["DataId:19195|19202"],
+            eventCondition:["DataId:regex:^(19195|19202)$"],
             suppress:13000,
             userControl:false)]
 
         public void Shenanigans(Event @event,ScriptAccessory accessory) {
             
-            if(!enableWipeShenanigans) {
+            if(!enableShenanigans) {
 
                 return;
 
@@ -1939,7 +1939,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         [ScriptMethod(name:"门神 细胞附身·中期 出口 (指路)",
             eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:46267"])]
+            eventCondition:["ActionId:regex:^(46264|46265|46266|46267)$"])]
     
         public void 门神_细胞附身_中期_出口_指路(Event @event,ScriptAccessory accessory) {
 
@@ -10705,9 +10705,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         }
         
         [ScriptMethod(name:"本体 境中奇梦 心象投影4 (范围)",
-            eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:48098"],
-            suppress:1000)]
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
     
         public void 本体_境中奇梦_心象投影4_范围(Event @event,ScriptAccessory accessory) {
             
@@ -10723,7 +10722,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            bool isTheRound=phase4TwistedVision4Semaphore2.WaitOne(1000);
+            bool isTheRound=phase4TwistedVision4Semaphore2.WaitOne(4000);
 
             if(!isTheRound) {
 
@@ -10737,7 +10736,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            int delay=1500;
+            int delay=5500;
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             for(int round=0;round<4;++round) {
@@ -10852,9 +10851,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         }
         
         [ScriptMethod(name:"本体 境中奇梦 心象投影4 (指路)",
-            eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:48098"],
-            suppress:1000)]
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
     
         public void 本体_境中奇梦_心象投影4_指路(Event @event,ScriptAccessory accessory) {
             
@@ -10876,7 +10874,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            bool isTheRound=phase4TwistedVision4Semaphore1.WaitOne(1000);
+            bool isTheRound=phase4TwistedVision4Semaphore1.WaitOne(4000);
 
             if(!isTheRound) {
 
@@ -10913,7 +10911,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             }
 
             bool isLastActionDefamation=false;
-            int delay=1500;
+            int delay=5500;
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             for(int round=0;round<4;++round) {
@@ -11056,9 +11054,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         }
         
         [ScriptMethod(name:"本体 境中奇梦 心象投影4 (小队指挥)",
-            eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:48098"],
-            suppress:1000)]
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
     
         public void 本体_境中奇梦_心象投影4_小队指挥(Event @event,ScriptAccessory accessory) {
             
@@ -11080,7 +11077,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            bool isTheRound=phase4TwistedVision4Semaphore3.WaitOne(1000);
+            bool isTheRound=phase4TwistedVision4Semaphore3.WaitOne(4000);
 
             if(!isTheRound) {
 
@@ -11135,9 +11132,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         }
         
         [ScriptMethod(name:"本体 境中奇梦 心象投影4 (小队标记)",
-            eventType:EventTypeEnum.ActionEffect,
-            eventCondition:["ActionId:48098"],
-            suppress:1000)]
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48098"])]
     
         public void 本体_境中奇梦_心象投影4_小队标记(Event @event,ScriptAccessory accessory) {
             
@@ -11159,7 +11155,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            bool isTheRound=phase4TwistedVision4Semaphore4.WaitOne(1000);
+            bool isTheRound=phase4TwistedVision4Semaphore4.WaitOne(4000);
 
             if(!isTheRound) {
 
@@ -11916,8 +11912,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             if(myTowerType==Phase4Towers.FIRE) {
 
-                currentProperties.Delay=5500;
-                currentProperties.DestoryAt=5125;
+                currentProperties.Delay=6000;
+                currentProperties.DestoryAt=4625;
 
             }
             
@@ -11932,7 +11928,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                 currentProperties.TargetPosition=myPosition;
                 currentProperties.ScaleMode|=ScaleMode.YByDistance;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
-                currentProperties.DestoryAt=5500;
+                currentProperties.DestoryAt=6000;
                 
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
@@ -12887,7 +12883,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            if(!enableWipeShenanigans) {
+            if(!enableShenanigans) {
 
                 return;
 
