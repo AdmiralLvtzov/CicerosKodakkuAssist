@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.5",
+        version:"0.0.2.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -11374,7 +11374,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                         currentProperties.Scale=new(10,50);
-                        currentProperties.Owner=accessory.Data.PartyList[currentOwner];
+                        currentProperties.Position=PHASE4_DEFAULT_TOWER[i];
+                        currentProperties.TargetObject=accessory.Data.PartyList[currentOwner];
                         currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                         currentProperties.DestoryAt=9375;
         
