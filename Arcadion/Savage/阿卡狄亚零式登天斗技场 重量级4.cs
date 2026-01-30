@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 重量级4",
         territorys:[1327],
         guid:"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-        version:"0.0.2.6",
+        version:"0.0.2.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,7 +34,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             """
             阿卡狄亚零式登天斗技场重量级4(也就是M12S)的脚本。
             
-            脚本已经基本完工,目前正在进行少量精修。
+            脚本已经完工,后续将仅有修复bug的更新(如有)而不会有大的改动。
             
             此脚本适配的攻略是M12S整合文档攻略,本体境中奇梦(四运)适配的攻略是文档中提及的盗火改。
             M12S整合文档攻略 - 门神: https://docs.qq.com/doc/DUHZiZU54ZGx5eGZV
@@ -517,6 +517,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
             initializedMajorPhase2=false;
             
             VariableAndSemaphoreInitialization();
+
+            shenaniganSemaphore.Set();
             
             targetIconBaseId=null;
 
@@ -704,7 +706,13 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
 
             }
 
-            shenaniganSemaphore.WaitOne();
+            bool wasWipe=shenaniganSemaphore.WaitOne(13000);
+
+            if(!wasWipe) {
+
+                return;
+
+            }
 
             System.Threading.Thread.Sleep(3000);
             
@@ -955,7 +963,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         [ScriptMethod(name:"门神 致命灾变 (范围) !!!未完工,不生效!!!",
             eventType:EventTypeEnum.StartCasting,
-            eventCondition:["ActionId:46229"])]
+            eventCondition:["ActionId:46229"],
+            userControl:false)]
     
         public void 门神_致命灾变_范围(Event @event,ScriptAccessory accessory) {
 
@@ -1007,7 +1016,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.Heavyweight.ChinaDataCenter
         
         [ScriptMethod(name:"门神 致命灾变 (指路) !!!未完工,不生效!!!",
             eventType:EventTypeEnum.StartCasting,
-            eventCondition:["ActionId:46229"])]
+            eventCondition:["ActionId:46229"],
+            userControl:false)]
     
         public void 门神_致命灾变_指路(Event @event,ScriptAccessory accessory) {
 

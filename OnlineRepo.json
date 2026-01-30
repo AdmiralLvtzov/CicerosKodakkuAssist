@@ -38,10 +38,10 @@
   {
     "Name":"阿卡狄亚零式登天斗技场 重量级4",
     "Guid":"d1d8375c-75e4-49a8-8764-aab85a982f0a",
-    "Version":"0.0.2.6",
+    "Version":"0.0.2.7",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1327],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/%E9%98%BF%E5%8D%A1%E7%8B%84%E4%BA%9A%E9%9B%B6%E5%BC%8F%E7%99%BB%E5%A4%A9%E6%96%97%E6%8A%80%E5%9C%BA%20%E9%87%8D%E9%87%8F%E7%BA%A74.cs",
-    "UpdateInfo":"上次更新: 2026年1月28日\n更新内容: 已完工,正在进行少量精修。新增本体境中奇梦(四运)小队指挥。修复本体境中奇梦(四运)暗塔的技能范围。"
+    "UpdateInfo":"上次更新: 2026年1月30日\n更新内容:\n脚本已经完工。\n新增本体境中奇梦(四运)的小队指挥功能。\n修复搞怪不生效的bug。"
   }
 ]
