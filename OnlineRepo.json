@@ -43,5 +43,14 @@
     "TerritoryIds":[1327],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/Arcadion/Savage/%E9%98%BF%E5%8D%A1%E7%8B%84%E4%BA%9A%E9%9B%B6%E5%BC%8F%E7%99%BB%E5%A4%A9%E6%96%97%E6%8A%80%E5%9C%BA%20%E9%87%8D%E9%87%8F%E7%BA%A74.cs",
     "UpdateInfo":"上次更新: 2026年2月11日\n更新内容:\n脚本已经完工。\n新增了本体境中奇梦(四运)的小队指挥功能。\n调整了几处绘制类型。"
+  },
+  {
+    "Name":"究极神兵绝境战",
+    "Guid":"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
+    "Version":"0.0.0.1",
+    "Author":"Cicero 灵视",
+    "TerritoryIds":[777],
+    "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/WeaponsRefrainUltimate/%E7%A9%B6%E6%9E%81%E7%A5%9E%E5%85%B5%E7%BB%9D%E5%A2%83%E6%88%98.cs",
+    "UpdateInfo":"上次更新: 2026年4月3日\n更新内容: 刚开始施工,进度随缘。"
   }
 ]
