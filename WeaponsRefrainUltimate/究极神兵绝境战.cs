@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.0.1",
+        version:"0.0.0.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -69,13 +69,84 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Variables_And_Semaphores
         
+        private volatile int majorPhase=1;
+        private volatile int phase=1;
         
+        /*
+
+        Major Phase 1 - 迦楼罗:
+
+            Phases are separated by Feather Rain.
+            阶段由飞翎雨分隔。
+        
+        Major Phase 2 - 伊弗利特:
+        
+            Phase 1 - 占位符
+            Phase 2 - 占位符
+            Phase 3 - 占位符
+            
+        Major Phase 3 - 泰坦:
+
+            Phase 1 - 占位符
+            Phase 2 - 占位符
+            Phase 3 - 占位符
+            
+        Major Phase 4 - 无影拉哈布雷亚:
+
+            Phase 1 - 占位符
+            Phase 2 - 占位符
+            Phase 3 - 占位符
+            
+        Major Phase 5 - 究极神兵:
+
+            Phase 1 - 占位符
+            Phase 2 - 占位符
+            Phase 3 - 占位符
+
+        */
+        
+        // ----- Major Phase 1 -----
+
+        private volatile int phase1_slipstreamCounter=0;
+        private ulong phase1_targetOfMistralSong=0;
+        private System.Threading.AutoResetEvent phase1_mistralSongSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase1_downburstSemaphore=new System.Threading.AutoResetEvent(false);
+        
+        // ----- End Of Major Phase 1 -----
+        
+        // ----- Major Phase 2 -----
+        
+        
+        
+        // ----- End Of Major Phase 2 -----
+        
+        // ----- Major Phase 3 -----
+        
+        
+        
+        // ----- End Of Major Phase 3 -----
+        
+        // ----- Major Phase 4 -----
+        
+        
+        
+        // ----- End Of Major Phase 4 -----
+        
+        // ----- Major Phase 5 -----
+        
+        
+        
+        // ----- End Of Major Phase 5 -----
         
         #endregion
         
         #region Constants_And_Locks
         
+        private const int MAXIMUM_DURATION=7200000;
+        private const int COMMON_INTERVAL=2500;
         
+        private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
+        // The arena is a circle with a radius of 20.
         
         #endregion
         
@@ -102,8 +173,42 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         }
 
         private void VariableAndSemaphoreInitialization() {
+
+            majorPhase=1;
+            phase=1;
             
+            // ----- Major Phase 1 -----
             
+            phase1_slipstreamCounter=0;
+            phase1_targetOfMistralSong=0;
+            phase1_mistralSongSemaphore.Reset();
+            phase1_downburstSemaphore.Reset();
+
+            // ----- End Of Major Phase 1 -----
+
+            // ----- Major Phase 2 -----
+
+
+
+            // ----- End Of Major Phase 2 -----
+
+            // ----- Major Phase 3 -----
+
+
+
+            // ----- End Of Major Phase 3 -----
+
+            // ----- Major Phase 4 -----
+
+
+
+            // ----- End Of Major Phase 4 -----
+
+            // ----- Major Phase 5 -----
+
+
+
+            // ----- End Of Major Phase 5 -----
 
         }
         
@@ -169,9 +274,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
 
-            bool wasWipe=shenaniganSemaphore.WaitOne(14000);
+            bool wasSignalled=shenaniganSemaphore.WaitOne(14000);
 
-            if(!wasWipe) {
+            if(!wasSignalled) {
 
                 return;
 
@@ -199,7 +304,470 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Garuda
         
+        [ScriptMethod(name:"迦楼罗 向东拉Boss (指示,仅MT)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8722"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 迦楼罗_向东拉Boss_指示_仅MT(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            System.Threading.Tasks.Task.Delay(4000).ContinueWith(_=> {
+                
+                if(majorPhase!=1&&!skipPhaseChecks) {
+
+                    return;
+
+                }
+
+                if(phase!=1&&!skipPhaseChecks) {
+
+                    return;
+
+                }
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+                if(!isLegalPartyIndex(myIndex)) {
+
+                    return;
+
+                }
+
+                if(myIndex!=0) {
+
+                    return;
+
+                }
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="迦楼罗_向东拉Boss_指示_仅MT";
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetPosition=new Vector3(116.25f,0,100);
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            });
+
+        }
         
+        [ScriptMethod(name:"迦楼罗 向东拉Boss (指示清除)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11091"],
+            userControl:false)]
+
+        public void 迦楼罗_向东拉Boss_指示清除(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw("迦楼罗_向东拉Boss_指示_仅MT");
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 螺旋气流 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11091"])]
+
+        public void 迦楼罗_螺旋气流_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(12);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 螺旋气流 (计数器)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11091"],
+            userControl:false)]
+
+        public void 迦楼罗_螺旋气流_计数器(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            Interlocked.Increment(ref phase1_slipstreamCounter);
+
+            if(2<=phase1_slipstreamCounter&&phase1_slipstreamCounter<=4) {
+
+                phase1_downburstSemaphore.Set();
+
+            }
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"phase1_slipstreamCounter={phase1_slipstreamCounter}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 第一次寒风之歌 (数据获取)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:0010"],
+            userControl:false)]
+
+        public void 迦楼罗_第一次寒风之歌_数据获取(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase1_targetOfMistralSong!=0) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            phase1_targetOfMistralSong=targetId;
+
+            phase1_mistralSongSemaphore.Set();
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"phase1_targetOfMistralSong={phase1_targetOfMistralSong}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 第一次寒风之歌 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11091"])]
+
+        public void 迦楼罗_第一次寒风之歌_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            bool wasSignalled=phase1_mistralSongSemaphore.WaitOne(COMMON_INTERVAL);
+            
+            if(!wasSignalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(3.5f,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=phase1_targetOfMistralSong;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 第一次大龙卷风 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11074"])]
+
+        public void 迦楼罗_第一次大龙卷风_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+            
+            Vector3 targetPosition=ARENA_CENTER;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(8);
+            currentProperties.Position=targetPosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=18375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 拉刺羽 (指示,仅ST)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8726"])]
+
+        public void 迦楼罗_拉刺羽_指示_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+                
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=1) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="迦楼罗_拉刺羽_指示_仅ST";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=sourceId;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 拉刺羽 (指示清除)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0011"],
+            userControl:false)]
+
+        public void 迦楼罗_拉刺羽_指示清除(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=8726) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw("迦楼罗_拉刺羽_指示_仅ST");
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 下行突风 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11091"])]
+
+        public void 迦楼罗_下行突风_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool wasSignalled=phase1_downburstSemaphore.WaitOne(COMMON_INTERVAL);
+            
+            if(!wasSignalled) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(12);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=2500;
+            currentProperties.DestoryAt=3500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 飞翎雨 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11085"])]
+
+        public void 迦楼罗_飞翎雨_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(3);
+            currentProperties.Position=effectPosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=1000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 飞翎雨 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11085"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+
+        public void 迦楼罗_飞翎雨_阶段控制(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            Interlocked.Increment(ref phase);
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
         
         #endregion
         
