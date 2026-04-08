@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.0.2",
+        version:"0.0.0.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -64,6 +64,17 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         public bool skipPhaseChecks { get; set; } = false;
         [UserSetting("调试 在转阶段时保留绘制")]
         public bool preserveDrawingsWhileSwitchingPhase { get; set; } = false;
+        
+        // ----- Major Phase 1 -----
+        
+        [UserSetting("迦楼罗 D2粗略指路的颜色")]
+        public ScriptColor phase1_colourOfM2ImpreciseGuidance { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
+        
+        // ----- End Of Major Phase 1 -----
+        
+        // ----- Major Phase 2 -----
+        
+        // ----- End Of Major Phase 2 -----
 
         #endregion
         
@@ -111,6 +122,11 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private ulong phase1_targetOfMistralSong=0;
         private System.Threading.AutoResetEvent phase1_mistralSongSemaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase1_downburstSemaphore=new System.Threading.AutoResetEvent(false);
+
+        private Vector3 phase1_gigastormPosition=ARENA_CENTER;
+        private System.Threading.ManualResetEvent phase1_gigastormSemaphore=new System.Threading.ManualResetEvent(false);
+        private int[] stackOfThermalLow=Enumerable.Range(0,8).Select(i=>0).ToArray();
+        private bool[] phase1_hasEliminatedThermalLow=Enumerable.Range(0,8).Select(i=>false).ToArray();
         
         // ----- End Of Major Phase 1 -----
         
@@ -183,6 +199,11 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase1_targetOfMistralSong=0;
             phase1_mistralSongSemaphore.Reset();
             phase1_downburstSemaphore.Reset();
+            
+            phase1_gigastormPosition=ARENA_CENTER;
+            phase1_gigastormSemaphore.Reset();
+            for(int i=0;i<stackOfThermalLow.Length;++i)stackOfThermalLow[i]=0;
+            for(int i=0;i<phase1_hasEliminatedThermalLow.Length;++i)phase1_hasEliminatedThermalLow[i]=false;
 
             // ----- End Of Major Phase 1 -----
 
@@ -274,9 +295,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
 
-            bool wasSignalled=shenaniganSemaphore.WaitOne(14000);
+            bool signalled=shenaniganSemaphore.WaitOne(14000);
 
-            if(!wasSignalled) {
+            if(!signalled) {
 
                 return;
 
@@ -300,6 +321,151 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
 
+        #endregion
+        
+        #region Global
+        
+        [ScriptMethod(name:"状态 低气压 (更新)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1525"],
+            userControl:false)]
+
+        public void 状态_低气压_更新(Event @event,ScriptAccessory accessory) {
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount<0) {
+
+                return;
+
+            }
+
+            int stackBefore=0;
+
+            lock(stackOfThermalLow) {
+                
+                stackBefore=stackOfThermalLow[targetIndex];
+                
+                stackOfThermalLow[targetIndex]=stackCount;
+                
+            }
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"stackOfThermalLow[{targetIndex}]:{stackBefore}->{stackCount}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"状态 低气压 (移除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1525"],
+            userControl:false)]
+
+        public void 状态_低气压_移除(Event @event,ScriptAccessory accessory) {
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            bool anomalousStackCount=false;
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+
+                anomalousStackCount=true;
+
+            }
+
+            if(stackCount<0) {
+
+                anomalousStackCount=true;
+
+            }
+
+            bool recordMismatch=false;
+            int expectedStack=0;
+
+            lock(stackOfThermalLow) {
+                
+                expectedStack=stackOfThermalLow[targetIndex];
+                
+                stackOfThermalLow[targetIndex]=0;
+                
+            }
+            
+            if(!anomalousStackCount) {
+
+                if(expectedStack!=stackCount) {
+
+                    recordMismatch=true;
+
+                }
+                
+            }
+
+            else {
+
+                recordMismatch=true;
+
+            }
+
+            if(enableDebugLogging) {
+
+                if(anomalousStackCount) {
+                    
+                    accessory.Log.Debug($"stackOfThermalLow[{targetIndex}]:?->0\nanomalousStackCount={anomalousStackCount}\nexpectedStack={expectedStack}");
+                    
+                }
+
+                else {
+
+                    if(recordMismatch) {
+                        
+                        accessory.Log.Debug($"stackOfThermalLow[{targetIndex}]:{stackCount}->0\nexpectedStack={expectedStack}");
+                        
+                    }
+
+                    else {
+                        
+                        accessory.Log.Debug($"stackOfThermalLow[{targetIndex}]:{stackCount}->0");
+                        
+                    }
+                    
+                }
+                
+            }
+
+        }
+        
         #endregion
         
         #region Garuda
@@ -510,9 +676,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             }
 
-            bool wasSignalled=phase1_mistralSongSemaphore.WaitOne(COMMON_INTERVAL);
+            bool signalled=phase1_mistralSongSemaphore.WaitOne(COMMON_INTERVAL);
             
-            if(!wasSignalled) {
+            if(!signalled) {
 
                 return;
 
@@ -680,9 +846,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
-            bool wasSignalled=phase1_downburstSemaphore.WaitOne(COMMON_INTERVAL);
+            bool signalled=phase1_downburstSemaphore.WaitOne(COMMON_INTERVAL);
             
-            if(!wasSignalled) {
+            if(!signalled) {
 
                 return;
 
@@ -769,6 +935,733 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"迦楼罗 大暴风 (精确范围)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2002792"])]
+
+        public void 迦楼罗_大暴风_精确范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=1&&phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Position=sourcePosition;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=23000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 大暴风 (数据获取)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:2002792"],
+            userControl:false)]
+
+        public void 迦楼罗_大暴风_数据获取(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=1&&phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase1_gigastormSemaphore.WaitOne(0);
+
+            if(signalled) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            phase1_gigastormPosition=sourcePosition;
+
+            phase1_gigastormSemaphore.Set();
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 烈风刃 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11080"])]
+
+        public void 迦楼罗_烈风刃_指路(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            bool mtDodges=false;
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=2000;
+
+            if(myIndex==0) {
+
+                if(stackOfThermalLow[myIndex]<1) {
+                    
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    
+                }
+
+                else {
+                    
+                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+
+                    mtDodges=true;
+
+                }
+                
+            }
+
+            else {
+                
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                
+            }
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+            if(myIndex!=targetIndex&&!mtDodges) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetObject=accessory.Data.PartyList[targetIndex];
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=2000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路,仅ST)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1525"])]
+
+        public void 迦楼罗_低气压_指路_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=1&&phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=1) {
+
+                return;
+
+            }
+
+            if(phase1_hasEliminatedThermalLow[myIndex]) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount!=2) {
+
+                return;
+
+            }
+            
+            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="迦楼罗_低气压_指路_仅ST";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=phase1_gigastormPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路清除,仅ST)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1525"],
+            userControl:false)]
+
+        public void 迦楼罗_低气压_指路清除_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=1&&phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase1_hasEliminatedThermalLow[1]) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(targetIndex!=1) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount<2) {
+
+                return;
+
+            }
+
+            phase1_hasEliminatedThermalLow[1]=true;
+            
+            accessory.Method.RemoveDraw("迦楼罗_低气压_指路_仅ST");
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路,远程DPS与奶妈)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1525"])]
+
+        public void 迦楼罗_低气压_指路_远程DPS与奶妈(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(!isRanged(myIndex)) {
+
+                return;
+
+            }
+
+            if(phase1_hasEliminatedThermalLow[myIndex]) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount!=1) {
+
+                return;
+
+            }
+            
+            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"迦楼罗_低气压_指路_远程DPS与奶妈_{myIndex}";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=phase1_gigastormPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路清除,远程DPS与奶妈)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1525"],
+            userControl:false)]
+
+        public void 迦楼罗_低气压_指路清除_远程DPS与奶妈(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(!isRanged(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(phase1_hasEliminatedThermalLow[targetIndex]) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount<1) {
+
+                return;
+
+            }
+
+            phase1_hasEliminatedThermalLow[targetIndex]=true;
+            
+            accessory.Method.RemoveDraw($"迦楼罗_低气压_指路_远程DPS与奶妈_{targetIndex}");
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路,仅D1)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1525"])]
+
+        public void 迦楼罗_低气压_指路_仅D1(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=4) {
+
+                return;
+
+            }
+
+            if(phase1_hasEliminatedThermalLow[myIndex]) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount!=2) {
+
+                return;
+
+            }
+            
+            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"迦楼罗_低气压_指路_近战DPS_{myIndex}";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=phase1_gigastormPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (粗略指路,仅D2)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1525"])]
+
+        public void 迦楼罗_低气压_粗略指路_仅D2(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=5) {
+
+                return;
+
+            }
+
+            if(phase1_hasEliminatedThermalLow[myIndex]) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(targetIndex!=4) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount<2) {
+
+                return;
+
+            }
+            
+            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"迦楼罗_低气压_指路_近战DPS_{myIndex}";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=phase1_gigastormPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=phase1_colourOfM2ImpreciseGuidance.V4.WithW(1);
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路清除,近战DPS)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1525"],
+            userControl:false)]
+
+        public void 迦楼罗_低气压_指路清除_近战DPS(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(!isMeleeDps(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(phase1_hasEliminatedThermalLow[targetIndex]) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["StackCount"], out var stackCount)) {
+                
+                return;
+                
+            }
+
+            if(stackCount<2) {
+
+                return;
+
+            }
+
+            phase1_hasEliminatedThermalLow[targetIndex]=true;
+            
+            accessory.Method.RemoveDraw($"迦楼罗_低气压_指路_近战DPS_{targetIndex}");
+
+        }
+        
         #endregion
         
         #region Ifrit
@@ -797,22 +1690,38 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Commons
 
-        public static bool convertObjectIdToDecimal(string? rawHexId,out ulong result) {
+        public static bool convertObjectIdToDecimal(string? rawObjectId,out ulong result) {
             
             result=0;
 
-            if(string.IsNullOrWhiteSpace(rawHexId)) {
+            if(string.IsNullOrWhiteSpace(rawObjectId)) {
                 
                 return false;
                 
             }
 
-            string hexId=rawHexId.Trim();
+            string objectId=rawObjectId.Trim();
             
-            hexId=hexId.StartsWith("0x",StringComparison.OrdinalIgnoreCase)?hexId.Substring(2):hexId;
+            objectId=objectId.StartsWith("0x",StringComparison.OrdinalIgnoreCase)?objectId.Substring(2):objectId;
             
-            return ulong.TryParse(hexId,System.Globalization.NumberStyles.HexNumber,null,out result);
+            return ulong.TryParse(objectId,System.Globalization.NumberStyles.HexNumber,null,out result);
             
+        }
+        
+        public static bool convertStringToSignedInteger(string? rawString,out int result) {
+    
+            result=0;
+
+            if(string.IsNullOrWhiteSpace(rawString)) {
+        
+                return false;
+        
+            }
+
+            string cleanString=rawString.Trim();
+
+            return int.TryParse(cleanString,System.Globalization.NumberStyles.Integer,null,out result);
+    
         }
         
         public static int discretizePosition(Vector3 position,Vector3 center,int numberOfDirections,bool diagonalSplit=true) {
