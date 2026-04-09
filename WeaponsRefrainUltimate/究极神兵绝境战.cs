@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.0.5",
+        version:"0.0.1.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -35,7 +35,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            刚开始施工,进度随缘。
+            目前风神阶段已经完工,火神阶段刚刚开始。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -660,7 +660,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             Interlocked.Increment(ref phase1_slipstreamCounter);
 
-            if(2<=phase1_slipstreamCounter&&phase1_slipstreamCounter<=4) {
+            if(phase1_slipstreamCounter==2||phase1_slipstreamCounter==3) {
 
                 phase1_downburstSemaphore.Set();
 
@@ -2265,6 +2265,78 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.DestoryAt=5000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 最后一次邪轮旋风 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11086"])]
+
+        public void 迦楼罗_最后一次邪轮旋风_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(garudaHasWoken) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20);
+                currentProperties.InnerScale=new(8.5f);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=3000;
+                currentProperties.DestoryAt=2125;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(12);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+                currentProperties.TargetOrderIndex=1;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=5125;
+                currentProperties.DestoryAt=3500;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+            }
+
+            else {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(12);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+                currentProperties.TargetOrderIndex=1;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.Delay=3000;
+                currentProperties.DestoryAt=3500;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+            }
 
         }
         
