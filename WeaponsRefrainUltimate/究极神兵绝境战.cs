@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.0.4",
+        version:"0.0.0.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -130,7 +130,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private int[] stackOfThermalLow=Enumerable.Range(0,8).Select(i=>0).ToArray();
         private bool[] phase1_hasEliminatedThermalLow=Enumerable.Range(0,8).Select(i=>false).ToArray();
         
-        private bool[] phase1_tankBusters=Enumerable.Range(0,4).Select(i=>false).ToArray(); 
+        private bool[] phase1_tankBusters=Enumerable.Range(0,4).Select(i=>false).ToArray();
+        
+        private ConcurrentDictionary<ulong,int> phase1_mesohighDrawingCounter=new ConcurrentDictionary<ulong,int>();
+        private volatile bool garudaHasWoken=false;
         
         // ----- End Of Major Phase 1 -----
         
@@ -210,6 +213,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             for(int i=0;i<phase1_hasEliminatedThermalLow.Length;++i)phase1_hasEliminatedThermalLow[i]=false;
             
             for(int i=0;i<phase1_tankBusters.Length;++i)phase1_tankBusters[i]=false;
+            
+            phase1_mesohighDrawingCounter.Clear();
+            garudaHasWoken=false;
 
             // ----- End Of Major Phase 1 -----
 
@@ -466,6 +472,59 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                         
                     }
                     
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"觉醒 (数据获取)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1529"],
+            userControl:false)]
+    
+        public void 觉醒_数据获取(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&majorPhase!=2&&majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var targetObject=accessory.Data.Objects.SearchById(targetId);
+
+            if(targetObject==null) {
+
+                return;
+
+            }
+
+            switch(targetObject.DataId) {
+
+                case 8722: {
+                    
+                    garudaHasWoken=true;
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"garudaHasWoken={garudaHasWoken}");
+                        
+                    }
+
+                    break;
+
+                }
+
+                default: {
+
+                    break;
+
                 }
                 
             }
@@ -1800,7 +1859,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
-            if(phase!=4&&!skipPhaseChecks) {
+            if(phase!=4&&phase!=5&&!skipPhaseChecks) {
 
                 return;
 
@@ -2067,6 +2126,145 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.DestoryAt=6250;
             
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 中高压 (范围)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0004"])]
+    
+        public void 迦楼罗_中高压_范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            lock(phase1_mesohighDrawingCounter) {
+                
+                int lastDrawing=phase1_mesohighDrawingCounter.GetOrAdd(sourceId,0);
+            
+                accessory.Method.RemoveDraw($"迦楼罗_中高压_范围_{sourceId}_{lastDrawing}");
+
+                ++lastDrawing;
+                phase1_mesohighDrawingCounter[sourceId]=lastDrawing;
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"迦楼罗_中高压_范围_{sourceId}_{lastDrawing}";
+                currentProperties.Scale=new(3);
+                currentProperties.Owner=targetId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"迦楼罗 中高压 (范围清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11081"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+    
+        public void 迦楼罗_中高压_范围清除(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=5&&phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw(@"^迦楼罗_中高压_范围_.*$");
+            
+            phase1_mesohighDrawingCounter.Clear();
+        
+        }
+        
+        [ScriptMethod(name:"迦楼罗 中高压 (指路,ST与D3)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0004"],
+            suppress:5000+COMMON_INTERVAL)]
+    
+        public void 迦楼罗_中高压_指路_ST与D3(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=1&&myIndex!=6) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(myIndex==1) {
+
+                myPosition=new Vector3(110.5f,0,100);
+
+            }
+
+            if(myIndex==6) {
+                
+                myPosition=new Vector3(89.5f,0,100);
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
         }
         
