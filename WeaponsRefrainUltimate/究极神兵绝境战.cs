@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.1",
+        version:"0.0.1.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -94,27 +94,27 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         Major Phase 2 - 伊弗利特:
         
-            Phase 1 - 占位符
-            Phase 2 - 占位符
-            Phase 3 - 占位符
+            Phase 1 - (~,First Incinerate 第一次烈焰焚烧]
+            Phase 2 - Placeholder 占位符
+            Phase 3 - Placeholder 占位符
             
         Major Phase 3 - 泰坦:
 
-            Phase 1 - 占位符
-            Phase 2 - 占位符
-            Phase 3 - 占位符
+            Phase 1 - Placeholder 占位符
+            Phase 2 - Placeholder 占位符
+            Phase 3 - Placeholder 占位符
             
         Major Phase 4 - 无影拉哈布雷亚:
 
-            Phase 1 - 占位符
-            Phase 2 - 占位符
-            Phase 3 - 占位符
+            Phase 1 - Placeholder 占位符
+            Phase 2 - Placeholder 占位符
+            Phase 3 - Placeholder 占位符
             
         Major Phase 5 - 究极神兵:
 
-            Phase 1 - 占位符
-            Phase 2 - 占位符
-            Phase 3 - 占位符
+            Phase 1 - Placeholder 占位符
+            Phase 2 - Placeholder 占位符
+            Phase 3 - Placeholder 占位符
 
         */
         
@@ -143,6 +143,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase2_firstCrimsonCycloneSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int phase2_radiantPlumeCounter=0;
         private System.Threading.AutoResetEvent phase2_radiantPlumeSemaphore=new System.Threading.AutoResetEvent(false);
+        
+        private System.Threading.AutoResetEvent phase2_firstIncinerateSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -228,6 +230,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase2_firstCrimsonCycloneSemaphore.Reset();
             phase2_radiantPlumeCounter=0;
             phase2_radiantPlumeSemaphore.Reset();
+
+            phase2_firstIncinerateSemaphore.Reset();
 
             // ----- End Of Major Phase 2 -----
 
@@ -2581,6 +2585,135 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.DestoryAt=4000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火神爆裂 (击退指示)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11102"])]
+
+        public void 伊弗利特_火神爆裂_击退指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=accessory.Data.Me;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.Delay=3000;
+            currentProperties.DestoryAt=8125;
+                
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,10);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=sourceId;
+            currentProperties.Rotation=float.Pi;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.Delay=3000;
+            currentProperties.DestoryAt=8125;
+                
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火神爆裂 (阶段控制)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11095"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+
+        public void 伊弗利特_火神爆裂_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            Interlocked.Increment(ref phase);
+
+            phase2_firstIncinerateSemaphore.Set();
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第一次烈焰焚烧 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11095"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 伊弗利特_第一次烈焰焚烧_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_firstIncinerateSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(15);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=10125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
         }
         
