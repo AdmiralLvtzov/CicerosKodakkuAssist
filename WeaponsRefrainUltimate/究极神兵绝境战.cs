@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.0",
+        version:"0.0.1.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -139,7 +139,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- Major Phase 2 -----
         
-        
+        private bool[] phase2_initialSafeZone=Enumerable.Range(0,4).Select(i=>true).ToArray();
+        private System.Threading.AutoResetEvent phase2_firstCrimsonCycloneSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase2_radiantPlumeCounter=0;
+        private System.Threading.AutoResetEvent phase2_radiantPlumeSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -221,7 +224,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             // ----- Major Phase 2 -----
 
-
+            for(int i=0;i<phase2_initialSafeZone.Length;++i)phase2_initialSafeZone[i]=true;
+            phase2_firstCrimsonCycloneSemaphore.Reset();
+            phase2_radiantPlumeCounter=0;
+            phase2_radiantPlumeSemaphore.Reset();
 
             // ----- End Of Major Phase 2 -----
 
@@ -2344,7 +2350,239 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Ifrit
         
+        [ScriptMethod(name:"伊弗利特 第一次深红旋风 (阶段控制与数据获取)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"],
+            userControl:false)]
+
+        public void 伊弗利特_第一次深红旋风_阶段控制与数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Id"],"7747")) {
+
+                return;
+
+            }
+
+            Interlocked.Increment(ref majorPhase);
+            phase=1;
+
+            phase2_firstCrimsonCycloneSemaphore.Set();
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,4);
+            
+            phase2_initialSafeZone[discretizedPosition]=false;
+            phase2_initialSafeZone[(discretizedPosition+2)%4]=false;
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}\nphase2_initialSafeZone[{discretizedPosition}]=false\nphase2_initialSafeZone[{(discretizedPosition+2)%4}]=false");
+                
+            }
+
+        }
         
+        [ScriptMethod(name:"伊弗利特 第一次深红旋风 (范围)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"])]
+
+        public void 伊弗利特_第一次深红旋风_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(!string.Equals(@event["Id"],"7747")) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            bool signalled=phase2_firstCrimsonCycloneSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(18,44);
+            currentProperties.Position=sourcePosition;
+            currentProperties.TargetPosition=ARENA_CENTER;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 光辉炎柱 (数据获取)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11105"],
+            userControl:false)]
+
+        public void 伊弗利特_光辉炎柱_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2_radiantPlumeCounter>=10) {
+
+                return;
+
+            }
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+
+            for(int i=0;i<4;++i) {
+
+                if(Vector3.Distance(effectPosition,rotatePosition(new Vector3(100,0,82),ARENA_CENTER,Math.PI/2*i))<0.1) {
+
+                    phase2_initialSafeZone[i]=false;
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"phase2_initialSafeZone[{i}]=false");
+                        
+                    }
+
+                }
+                
+            }
+
+            lock(phase2_radiantPlumeSemaphore) {
+
+                Interlocked.Increment(ref phase2_radiantPlumeCounter);
+
+                if(phase2_radiantPlumeCounter==10) {
+
+                    phase2_radiantPlumeSemaphore.Set();
+
+                }
+
+            }
+                
+        }
+        
+        [ScriptMethod(name:"伊弗利特 光辉炎柱 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11105"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 伊弗利特_光辉炎柱_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_radiantPlumeSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+
+            int discretizedSafeZone=Array.IndexOf(phase2_initialSafeZone,true);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"discretizedSafeZone={discretizedSafeZone}");
+                
+            }
+            
+            if(discretizedSafeZone<0||discretizedSafeZone>3) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/2*discretizedSafeZone);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=4000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
         
         #endregion
         
