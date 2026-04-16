@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.3",
+        version:"0.0.1.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -3086,7 +3086,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             Vector3 myPosition=myIndex switch {
                 
-                0 => new Vector3(100,0,82.5f),
+                0 => new Vector3(100,0,88.5f),
                 6 => new Vector3(113.643f,0,108.358f),
                 7 => new Vector3(86.357f,0,108.358f),
                 _ => ARENA_CENTER
@@ -3389,6 +3389,69 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 }
 
             }
+            
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第一次灼热 (指路)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1578"])]
+
+        public void 伊弗利特_第一次灼热_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(accessory.Data.Me!=targetId) {
+
+                return;
+
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,118.5f),ARENA_CENTER,phase2_temporaryRotation);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=durationMilliseconds;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
         }
         
