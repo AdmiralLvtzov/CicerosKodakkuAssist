@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.2",
+        version:"0.0.1.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -35,7 +35,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前风神阶段已经完工,火神阶段刚刚开始。施工进度随缘,可能很慢。
+            目前风神阶段已经完工,火神阶段完成了大约一半。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -76,7 +76,30 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- Major Phase 2 -----
         
+        [UserSetting("伊弗利特 火狱之楔 指北针的颜色")]
+        public ScriptColor phase2_colourOfNorthIndicator { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
+        [UserSetting("伊弗利特 火狱之楔 标记顺序")]
+        public bool phase2_enableNailOrderAssistance { get; set; } = false;
+        
         // ----- End Of Major Phase 2 -----
+        
+        // ----- Major Phase 3 -----
+        
+        
+        
+        // ----- End Of Major Phase 3 -----
+        
+        // ----- Major Phase 4 -----
+        
+        
+        
+        // ----- End Of Major Phase 4 -----
+        
+        // ----- Major Phase 5 -----
+        
+        
+        
+        // ----- End Of Major Phase 5 -----
 
         #endregion
         
@@ -94,8 +117,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         Major Phase 2 - 伊弗利特:
         
-            Phase 1 - (~,First Incinerate 第一次烈焰焚烧]
-            Phase 2 - Placeholder 占位符
+            Phase 1 - (~,First Incinerate 第一次烈焰焚烧)
+            Phase 2 - [First Incinerate 第一次烈焰焚烧,First Eruption 第一次地火喷发]
             Phase 3 - Placeholder 占位符
             
         Major Phase 3 - 泰坦:
@@ -130,7 +153,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private int[] stackOfThermalLow=Enumerable.Range(0,8).Select(i=>0).ToArray();
         private bool[] phase1_hasEliminatedThermalLow=Enumerable.Range(0,8).Select(i=>false).ToArray();
         
-        private bool[] phase1_tankBusters=Enumerable.Range(0,4).Select(i=>false).ToArray();
+        private bool[] phase1_tankBuster=Enumerable.Range(0,4).Select(i=>false).ToArray();
         
         private ConcurrentDictionary<ulong,int> phase1_mesohighDrawingCounter=new ConcurrentDictionary<ulong,int>();
         private volatile bool garudaHasWoken=false;
@@ -145,6 +168,17 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase2_radiantPlumeSemaphore=new System.Threading.AutoResetEvent(false);
         
         private System.Threading.AutoResetEvent phase2_firstIncinerateSemaphore=new System.Threading.AutoResetEvent(false);
+        private bool[] phase2_infernalNailDeployed=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private ulong[] phase2_infernalNailId=Enumerable.Range(0,8).Select(i=>((ulong)0)).ToArray();
+        private volatile int phase2_infernalNailCounter=0;
+        private int[] phase2_infernalNail=Enumerable.Range(0,4).Select(i=>-1).ToArray();
+        private double phase2_temporaryRotation=0;
+        private System.Threading.AutoResetEvent phase2_infernalNailSemaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2_infernalNailSemaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2_infernalNailSemaphore3=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2_infernalNailSemaphore4=new System.Threading.AutoResetEvent(false);
+        private volatile int phase2_infernalFetterDrawingCounter=0;
+        private volatile int phase2_eruptionCounter=0; // Its read-write lock is phase2_eruptionCounterLock
         
         // ----- End Of Major Phase 2 -----
         
@@ -175,6 +209,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
         // The arena is a circle with a radius of 19.5.
+        
+        private static readonly object phase2_eruptionCounterLock=new object();
         
         #endregion
         
@@ -217,7 +253,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             for(int i=0;i<stackOfThermalLow.Length;++i)stackOfThermalLow[i]=0;
             for(int i=0;i<phase1_hasEliminatedThermalLow.Length;++i)phase1_hasEliminatedThermalLow[i]=false;
             
-            for(int i=0;i<phase1_tankBusters.Length;++i)phase1_tankBusters[i]=false;
+            for(int i=0;i<phase1_tankBuster.Length;++i)phase1_tankBuster[i]=false;
             
             phase1_mesohighDrawingCounter.Clear();
             garudaHasWoken=false;
@@ -232,6 +268,17 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase2_radiantPlumeSemaphore.Reset();
 
             phase2_firstIncinerateSemaphore.Reset();
+            for(int i=0;i<phase2_infernalNailDeployed.Length;++i)phase2_infernalNailDeployed[i]=false;
+            for(int i=0;i<phase2_infernalNailId.Length;++i)phase2_infernalNailId[i]=((ulong)0);
+            phase2_infernalNailCounter=0;
+            for(int i=0;i<phase2_infernalNail.Length;++i)phase2_infernalNail[i]=-1;
+            phase2_temporaryRotation=0;
+            phase2_infernalNailSemaphore1.Reset();
+            phase2_infernalNailSemaphore2.Reset();
+            phase2_infernalNailSemaphore3.Reset();
+            phase2_infernalNailSemaphore4.Reset();
+            phase2_infernalFetterDrawingCounter=0;
+            phase2_eruptionCounter=0;
 
             // ----- End Of Major Phase 2 -----
 
@@ -539,6 +586,67 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             }
 
+        }
+        
+        [ScriptMethod(name:"通用 灼热 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1578"])]
+
+        public void 通用_灼热_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"通用_灼热_范围_{targetId}";
+            currentProperties.Scale=new(15);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=durationMilliseconds;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"通用 灼热 (范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1578"],
+            userControl:false)]
+
+        public void 通用_灼热_范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"通用_灼热_范围_{targetId}");
+            
         }
         
         #endregion
@@ -1843,9 +1951,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,4);
 
-            lock(phase1_tankBusters) {
+            lock(phase1_tankBuster) {
 
-                phase1_tankBusters[discretizedPosition]=true;
+                phase1_tankBuster[discretizedPosition]=true;
 
             }
 
@@ -2029,7 +2137,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
                 myDiscretizedPosition=0;
 
-                while(!phase1_tankBusters[myDiscretizedPosition]) {
+                while(!phase1_tankBuster[myDiscretizedPosition]) {
 
                     ++myDiscretizedPosition;
 
@@ -2049,7 +2157,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
                 myDiscretizedPosition=3;
                 
-                while(!phase1_tankBusters[myDiscretizedPosition]) {
+                while(!phase1_tankBuster[myDiscretizedPosition]) {
 
                     --myDiscretizedPosition;
 
@@ -2376,6 +2484,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             Interlocked.Increment(ref majorPhase);
             phase=1;
 
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+
             phase2_firstCrimsonCycloneSemaphore.Set();
             
             Vector3 sourcePosition=ARENA_CENTER;
@@ -2658,7 +2772,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
 
-            Interlocked.Increment(ref phase);
+            phase=2;
 
             phase2_firstIncinerateSemaphore.Set();
             
@@ -2715,6 +2829,567 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火狱之楔 (数据获取)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8731"],
+            userControl:false)]
+
+        public void 伊弗利特_火狱之楔_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2_infernalNailCounter>=4) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
+
+            lock(phase2_infernalNailDeployed) {
+
+                phase2_infernalNailId[discretizedPosition]=sourceId;
+                phase2_infernalNailDeployed[discretizedPosition]=true;
+
+                Interlocked.Increment(ref phase2_infernalNailCounter);
+
+                if(phase2_infernalNailCounter==4) {
+
+                    int theFourthNail=0;
+
+                    while(theFourthNail<8) {
+
+                        int theNextNail=(theFourthNail+1)%8;
+
+                        if(phase2_infernalNailDeployed[theFourthNail]&&phase2_infernalNailDeployed[theNextNail]) {
+
+                            break;
+
+                        }
+
+                        else {
+                            
+                            ++theFourthNail;
+
+                        }
+
+                    }
+
+                    if(theFourthNail>=8) {
+
+                        return;
+
+                    }
+                    
+                    phase2_infernalNail[3]=theFourthNail;
+                    phase2_infernalNail[2]=(theFourthNail+1)%8;
+                    phase2_infernalNail[1]=(theFourthNail+6)%8;
+                    phase2_infernalNail[0]=(theFourthNail+3)%8;
+
+                    phase2_temporaryRotation=Math.PI/4*(0.5d+theFourthNail);
+
+                    phase2_infernalNailSemaphore1.Set();
+                    phase2_infernalNailSemaphore2.Set();
+                    phase2_infernalNailSemaphore3.Set();
+                    phase2_infernalNailSemaphore4.Set();
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             phase2_infernalNailDeployed:{string.Join(",",phase2_infernalNailDeployed)}
+                                             phase2_infernalNail:{string.Join(",",phase2_infernalNail)}
+                                             phase2_temporaryRotation={phase2_temporaryRotation}
+                                             """);
+                        
+                    }
+
+                }
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火狱之楔 (目标指示,仅DPS)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8731"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 伊弗利特_火狱之楔_目标指示_仅DPS(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(!isDps(myIndex)) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_infernalNailSemaphore1.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+
+            int myNail=myIndex switch {
+                
+                4 => phase2_infernalNail[0],
+                5 => phase2_infernalNail[1],
+                6 => phase2_infernalNail[2],
+                7 => phase2_infernalNail[3],
+                _ => -1
+                
+            };
+
+            if(myNail==-1) {
+
+                return;
+
+            }
+
+            ulong idOfMyNail=phase2_infernalNailId[myNail];
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"伊弗利特_火狱之楔_目标指示_仅DPS_{idOfMyNail}";
+            currentProperties.Scale=new(0.25f);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=idOfMyNail;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火狱之楔 (目标指示清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11096"],
+            userControl:false)]
+
+        public void 伊弗利特_火狱之楔_目标指示清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"伊弗利特_火狱之楔_目标指示_仅DPS_{sourceId}");
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 地火喷发 (指路,远程DPS与MT)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8731"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 伊弗利特_地火喷发_指路_远程DPS与MT(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(!isRangedDps(myIndex)&&myIndex!=0) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_infernalNailSemaphore2.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=myIndex switch {
+                
+                0 => new Vector3(100,0,82.5f),
+                6 => new Vector3(113.643f,0,108.358f),
+                7 => new Vector3(86.357f,0,108.358f),
+                _ => ARENA_CENTER
+                
+            };
+            // Geometric Construction:
+            // https://www.geogebra.org/calculator/bs4sbfem
+
+            myPosition=rotatePosition(myPosition,ARENA_CENTER,phase2_temporaryRotation);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+            if(isRangedDps(myIndex)) {
+                
+                currentProperties.DestoryAt=11250;
+                
+            }
+            
+            if(myIndex==0) {
+                
+                currentProperties.DestoryAt=17250;
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(isRangedDps(myIndex)) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(17.5f);
+                currentProperties.InnerScale=new(14.5f);
+                currentProperties.Radian=((float)(convertDegreesToRadians(121.492)));
+                currentProperties.Position=ARENA_CENTER;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=17250;
+
+                if(myIndex==6) {
+
+                    currentProperties.Rotation=((float)(convertDegreesToRadians(121.492/2)));
+
+                }
+                
+                if(myIndex==7) {
+                    
+                    currentProperties.Rotation=-((float)(convertDegreesToRadians(121.492/2)));
+                    
+                }
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火狱之楔 (指北针)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8731"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 伊弗利特_火狱之楔_指北针(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_infernalNailSemaphore3.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2,14);
+            currentProperties.Position=rotatePosition(new Vector3(100,0,107),ARENA_CENTER,phase2_temporaryRotation);
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,93),ARENA_CENTER,phase2_temporaryRotation);
+            currentProperties.Color=phase2_colourOfNorthIndicator.V4.WithW(1);
+            currentProperties.DestoryAt=17250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火狱之楔 (标记顺序)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8731"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 伊弗利特_火狱之楔_标记顺序(Event @event,ScriptAccessory accessory) {
+
+            if(!phase2_enableNailOrderAssistance) {
+
+                return;
+
+            }
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_infernalNailSemaphore4.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            accessory.Method.Mark(((uint)phase2_infernalNailId[phase2_infernalNail[0]]),MarkType.Attack1);
+            accessory.Method.Mark(((uint)phase2_infernalNailId[phase2_infernalNail[1]]),MarkType.Attack2);
+            accessory.Method.Mark(((uint)phase2_infernalNailId[phase2_infernalNail[2]]),MarkType.Attack3);
+            accessory.Method.Mark(((uint)phase2_infernalNailId[phase2_infernalNail[3]]),MarkType.Attack4);
+
+            if(enableDebugLogging) {
+
+                accessory.Log.Debug($"""
+                                     Mark {phase2_infernalNailId[phase2_infernalNail[0]]} as {MarkType.Attack1}
+                                     Mark {phase2_infernalNailId[phase2_infernalNail[1]]} as {MarkType.Attack2}
+                                     Mark {phase2_infernalNailId[phase2_infernalNail[2]]} as {MarkType.Attack3}
+                                     Mark {phase2_infernalNailId[phase2_infernalNail[3]]} as {MarkType.Attack4}
+                                     """);
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 火狱之锁 (连线指示)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:0009"])]
+
+        public void 伊弗利特_火狱之锁_连线指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw($"伊弗利特_火狱之锁_连线指示_{phase2_infernalFetterDrawingCounter}");
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(accessory.Data.Me!=sourceId&&accessory.Data.Me!=targetId) {
+
+                return;
+
+            }
+            
+            int sourceIndex=accessory.Data.PartyList.IndexOf(((uint)sourceId));
+            
+            if(!isLegalPartyIndex(sourceIndex)) {
+
+                return;
+
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+            }
+
+            ulong sourceInDrawing=sourceId,targetInDrawing=targetId;
+            bool anomalousTether=true;
+
+            if(isTank(sourceIndex)&&isDps(targetIndex)) {
+
+                anomalousTether=false;
+
+                sourceInDrawing=sourceId;
+                targetInDrawing=targetId;
+
+            }
+            
+            if(isTank(targetIndex)&&isDps(sourceIndex)) {
+
+                anomalousTether=false;
+
+                sourceInDrawing=targetId;
+                targetInDrawing=sourceId;
+
+            }
+
+            if(anomalousTether) {
+
+                if(accessory.Data.Me==sourceId) {
+                    
+                    sourceInDrawing=sourceId;
+                    targetInDrawing=targetId;
+
+                }
+                
+                if(accessory.Data.Me==targetId) {
+                    
+                    sourceInDrawing=targetId;
+                    targetInDrawing=sourceId;
+
+                }
+                
+            }
+            
+            Interlocked.Increment(ref phase2_infernalFetterDrawingCounter);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"伊弗利特_火狱之锁_连线指示_{phase2_infernalFetterDrawingCounter}";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=sourceInDrawing;
+            currentProperties.TargetObject=targetInDrawing;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=21000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"伊弗利特 地火喷发 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11098"],
+            userControl:false)]
+
+        public void 伊弗利特_地火喷发_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2_eruptionCounter>=8) {
+
+                return;
+
+            }
+            
+            lock(phase2_eruptionCounterLock) {
+
+                Interlocked.Increment(ref phase2_eruptionCounter);
+
+                if(phase2_eruptionCounter==8) {
+
+                    phase=3;
+                    
+                    if(enableDebugLogging) {
+                
+                        accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+                    }
+
+                }
+
+            }
+            
         }
         
         #endregion
