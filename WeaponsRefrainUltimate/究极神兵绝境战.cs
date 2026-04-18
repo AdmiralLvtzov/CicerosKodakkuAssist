@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.5",
+        version:"0.0.1.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -186,6 +186,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private double phase2_temporaryRotation2=0;
         private System.Threading.AutoResetEvent phase2_hellfireSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2_hellfireSemaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2_hellfireSemaphore3=new System.Threading.AutoResetEvent(false);
         private HashSet<ulong> partyMembersWithSearingWind=new HashSet<ulong>();
         
         // ----- End Of Major Phase 2 -----
@@ -290,6 +291,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase2_temporaryRotation2=0;
             phase2_hellfireSemaphore1.Reset();
             phase2_hellfireSemaphore2.Reset();
+            phase2_hellfireSemaphore3.Reset();
             partyMembersWithSearingWind.Clear();
 
             // ----- End Of Major Phase 2 -----
@@ -3563,6 +3565,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             phase2_hellfireSemaphore1.Set();
             phase2_hellfireSemaphore2.Set();
+            phase2_hellfireSemaphore3.Set();
                     
             if(enableDebugLogging) {
                 
@@ -3633,6 +3636,45 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第二次地狱之火炎 (指北针)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11102"])]
+
+        public void 伊弗利特_第二次地狱之火炎_指北针(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_hellfireSemaphore3.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="伊弗利特_第二次地狱之火炎_指北针";
+            currentProperties.Scale=new(2,14);
+            currentProperties.Position=rotatePosition(new Vector3(100,0,107),ARENA_CENTER,Math.PI+phase2_temporaryRotation2);
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,93),ARENA_CENTER,Math.PI+phase2_temporaryRotation2);
+            currentProperties.Color=phase2_colourOfNorthIndicator.V4.WithW(1);
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
 
         }
         
@@ -3941,6 +3983,38 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.DestoryAt=5125;
             
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 烈焰碎击 (阶段控制)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11101"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+
+        public void 伊弗利特_烈焰碎击_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            accessory.Method.RemoveDraw("伊弗利特_第二次地狱之火炎_指北针");
+            
+            phase=5;
+                    
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
 
         }
         
