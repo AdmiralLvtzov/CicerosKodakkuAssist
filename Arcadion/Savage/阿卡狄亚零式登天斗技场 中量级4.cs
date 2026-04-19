@@ -18,7 +18,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
     [ScriptType(name:"阿卡狄亚零式登天斗技场 中量级4",
         territorys:[1263],
         guid:"d9de6d9a-f6f5-41c6-a15b-9332fa1e6c33",
-        version:"0.0.1.19",
+        version:"0.0.1.20",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -62,6 +62,8 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
         public ScriptColor colourOfHighlyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
+        [UserSetting("调试选项 - 为解限攻略副本禁用部分阶段检查 (可能会导致异常!)")]
+        public bool skipCertainPhaseChecks { get; set; } = false;
         
         [UserSetting("门神攻略")]
         public StratsOfPhase1 stratOfPhase1 { get; set; }
@@ -5790,7 +5792,7 @@ namespace CicerosKodakkuAssist.Arcadion.Savage.ChinaDataCenter
 
             }
 
-            if(currentSubPhase!=9) {
+            if(currentSubPhase!=9&&!skipCertainPhaseChecks) {
 
                 return;
 
