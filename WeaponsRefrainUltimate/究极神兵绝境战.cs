@@ -23,7 +23,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.6",
+        version:"0.0.1.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -164,6 +164,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- Major Phase 2 -----
         
+        private ulong phase2_ifritId=0;
         private bool[] phase2_initialSafeZone=Enumerable.Range(0,4).Select(i=>true).ToArray();
         private System.Threading.AutoResetEvent phase2_firstCrimsonCycloneSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int phase2_radiantPlumeCounter=0;
@@ -188,6 +189,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase2_hellfireSemaphore2=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2_hellfireSemaphore3=new System.Threading.AutoResetEvent(false);
         private HashSet<ulong> partyMembersWithSearingWind=new HashSet<ulong>();
+
+        private List<int> phase2_readableDetonationOrder=new List<int>(); 
+        private volatile bool phase2_disableCrimsonCycloneGuidance=false;
+        private volatile int phase2_initialDiscretizedRotation=0;
+        private volatile bool phase2_clockwise=false;
+        private System.Threading.AutoResetEvent phase2_thirdCrimsonCycloneSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 2 -----
         
@@ -269,6 +276,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             // ----- Major Phase 2 -----
 
+            phase2_ifritId=0;
             for(int i=0;i<phase2_initialSafeZone.Length;++i)phase2_initialSafeZone[i]=true;
             phase2_firstCrimsonCycloneSemaphore.Reset();
             phase2_radiantPlumeCounter=0;
@@ -293,6 +301,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase2_hellfireSemaphore2.Reset();
             phase2_hellfireSemaphore3.Reset();
             partyMembersWithSearingWind.Clear();
+
+            phase2_readableDetonationOrder.Clear();
+            phase2_disableCrimsonCycloneGuidance=false;
+            phase2_initialDiscretizedRotation=0;
+            phase2_clockwise=false;
+            phase2_thirdCrimsonCycloneSemaphore.Reset();
 
             // ----- End Of Major Phase 2 -----
 
@@ -2581,10 +2595,18 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             phase2_initialSafeZone[discretizedPosition]=false;
             phase2_initialSafeZone[(discretizedPosition+2)%4]=false;
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            phase2_ifritId=sourceId;
 
             if(enableDebugLogging) {
                 
-                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}\nphase2_initialSafeZone[{discretizedPosition}]=false\nphase2_initialSafeZone[{(discretizedPosition+2)%4}]=false");
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}\nphase2_initialSafeZone[{discretizedPosition}]=false\nphase2_initialSafeZone[{(discretizedPosition+2)%4}]=false\nphase2_ifritId={phase2_ifritId}");
                 
             }
 
@@ -2811,7 +2833,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(2,10);
+            currentProperties.Scale=new(2,15);
             currentProperties.Owner=accessory.Data.Me;
             currentProperties.TargetObject=sourceId;
             currentProperties.Rotation=float.Pi;
@@ -4013,6 +4035,440 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             if(enableDebugLogging) {
                 
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第三次深红旋风 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11103"])]
+
+        public void 伊弗利特_第三次深红旋风_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(18,44);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+            if(sourceId==phase2_ifritId) {
+
+                if(ifritHasWoken) {
+                    
+                    Vector3 sourcePosition=ARENA_CENTER;
+
+                    try {
+
+                        sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+                    } catch(Exception e) {
+                
+                        accessory.Log.Error("SourcePosition deserialization failed.");
+
+                        return;
+
+                    }
+            
+                    int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
+
+                    Vector3 targetPosition1=new Vector3(ARENA_CENTER.X,ARENA_CENTER.Y,ARENA_CENTER.Z-1);
+                    Vector3 targetPosition2=new Vector3(ARENA_CENTER.X+1,ARENA_CENTER.Y,ARENA_CENTER.Z);
+
+                    if(discretizedPosition%2==0) {
+
+                        targetPosition1=rotatePosition(targetPosition1,ARENA_CENTER,Math.PI/4);
+                        targetPosition2=rotatePosition(targetPosition2,ARENA_CENTER,Math.PI/4);
+
+                    }
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(10,44);
+                    currentProperties.Position=ARENA_CENTER;
+                    currentProperties.TargetPosition=targetPosition1;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=2125;
+                    currentProperties.DestoryAt=3000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+            
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(10,44);
+                    currentProperties.Position=ARENA_CENTER;
+                    currentProperties.TargetPosition=targetPosition2;
+                    currentProperties.Color=accessory.Data.DefaultDangerColor;
+                    currentProperties.Delay=2125;
+                    currentProperties.DestoryAt=3000;
+        
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+                    
+                }
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第三次深红旋风 (数据计算)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"],
+            userControl:false)]
+
+        public void 伊弗利特_第三次深红旋风_数据计算(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Id"],"7737")) {
+
+                return;
+
+            }
+            
+            if(phase2_detonationOrder.Count!=4) {
+                
+                phase2_disableCrimsonCycloneGuidance=true;
+                
+                phase2_thirdCrimsonCycloneSemaphore.Set();
+
+                return;
+                
+            }
+
+            for(int i=0;i<4;++i) {
+
+                phase2_readableDetonationOrder.Add(Array.IndexOf(phase2_infernalNail,phase2_detonationOrder[i])+1);
+
+                if(phase2_readableDetonationOrder.Last()<1||phase2_readableDetonationOrder.Last()>4) {
+
+                    phase2_disableCrimsonCycloneGuidance=true;
+                    
+                    phase2_thirdCrimsonCycloneSemaphore.Set();
+
+                    return;
+
+                }
+
+            }
+            
+            if(phase2_readableDetonationOrder.Count!=4) {
+                
+                phase2_disableCrimsonCycloneGuidance=true;
+                
+                phase2_thirdCrimsonCycloneSemaphore.Set();
+
+                return;
+                
+            }
+
+            if(phase2_readableDetonationOrder[0]==1
+               &&
+               phase2_readableDetonationOrder[1]==2
+               &&
+               phase2_readableDetonationOrder[2]==3
+               &&
+               phase2_readableDetonationOrder[3]==4) {
+                
+                phase2_initialDiscretizedRotation=(phase2_infernalNail[0]+1)%8;
+                phase2_clockwise=false;
+                
+            }
+
+            else {
+                
+                if(phase2_readableDetonationOrder[0]==2
+                   &&
+                   phase2_readableDetonationOrder[1]==1
+                   &&
+                   phase2_readableDetonationOrder[2]==3
+                   &&
+                   phase2_readableDetonationOrder[3]==4) {
+                    
+                    phase2_initialDiscretizedRotation=(phase2_infernalNail[1]+7)%8;
+                    phase2_clockwise=true;
+                
+                }
+
+                else {
+                    
+                    phase2_disableCrimsonCycloneGuidance=true;
+                    
+                }
+                
+            }
+
+            phase2_thirdCrimsonCycloneSemaphore.Set();
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"""
+                                     phase2_readableDetonationOrder:{string.Join(",",phase2_readableDetonationOrder)}
+                                     phase2_disableCrimsonCycloneGuidance={phase2_disableCrimsonCycloneGuidance}
+                                     phase2_initialDiscretizedRotation={phase2_initialDiscretizedRotation}
+                                     phase2_clockwise={phase2_clockwise}
+                                     """);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第三次深红旋风 (起始位置指路)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"])]
+
+        public void 伊弗利特_第三次深红旋风_起始位置指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Id"],"7737")) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2_thirdCrimsonCycloneSemaphore.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            string prompt=String.Empty;
+
+            if(phase2_disableCrimsonCycloneGuidance) {
+
+                bool fatalError=false;
+
+                if(phase2_readableDetonationOrder.Count!=4) {
+
+                    fatalError=true;
+
+                }
+
+                else {
+
+                    for(int i=0;i<phase2_readableDetonationOrder.Count;++i) {
+
+                        if(phase2_readableDetonationOrder[i]<1||phase2_readableDetonationOrder[i]>4) {
+                            
+                            fatalError=true;
+
+                            break;
+
+                        }
+                        
+                    }
+                    
+                }
+
+                if(fatalError) {
+
+                    prompt="计算引爆顺序时遭遇了致命错误。\n指路已禁用。";
+
+                }
+
+                else {
+
+                    prompt=$"错误的引爆顺序:{phase2_readableDetonationOrder[0]},{phase2_readableDetonationOrder[1]},{phase2_readableDetonationOrder[2]},{phase2_readableDetonationOrder[3]}。\n指路已禁用。";
+
+                }
+
+            }
+
+            else {
+
+                Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/4*phase2_initialDiscretizedRotation);
+
+                if(partyMembersWithSearingWind.Contains(accessory.Data.Me)) {
+                    
+                    myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI);
+                    
+                }
+                
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=7375;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+                if(!phase2_clockwise) {
+                    
+                    prompt=$"正确的引爆顺序:{phase2_readableDetonationOrder[0]},{phase2_readableDetonationOrder[1]},{phase2_readableDetonationOrder[2]},{phase2_readableDetonationOrder[3]}。\n即将逆时针移动。";
+                    
+                }
+
+                else {
+                    
+                    prompt=$"一二楔引爆顺序错误:{phase2_readableDetonationOrder[0]},{phase2_readableDetonationOrder[1]},{phase2_readableDetonationOrder[2]},{phase2_readableDetonationOrder[3]}。\n指路已调整,即将顺时针移动。";
+                    
+                }
+
+            }
+            
+            if(enablePrompts) {
+                    
+                accessory.Method.TextInfo(prompt,7375,phase2_disableCrimsonCycloneGuidance);
+                    
+            }
+                
+            accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+
+        }
+        
+        [ScriptMethod(name:"伊弗利特 第三次深红旋风 (路径指路)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"])]
+
+        public void 伊弗利特_第三次深红旋风_路径指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Id"],"7747")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            if(sourceId!=phase2_ifritId) {
+
+                return;
+
+            }
+
+            if(phase2_disableCrimsonCycloneGuidance) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(sourcePosition,ARENA_CENTER)<18.5f) {
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
+
+            float radius=float.Pi/4;
+
+            if(discretizedPosition%2==phase2_initialDiscretizedRotation%2) {
+
+                radius=float.Pi/2;
+
+            }
+            
+            Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/4*phase2_initialDiscretizedRotation);
+
+            if(partyMembersWithSearingWind.Contains(accessory.Data.Me)) {
+                    
+                myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI);
+                    
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(19.5f);
+            currentProperties.InnerScale=new(18.5f);
+            currentProperties.Radian=radius;
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=9250;
+
+            if(!phase2_clockwise) {
+
+                currentProperties.Rotation=radius/2;
+
+            }
+                
+            else {
+                    
+                currentProperties.Rotation=-(radius/2);
+                    
+            }
+                
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"radius={radius}");
                 
             }
 
