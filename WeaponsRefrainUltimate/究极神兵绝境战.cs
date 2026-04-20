@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using Dalamud.Utility.Numerics;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.STD.Helper;
+using KodakkuAssist.Data;
 using Lumina.Data.Parsing;
 
 namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
@@ -23,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.1.7",
+        version:"0.0.2.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -35,7 +36,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前风神阶段已经完工,火神阶段也即将完工。施工进度随缘,可能很慢。
+            目前风神阶段和火神阶段已经完工,刚刚开始土神阶段。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -2566,12 +2567,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
 
-            Interlocked.Increment(ref majorPhase);
+            majorPhase=2;
             phase=1;
 
             if(!preserveDrawingsWhileSwitchingPhase) {
                 
-                accessory.Method.RemoveDraw(".*");
+                accessory.Method.RemoveDraw("^(?!伊弗利特_第一次深红旋风_范围$).*$");
                 
             }
 
@@ -2660,6 +2661,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
+            currentProperties.Name="伊弗利特_第一次深红旋风_范围";
             currentProperties.Scale=new(18,44);
             currentProperties.Position=sourcePosition;
             currentProperties.TargetPosition=ARENA_CENTER;
@@ -4156,6 +4158,55 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            if(sourceId!=phase2_ifritId) {
+
+                return;
+
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+            uint currentHp=1408009;
+
+            if(sourceObject==null) {
+                
+                phase2_disableCrimsonCycloneGuidance=true;
+
+                return;
+                
+            }
+
+            else {
+                
+                if(sourceObject is not ICharacter sourceICharacter) {
+                    
+                    phase2_disableCrimsonCycloneGuidance=true;
+
+                    return;
+                    
+                }
+
+                else {
+
+                    currentHp=sourceICharacter.CurrentHp;
+
+                    if(currentHp<=1) {
+                        
+                        phase2_disableCrimsonCycloneGuidance=true;
+
+                        return;
+
+                    }
+
+                }
+                
+            }
+            
             if(phase2_detonationOrder.Count!=4) {
                 
                 phase2_disableCrimsonCycloneGuidance=true;
@@ -4165,6 +4216,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 return;
                 
             }
+            
+            phase2_readableDetonationOrder.Clear();
 
             for(int i=0;i<4;++i) {
 
@@ -4200,6 +4253,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                &&
                phase2_readableDetonationOrder[3]==4) {
                 
+                phase2_disableCrimsonCycloneGuidance=false;
                 phase2_initialDiscretizedRotation=(phase2_infernalNail[0]+1)%8;
                 phase2_clockwise=false;
                 
@@ -4215,6 +4269,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                    &&
                    phase2_readableDetonationOrder[3]==4) {
                     
+                    phase2_disableCrimsonCycloneGuidance=false;
                     phase2_initialDiscretizedRotation=(phase2_infernalNail[1]+7)%8;
                     phase2_clockwise=true;
                 
@@ -4233,6 +4288,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             if(enableDebugLogging) {
                 
                 accessory.Log.Debug($"""
+                                     sourceICharacter.CurrentHp={currentHp}
                                      phase2_readableDetonationOrder:{string.Join(",",phase2_readableDetonationOrder)}
                                      phase2_disableCrimsonCycloneGuidance={phase2_disableCrimsonCycloneGuidance}
                                      phase2_initialDiscretizedRotation={phase2_initialDiscretizedRotation}
@@ -4262,6 +4318,18 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
             
             if(!string.Equals(@event["Id"],"7737")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            if(sourceId!=phase2_ifritId) {
 
                 return;
 
@@ -4346,7 +4414,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
                 else {
                     
-                    prompt=$"一二楔引爆顺序错误:{phase2_readableDetonationOrder[0]},{phase2_readableDetonationOrder[1]},{phase2_readableDetonationOrder[2]},{phase2_readableDetonationOrder[3]}。\n指路已调整,即将顺时针移动。";
+                    prompt=$"一二楔顺序错误:{phase2_readableDetonationOrder[0]},{phase2_readableDetonationOrder[1]},{phase2_readableDetonationOrder[2]},{phase2_readableDetonationOrder[3]}。\n指路已调整,即将顺时针移动。";
                     
                 }
 
@@ -4397,12 +4465,6 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 return;
 
             }
-
-            if(phase2_disableCrimsonCycloneGuidance) {
-
-                return;
-
-            }
             
             Vector3 sourcePosition=ARENA_CENTER;
 
@@ -4419,6 +4481,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
 
             if(Vector3.Distance(sourcePosition,ARENA_CENTER)<18.5f) {
+
+                return;
+
+            }
+            
+            if(phase2_disableCrimsonCycloneGuidance) {
 
                 return;
 
@@ -4474,11 +4542,109 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"伊弗利特 第二次烈焰焚烧 (范围)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"])]
+
+        public void 伊弗利特_第二次烈焰焚烧_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Id"],"7747")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            if(sourceId!=phase2_ifritId) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            if(Vector3.Distance(sourcePosition,ARENA_CENTER)>1) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(15);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=12500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
         #endregion
         
         #region Titan
         
-        
+        [ScriptMethod(name:"泰坦 大地粉碎 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11517"],
+            userControl:false)]
+
+        public void 泰坦_大地粉碎_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            majorPhase=3;
+            phase=1;
+
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
         
         #endregion
         
