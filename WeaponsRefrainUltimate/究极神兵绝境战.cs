@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.2.1",
+        version:"0.0.2.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -201,6 +201,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- Major Phase 3 -----
         
+        private volatile int phase3_discretizedLandingPosition=0;
         private System.Threading.AutoResetEvent phase3_secondGeocrushSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 3 -----
@@ -313,6 +314,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             // ----- Major Phase 3 -----
 
+            phase3_discretizedLandingPosition=0;
             phase3_secondGeocrushSemaphore.Reset();
 
             // ----- End Of Major Phase 3 -----
@@ -4800,6 +4802,22 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 return;
 
             }
+            
+            Vector3 targetPosition=ARENA_CENTER;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            phase3_discretizedLandingPosition=discretizePosition(targetPosition,ARENA_CENTER,4);
 
             phase=2;
 
@@ -4807,7 +4825,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             if(enableDebugLogging) {
                 
-                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}\nphase3_discretizedLandingPosition={phase3_discretizedLandingPosition}");
                 
             }
 
@@ -4824,22 +4842,6 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 return;
 
             }
-            
-            Vector3 targetPosition=ARENA_CENTER;
-
-            try {
-
-                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
-
-            } catch(Exception e) {
-                
-                accessory.Log.Error("TargetPosition deserialization failed.");
-
-                return;
-
-            }
-            
-            int discretizedPosition=discretizePosition(targetPosition,ARENA_CENTER,4);
 
             bool signalled=phase3_secondGeocrushSemaphore.WaitOne(COMMON_INTERVAL);
             
@@ -4859,7 +4861,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             currentProperties.Scale=new(2);
             currentProperties.Owner=accessory.Data.Me;
-            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,115),ARENA_CENTER,Math.PI/2*discretizedPosition);
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,115),ARENA_CENTER,Math.PI/2*phase3_discretizedLandingPosition);
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
             currentProperties.DestoryAt=3000;
