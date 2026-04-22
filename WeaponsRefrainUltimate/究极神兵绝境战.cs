@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.2.0",
+        version:"0.0.2.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -126,7 +126,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
         Major Phase 3 - 泰坦:
 
-            Phase 1 - Placeholder 占位符
+            Phase 1 - (~,Second Geocrush 第二次大地粉碎)
             Phase 2 - Placeholder 占位符
             Phase 3 - Placeholder 占位符
             
@@ -193,7 +193,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         private List<int> phase2_readableDetonationOrder=new List<int>(); 
         private volatile bool phase2_disableCrimsonCycloneGuidance=false;
-        private volatile int phase2_initialDiscretizedRotation=0;
+        private volatile int phase2_discretizedInitialRotation=0;
         private volatile bool phase2_clockwise=false;
         private System.Threading.AutoResetEvent phase2_thirdCrimsonCycloneSemaphore=new System.Threading.AutoResetEvent(false);
         
@@ -201,7 +201,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- Major Phase 3 -----
         
-        
+        private System.Threading.AutoResetEvent phase3_secondGeocrushSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 3 -----
         
@@ -305,7 +305,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             phase2_readableDetonationOrder.Clear();
             phase2_disableCrimsonCycloneGuidance=false;
-            phase2_initialDiscretizedRotation=0;
+            phase2_discretizedInitialRotation=0;
             phase2_clockwise=false;
             phase2_thirdCrimsonCycloneSemaphore.Reset();
 
@@ -313,7 +313,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             // ----- Major Phase 3 -----
 
-
+            phase3_secondGeocrushSemaphore.Reset();
 
             // ----- End Of Major Phase 3 -----
 
@@ -735,6 +735,37 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
         }
         
+        [ScriptMethod(name:"通用 大地之重 (精确范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11109"])]
+
+        public void 通用_大地之重_精确范围(Event @event,ScriptAccessory accessory) {
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Position=effectPosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
         #endregion
         
         #region Garuda
@@ -1139,6 +1170,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             currentProperties.Scale=new(12);
             currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/2;
             currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
             currentProperties.TargetOrderIndex=1;
             currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
@@ -4254,7 +4286,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                phase2_readableDetonationOrder[3]==4) {
                 
                 phase2_disableCrimsonCycloneGuidance=false;
-                phase2_initialDiscretizedRotation=(phase2_infernalNail[0]+1)%8;
+                phase2_discretizedInitialRotation=(phase2_infernalNail[0]+1)%8;
                 phase2_clockwise=false;
                 
             }
@@ -4270,7 +4302,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                    phase2_readableDetonationOrder[3]==4) {
                     
                     phase2_disableCrimsonCycloneGuidance=false;
-                    phase2_initialDiscretizedRotation=(phase2_infernalNail[1]+7)%8;
+                    phase2_discretizedInitialRotation=(phase2_infernalNail[1]+7)%8;
                     phase2_clockwise=true;
                 
                 }
@@ -4291,7 +4323,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                                      sourceICharacter.CurrentHp={currentHp}
                                      phase2_readableDetonationOrder:{string.Join(",",phase2_readableDetonationOrder)}
                                      phase2_disableCrimsonCycloneGuidance={phase2_disableCrimsonCycloneGuidance}
-                                     phase2_initialDiscretizedRotation={phase2_initialDiscretizedRotation}
+                                     phase2_initialDiscretizedRotation={phase2_discretizedInitialRotation}
                                      phase2_clockwise={phase2_clockwise}
                                      """);
                 
@@ -4387,7 +4419,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             else {
 
-                Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/4*phase2_initialDiscretizedRotation);
+                Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/4*phase2_discretizedInitialRotation);
 
                 if(partyMembersWithSearingWind.Contains(accessory.Data.Me)) {
                     
@@ -4496,13 +4528,13 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             float radius=float.Pi/4;
 
-            if(discretizedPosition%2==phase2_initialDiscretizedRotation%2) {
+            if(discretizedPosition%2==phase2_discretizedInitialRotation%2) {
 
                 radius=float.Pi/2;
 
             }
             
-            Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/4*phase2_initialDiscretizedRotation);
+            Vector3 myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,Math.PI/4*phase2_discretizedInitialRotation);
 
             if(partyMembersWithSearingWind.Contains(accessory.Data.Me)) {
                     
@@ -4643,6 +4675,196 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
                 
             }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第一次碎岩山崩连击 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11517"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 泰坦_第一次碎岩山崩连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10.5f);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=13625;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(15.5f);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=13625;
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次大地粉碎 (泰坦位置与面向指示)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8727"])]
+
+        public void 泰坦_第二次大地粉碎_泰坦位置与面向指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Id"],"7737")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(4.5f);
+            currentProperties.InnerScale=new(3.5f);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(1,4);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次大地粉碎 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11110"],
+            userControl:false)]
+
+        public void 泰坦_第二次大地粉碎_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase=2;
+
+            phase3_secondGeocrushSemaphore.Set();
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次大地粉碎 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11110"])]
+
+        public void 泰坦_第二次大地粉碎_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 targetPosition=ARENA_CENTER;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(targetPosition,ARENA_CENTER,4);
+
+            bool signalled=phase3_secondGeocrushSemaphore.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,115),ARENA_CENTER,Math.PI/2*discretizedPosition);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
         }
         
