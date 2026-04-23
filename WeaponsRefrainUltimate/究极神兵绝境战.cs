@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.2.2",
+        version:"0.0.2.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前风神阶段和火神阶段已经完工,刚刚开始土神阶段。施工进度随缘,可能很慢。
+            目前风神阶段和火神阶段已经完工,土神阶段完成了大约一半。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -79,14 +79,15 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         [UserSetting("伊弗利特 火狱之楔 指北针的颜色")]
         public ScriptColor phase2_colourOfNorthIndicator { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
-        [UserSetting("伊弗利特 火狱之楔 标记顺序")]
+        [UserSetting("伊弗利特 火狱之楔 标记顺序 (只应有一位小队成员启用类似的辅助功能!)")]
         public bool phase2_enableNailOrderAssistance { get; set; } = false;
         
         // ----- End Of Major Phase 2 -----
         
         // ----- Major Phase 3 -----
         
-        
+        [UserSetting("泰坦 花岗岩牢狱 小队指挥 (只应有一位小队成员启用类似的辅助功能!)")]
+        public bool phase3_enableRockThrowAssistance { get; set; } = false;
         
         // ----- End Of Major Phase 3 -----
         
@@ -127,7 +128,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         Major Phase 3 - 泰坦:
 
             Phase 1 - (~,Second Geocrush 第二次大地粉碎)
-            Phase 2 - Placeholder 占位符
+            Phase 2 - [Second Geocrush 第二次大地粉碎, Tumult 怒震]
             Phase 3 - Placeholder 占位符
             
         Major Phase 4 - 无影拉哈布雷亚:
@@ -203,6 +204,17 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         private volatile int phase3_discretizedLandingPosition=0;
         private System.Threading.AutoResetEvent phase3_secondGeocrushSemaphore=new System.Threading.AutoResetEvent(false);
+
+        private volatile int phase3_boulderCounter=0;
+        private volatile int phase3_bouldersOnLeft=0,phase3_bouldersOnRight=0;
+        private volatile bool phase3_leftSafeZone=false;
+        private System.Threading.AutoResetEvent phase3_bombBoulderSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase3_rockThrowCounter=0;
+        private bool[] phase3_isRockThrow=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private List<int> phase3_rockThrowOrder=new List<int>();
+        private System.Threading.AutoResetEvent phase3_rockThrowSemaphore1=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase3_rockThrowSemaphore2=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase3_rockThrowSemaphore3=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 3 -----
         
@@ -241,6 +253,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         public void Init(ScriptAccessory accessory) {
             
             accessory.Method.RemoveDraw(".*");
+            
+            if(phase2_enableNailOrderAssistance||phase3_enableRockThrowAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
             
             VariableAndSemaphoreInitialization();
             
@@ -316,6 +334,17 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             phase3_discretizedLandingPosition=0;
             phase3_secondGeocrushSemaphore.Reset();
+            
+            phase3_boulderCounter=0;
+            phase3_bouldersOnLeft=0;phase3_bouldersOnRight=0;
+            phase3_leftSafeZone=false;
+            phase3_bombBoulderSemaphore.Reset();
+            phase3_rockThrowCounter=0;
+            for(int i=0;i<phase3_isRockThrow.Length;++i)phase3_isRockThrow[i]=false;
+            phase3_rockThrowOrder.Clear();
+            phase3_rockThrowSemaphore1.Reset();
+            phase3_rockThrowSemaphore2.Reset();
+            phase3_rockThrowSemaphore3.Reset();
 
             // ----- End Of Major Phase 3 -----
 
@@ -2609,6 +2638,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 accessory.Method.RemoveDraw("^(?!伊弗利特_第一次深红旋风_范围$).*$");
                 
             }
+            
+            if(phase2_enableNailOrderAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
 
             phase2_firstCrimsonCycloneSemaphore.Set();
             
@@ -4672,6 +4707,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             }
             
+            if(phase2_enableNailOrderAssistance||phase3_enableRockThrowAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
+            
             if(enableDebugLogging) {
                 
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
@@ -4867,6 +4908,504 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.DestoryAt=3000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 爆破岩石 (数据获取)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8728"],
+            userControl:false)]
+
+        public void 泰坦_爆破岩石_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase3_boulderCounter>=5) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            Vector3 relativePosition=rotatePosition(sourcePosition,ARENA_CENTER,Math.PI/2*(4-phase3_discretizedLandingPosition));
+
+            lock(phase3_bombBoulderSemaphore) {
+
+                if(relativePosition.X<100) {
+
+                    Interlocked.Increment(ref phase3_bouldersOnLeft);
+
+                }
+                
+                if(relativePosition.X>100) {
+
+                    Interlocked.Increment(ref phase3_bouldersOnRight);
+
+                }
+                
+                Interlocked.Increment(ref phase3_boulderCounter);
+
+                if(phase3_boulderCounter==5) {
+
+                    if(phase3_bouldersOnLeft<phase3_bouldersOnRight) {
+
+                        phase3_leftSafeZone=true;
+
+                    }
+                    
+                    if(phase3_bouldersOnLeft>phase3_bouldersOnRight) {
+
+                        phase3_leftSafeZone=false;
+
+                    }
+
+                    phase3_bombBoulderSemaphore.Set();
+
+                    if(enableDebugLogging) {
+                
+                        accessory.Log.Debug($"phase3_bouldersOnLeft={phase3_bouldersOnLeft}\nphase3_bouldersOnRight={phase3_bouldersOnRight}\nphase3_leftSafeZone={phase3_leftSafeZone}");
+                
+                    }
+
+                }
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 爆破岩石 (范围)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8728"])]
+
+        public void 泰坦_爆破岩石_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6.3f);
+            currentProperties.Position=sourcePosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=6500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 大怒震 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11111"])]
+
+        public void 泰坦_大怒震_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase3_bombBoulderSemaphore.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(phase3_leftSafeZone) {
+
+                myPosition=new Vector3(99.541504f,0,89.973636f);
+
+            }
+
+            else {
+                
+                myPosition=new Vector3(100.458496f,0,89.973636f);
+                
+            }
+            // Geometric Construction:
+            // https://www.geogebra.org/calculator/r79ncvch
+
+            myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/2*phase3_discretizedLandingPosition);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=4375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 花岗岩牢狱之前的地裂 (引导指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11111"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 泰坦_花岗岩牢狱之前的地裂_引导指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(0.5f,32);
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.TargetPosition=rotatePosition(new Vector3(ARENA_CENTER.X,ARENA_CENTER.Y,ARENA_CENTER.Z-1),ARENA_CENTER,Math.PI/2*phase3_discretizedLandingPosition);
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=4250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 花岗岩牢狱 (数据获取)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(11115|11116)$"],
+            userControl:false)]
+
+        public void 泰坦_花岗岩牢狱_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase3_rockThrowCounter>=3) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(phase3_isRockThrow) {
+
+                phase3_isRockThrow[targetIndex]=true;
+                
+                Interlocked.Increment(ref phase3_rockThrowCounter);
+
+                if(phase3_rockThrowCounter==3) {
+
+                    int[] temporaryOrder=[0,1,4,5,6,7,2,3];
+                    phase3_rockThrowOrder.Clear();
+
+                    for(int i=0;i<temporaryOrder.Length;++i) {
+
+                        if(phase3_isRockThrow[temporaryOrder[i]]) {
+                            
+                            phase3_rockThrowOrder.Add(temporaryOrder[i]);
+                            
+                        }
+                        
+                    }
+
+                    if(phase3_rockThrowOrder.Count!=3) {
+
+                        return;
+
+                    }
+
+                    phase3_rockThrowSemaphore1.Set();
+                    phase3_rockThrowSemaphore2.Set();
+                    phase3_rockThrowSemaphore3.Set();
+
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             phase3_isRockThrow:{string.Join(",",phase3_isRockThrow)}
+                                             phase3_rockThrowOrder:{string.Join(",",phase3_rockThrowOrder)}
+                                             """);
+
+                    }
+
+                }
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 花岗岩牢狱 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(11115|11116)$"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 泰坦_花岗岩牢狱_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool signalled=phase3_rockThrowSemaphore1.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(phase3_rockThrowOrder.Count!=3) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            int myOrder=-1;
+
+            if(!phase3_rockThrowOrder.Contains(myIndex)) {
+
+                return;
+
+            }
+
+            else {
+
+                myOrder=phase3_rockThrowOrder.IndexOf(myIndex);
+
+            }
+
+            Vector3 myPosition=myOrder switch {
+                
+                0 => new Vector3(100,0,94),
+                1 => new Vector3(100,0,100),
+                2 => ((phase3_leftSafeZone)?(new Vector3(97.653846f,0,105.630769f)):(new Vector3(102.346154f,0,105.630769f))),
+                _ => ARENA_CENTER
+                
+            };
+            // Geometric Construction:
+            // https://www.geogebra.org/calculator/r79ncvch
+            
+            myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/2*phase3_discretizedLandingPosition);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 花岗岩牢狱 (半径与追踪爆炸范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(11115|11116)$"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 泰坦_花岗岩牢狱_半径与追踪爆炸范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool signalled=phase3_rockThrowSemaphore2.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(phase3_rockThrowOrder.Count!=3) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<phase3_rockThrowOrder.Count;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(1.8f);
+                currentProperties.Owner=accessory.Data.PartyList[phase3_rockThrowOrder[i]];
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.DestoryAt=7000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(6);
+                currentProperties.InnerScale=new(1.8f);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Owner=accessory.Data.PartyList[phase3_rockThrowOrder[i]];
+                currentProperties.Color=accessory.Data.DefaultDangerColor.WithW(1);
+                currentProperties.DestoryAt=7000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 花岗岩牢狱 (小队指挥)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(11115|11116)$"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 泰坦_花岗岩牢狱_小队指挥(Event @event,ScriptAccessory accessory) {
+
+            if(!phase3_enableRockThrowAssistance) {
+
+                return;
+
+            }
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool signalled=phase3_rockThrowSemaphore3.WaitOne(COMMON_INTERVAL);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+
+            if(phase3_rockThrowOrder.Count!=3) {
+
+                return;
+
+            }
+            
+            accessory.Method.Mark(accessory.Data.PartyList[phase3_rockThrowOrder[0]],MarkType.Attack1);
+            accessory.Method.Mark(accessory.Data.PartyList[phase3_rockThrowOrder[1]],MarkType.Attack2);
+            accessory.Method.Mark(accessory.Data.PartyList[phase3_rockThrowOrder[2]],MarkType.Attack3);
+
+            if(enableDebugLogging) {
+
+                accessory.Log.Debug($"""
+                                     Mark {phase3_rockThrowOrder[0]} as {MarkType.Attack1}
+                                     Mark {phase3_rockThrowOrder[1]} as {MarkType.Attack2}
+                                     Mark {phase3_rockThrowOrder[2]} as {MarkType.Attack3}
+                                     """);
+
+            }
 
         }
         
