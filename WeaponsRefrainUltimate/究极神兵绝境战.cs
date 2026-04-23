@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.2.3",
+        version:"0.0.2.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -5276,7 +5276,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             };
             // Geometric Construction:
-            // https://www.geogebra.org/calculator/r79ncvch
+            // https://www.geogebra.org/calculator/hjbpprjp
             
             myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/2*phase3_discretizedLandingPosition);
             
