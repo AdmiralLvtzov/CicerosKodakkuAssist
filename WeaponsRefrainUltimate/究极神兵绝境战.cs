@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.2.4",
+        version:"0.0.3.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前风神阶段和火神阶段已经完工,土神阶段完成了大约一半。施工进度随缘,可能很慢。
+            目前三神阶段刚刚完工。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -128,8 +128,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         Major Phase 3 - 泰坦:
 
             Phase 1 - (~,Second Geocrush 第二次大地粉碎)
-            Phase 2 - [Second Geocrush 第二次大地粉碎, Tumult 怒震]
-            Phase 3 - Placeholder 占位符
+            Phase 2 - [Second Geocrush 第二次大地粉碎, Second Weight of the Land第二次大地之重)
+            Phase 3 - [Second Weight of the Land 第二次大地之重, Third Rock Buster & Mountain Buster Combo 第三次碎岩山崩连击)
+            Phase 4 - [Third Rock Buster & Mountain Buster Combo 第三次碎岩山崩连击,~)
             
         Major Phase 4 - 无影拉哈布雷亚:
 
@@ -202,6 +203,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- Major Phase 3 -----
         
+        private ulong phase3_titanId=0;
         private volatile int phase3_discretizedLandingPosition=0;
         private System.Threading.AutoResetEvent phase3_secondGeocrushSemaphore=new System.Threading.AutoResetEvent(false);
 
@@ -215,6 +217,13 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase3_rockThrowSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase3_rockThrowSemaphore2=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase3_rockThrowSemaphore3=new System.Threading.AutoResetEvent(false);
+        private volatile bool titanHasWoken=false;
+
+        private ulong phase3_secondRockThrowTarget=0;
+        private volatile int phase3_tumultCounter=0;
+        private System.Threading.AutoResetEvent phase3_tumultSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase3_boulderRemovalCounter=0;
+        private System.Threading.AutoResetEvent phase3_boulderRemovalSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 3 -----
         
@@ -332,6 +341,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             // ----- Major Phase 3 -----
 
+            phase3_titanId=0;
             phase3_discretizedLandingPosition=0;
             phase3_secondGeocrushSemaphore.Reset();
             
@@ -345,6 +355,13 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase3_rockThrowSemaphore1.Reset();
             phase3_rockThrowSemaphore2.Reset();
             phase3_rockThrowSemaphore3.Reset();
+            titanHasWoken=false;
+            
+            phase3_secondRockThrowTarget=0;
+            phase3_tumultCounter=0;
+            phase3_tumultSemaphore.Reset();
+            phase3_boulderRemovalCounter=0;
+            phase3_boulderRemovalSemaphore.Reset();
 
             // ----- End Of Major Phase 3 -----
 
@@ -645,6 +662,20 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                     if(enableDebugLogging) {
                         
                         accessory.Log.Debug($"ifritHasWoken={ifritHasWoken}");
+                        
+                    }
+
+                    break;
+
+                }
+                
+                case 8727: {
+                    
+                    titanHasWoken=true;
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"titanHasWoken={titanHasWoken}");
                         
                     }
 
@@ -4713,9 +4744,17 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             }
             
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            phase3_titanId=sourceId;
+            
             if(enableDebugLogging) {
                 
-                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}\nphase3_titanId={phase3_titanId}");
                 
             }
 
@@ -5127,6 +5166,35 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"泰坦 地裂 (精确范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11120"])]
+
+        public void 泰坦_地裂_精确范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
         [ScriptMethod(name:"泰坦 花岗岩牢狱 (数据获取)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:regex:^(11115|11116)$"],
@@ -5293,12 +5361,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"泰坦 花岗岩牢狱 (半径与追踪爆炸范围)",
+        [ScriptMethod(name:"泰坦 花岗岩牢狱 (碰撞箱与追踪爆炸范围)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:regex:^(11115|11116)$"],
             suppress:COMMON_INTERVAL)]
 
-        public void 泰坦_花岗岩牢狱_半径与追踪爆炸范围(Event @event,ScriptAccessory accessory) {
+        public void 泰坦_花岗岩牢狱_碰撞箱与追踪爆炸范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=3&&!skipPhaseChecks) {
 
@@ -5406,6 +5474,631 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                                      """);
 
             }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次大地之重 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11109"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+
+        public void 泰坦_第二次大地之重_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase=3;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"泰坦 觉醒后的连击地裂 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11298"])]
+
+        public void 泰坦_觉醒后的连击地裂_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,40);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第三次大地粉碎 (泰坦位置与面向指示)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8727"])]
+
+        public void 泰坦_第三次大地粉碎_泰坦位置与面向指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Id"],"7737")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            if(sourceId!=phase3_titanId) {
+
+                return;
+
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+            uint currentHp=1440211;
+
+            if(sourceObject==null) {
+
+                return;
+                
+            }
+
+            else {
+                
+                if(sourceObject is not ICharacter sourceICharacter) {
+
+                    return;
+                    
+                }
+
+                else {
+
+                    currentHp=sourceICharacter.CurrentHp;
+
+                    if(currentHp<=1) {
+
+                        return;
+
+                    }
+
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(4.5f);
+            currentProperties.InnerScale=new(3.5f);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(1,4);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第三次大地粉碎 (指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11110"])]
+
+        public void 泰坦_第三次大地粉碎_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 targetPosition=ARENA_CENTER;
+
+            try {
+
+                targetPosition=JsonConvert.DeserializeObject<Vector3>(@event["TargetPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("TargetPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedLandingPosition=discretizePosition(targetPosition,ARENA_CENTER,4);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,111),ARENA_CENTER,Math.PI/2*discretizedLandingPosition);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"discretizedLandingPosition={discretizedLandingPosition}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次花岗岩牢狱 (指路)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11115"])]
+
+        public void 泰坦_第二次花岗岩牢狱_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=ARENA_CENTER;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次花岗岩牢狱 (数据获取)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11115"],
+            userControl:false)]
+
+        public void 泰坦_第二次花岗岩牢狱_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            phase3_secondRockThrowTarget=targetId;
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"phase3_secondRockThrowTarget={phase3_secondRockThrowTarget}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次花岗岩牢狱 (目标指示)",
+            eventType:EventTypeEnum.Targetable,
+            eventCondition:["DataId:8729"])]
+
+        public void 泰坦_第二次花岗岩牢狱_目标指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Targetable"],"True")) {
+
+                return;
+
+            }
+
+            if(accessory.Data.Me==phase3_secondRockThrowTarget) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="泰坦_第二次花岗岩牢狱_目标指示1";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=sourceId;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=7000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Name="泰坦_第二次花岗岩牢狱_目标指示2";
+            currentProperties.Scale=new(1.8f);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=7000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次花岗岩牢狱 (目标指示清除)",
+            eventType:EventTypeEnum.CancelAction,
+            eventCondition:["ActionId:11448"],
+            userControl:false)]
+
+        public void 泰坦_第二次花岗岩牢狱_目标指示清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            else {
+
+                if(sourceObject.DataId!=8729) {
+
+                    return;
+
+                }
+                
+            }
+            
+            accessory.Method.RemoveDraw("泰坦_第二次花岗岩牢狱_目标指示1");
+            accessory.Method.RemoveDraw("泰坦_第二次花岗岩牢狱_目标指示2");
+            
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次怒震 (数据获取)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11288"],
+            suppress:500,
+            userControl:false)]
+
+        public void 泰坦_第二次怒震_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase3_tumultCounter>=6) {
+
+                return;
+
+            }
+
+            lock(phase3_tumultSemaphore) {
+
+                Interlocked.Increment(ref phase3_tumultCounter);
+
+                if(phase3_tumultCounter==6) {
+
+                    phase3_tumultSemaphore.Set();
+
+                }
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次碎岩山崩连击 (范围)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11288"],
+            suppress:8000)]
+
+        public void 泰坦_第二次碎岩山崩连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            bool signalled=phase3_tumultSemaphore.WaitOne(8000);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10.5f);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=2250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(15.5f);
+            currentProperties.Owner=sourceId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=2250;
+            currentProperties.DestoryAt=4000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次爆破岩石 (范围)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8728"])]
+
+        public void 泰坦_第二次爆破岩石_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6.3f);
+            currentProperties.Position=sourcePosition;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=6375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第二次爆破岩石 (数据获取)",
+            eventType:EventTypeEnum.RemoveCombatant,
+            eventCondition:["DataId:8728"],
+            userControl:false)]
+
+        public void 泰坦_第二次爆破岩石_数据获取(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase3_boulderRemovalCounter>=4) {
+
+                return;
+
+            }
+
+            lock(phase3_boulderRemovalSemaphore) {
+
+                Interlocked.Increment(ref phase3_boulderRemovalCounter);
+
+                if(phase3_boulderRemovalCounter==4) {
+
+                    phase=4;
+
+                    phase3_boulderRemovalSemaphore.Set();
+
+                }
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"泰坦 第三次碎岩山崩连击 (范围)",
+            eventType:EventTypeEnum.RemoveCombatant,
+            eventCondition:["DataId:8728"],
+            suppress:8500)]
+
+        public void 泰坦_第三次碎岩山崩连击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase3_boulderRemovalSemaphore.WaitOne(8500);
+            
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10.5f);
+            currentProperties.Owner=phase3_titanId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=2500;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(15.5f);
+            currentProperties.Owner=phase3_titanId;
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=2500;
+            currentProperties.DestoryAt=4125;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
         }
         
