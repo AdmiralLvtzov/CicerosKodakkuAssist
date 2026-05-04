@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.3.0",
+        version:"0.0.3.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -1295,6 +1295,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
 
             Interlocked.Increment(ref phase);
+
+            if(phase==3) {
+                
+                accessory.Method.RemoveDraw(@"^迦楼罗_低气压_指路_.*$");
+                
+            }
             
             if(enableDebugLogging) {
                 
@@ -1560,7 +1566,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
-            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            bool signalled=phase1_gigastormSemaphore.WaitOne(15250);
             
             if(!signalled) {
 
@@ -1645,6 +1651,63 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"迦楼罗 低气压 (指路清除,仅ST)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11189"],
+            userControl:false)]
+
+        public void 迦楼罗_低气压_指路清除2_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=1&&phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(targetIndex!=1) {
+
+                return;
+
+            }
+            
+            if(phase1_hasEliminatedThermalLow[targetIndex]) {
+
+                return;
+
+            }
+
+            phase1_hasEliminatedThermalLow[1]=true;
+            
+            accessory.Method.RemoveDraw("迦楼罗_低气压_指路_仅ST");
+
+        }
+        
         [ScriptMethod(name:"迦楼罗 低气压 (指路,远程DPS与治疗)",
             eventType:EventTypeEnum.StatusAdd,
             eventCondition:["StatusID:1525"])]
@@ -1707,7 +1770,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
-            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            bool signalled=phase1_gigastormSemaphore.WaitOne(6250);
             
             if(!signalled) {
 
@@ -1792,6 +1855,63 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"迦楼罗 低气压 (指路清除2,远程DPS与治疗)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(11079|11189)$"],
+            userControl:false)]
+
+        public void 迦楼罗_低气压_指路清除2_远程DPS与治疗(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(!isRanged(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(phase1_hasEliminatedThermalLow[targetIndex]) {
+
+                return;
+
+            }
+
+            phase1_hasEliminatedThermalLow[targetIndex]=true;
+            
+            accessory.Method.RemoveDraw($"迦楼罗_低气压_指路_远程DPS与治疗_{targetIndex}");
+
+        }
+        
         [ScriptMethod(name:"迦楼罗 低气压 (指路,仅D1)",
             eventType:EventTypeEnum.StatusAdd,
             eventCondition:["StatusID:1525"])]
@@ -1854,7 +1974,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
-            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            bool signalled=phase1_gigastormSemaphore.WaitOne(6250);
             
             if(!signalled) {
 
@@ -1946,7 +2066,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             }
             
-            bool signalled=phase1_gigastormSemaphore.WaitOne(35250);
+            bool signalled=phase1_gigastormSemaphore.WaitOne(6250);
             
             if(!signalled) {
 
@@ -2020,6 +2140,63 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
 
             if(stackCount<2) {
+
+                return;
+
+            }
+
+            phase1_hasEliminatedThermalLow[targetIndex]=true;
+            
+            accessory.Method.RemoveDraw($"迦楼罗_低气压_指路_近战DPS_{targetIndex}");
+
+        }
+        
+        [ScriptMethod(name:"迦楼罗 低气压 (指路清除2,近战DPS)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11189"],
+            userControl:false)]
+
+        public void 迦楼罗_低气压_指路清除2_近战DPS(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            if(!isMeleeDps(targetIndex)) {
+
+                return;
+
+            }
+            
+            if(phase1_hasEliminatedThermalLow[targetIndex]) {
 
                 return;
 
