@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.3.1",
+        version:"0.0.3.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前三神阶段刚刚完工。施工进度随缘,可能很慢。
+            目前三神阶段已经完工,本体刚刚开始施工。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -112,12 +112,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         /*
 
-        Major Phase 1 - 迦楼罗:
+        Major Phase 1 - Garuda 迦楼罗:
 
             Phases are separated by Feather Rain.
             阶段由飞翎雨分隔。
         
-        Major Phase 2 - 伊弗利特:
+        Major Phase 2 - Ifrit 伊弗利特:
         
             Phase 1 - (~,First Incinerate 第一次烈焰焚烧)
             Phase 2 - [First Incinerate 第一次烈焰焚烧,Second Hellfire 第二次地狱之火炎)
@@ -125,20 +125,19 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             Phase 4 - [Second Crimson Cyclone 第二次深红旋风,Flaming Crush 烈焰碎击)
             Phase 5 - [Flaming Crush 烈焰碎击,~)
             
-        Major Phase 3 - 泰坦:
+        Major Phase 3 - Titan 泰坦:
 
             Phase 1 - (~,Second Geocrush 第二次大地粉碎)
             Phase 2 - [Second Geocrush 第二次大地粉碎, Second Weight of the Land第二次大地之重)
             Phase 3 - [Second Weight of the Land 第二次大地之重, Third Rock Buster & Mountain Buster Combo 第三次碎岩山崩连击)
             Phase 4 - [Third Rock Buster & Mountain Buster Combo 第三次碎岩山崩连击,~)
             
-        Major Phase 4 - 无影拉哈布雷亚:
+        Major Phase 4 - Ascian Lahabrea 无影拉哈布雷亚:
 
-            Phase 1 - Placeholder 占位符
-            Phase 2 - Placeholder 占位符
-            Phase 3 - Placeholder 占位符
+            No separated phase.
+            无阶段分隔。
             
-        Major Phase 5 - 究极神兵:
+        Major Phase 5 - Ultima Weapon 究极神兵:
 
             Phase 1 - Placeholder 占位符
             Phase 2 - Placeholder 占位符
@@ -227,15 +226,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         // ----- End Of Major Phase 3 -----
         
-        // ----- Major Phase 4 -----
-        
-        
-        
-        // ----- End Of Major Phase 4 -----
-        
         // ----- Major Phase 5 -----
         
-        
+        private ulong phase5_ultimaWeaponId=0;
+        private System.Threading.AutoResetEvent phase5_firstTankPurgeSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 5 -----
         
@@ -365,15 +359,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             // ----- End Of Major Phase 3 -----
 
-            // ----- Major Phase 4 -----
-
-
-
-            // ----- End Of Major Phase 4 -----
-
             // ----- Major Phase 5 -----
 
-
+            phase5_ultimaWeaponId=0;
+            phase5_firstTankPurgeSemaphore.Reset();
 
             // ----- End Of Major Phase 5 -----
 
@@ -6283,13 +6272,161 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Ascian_Lahabrea
         
-        
+        [ScriptMethod(name:"无影拉哈布雷亚 追踪爆炸 (阶段控制)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11509"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+
+        public void 无影拉哈布雷亚_追踪爆炸_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            majorPhase=4;
+            phase=1;
+
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+            
+            if(phase3_enableRockThrowAssistance) {
+
+                accessory.Method.MarkClear();
+                
+            }
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
         
         #endregion
         
         #region Ultima_Weapon
         
+        [ScriptMethod(name:"究极神兵 魔导核爆 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11143"],
+            userControl:false)]
+
+        public void 究极神兵_魔导核爆_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            majorPhase=5;
+            phase=1;
+            
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw("^(?!究极神兵_第一次吸附式以太炸弹_范围$).*$");
+                
+            }
+
+            phase5_firstTankPurgeSemaphore.Set();
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            phase5_ultimaWeaponId=sourceId;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}\nphase5_ultimaWeaponId={phase5_ultimaWeaponId}");
+                
+            }
+
+        }
         
+        [ScriptMethod(name:"究极神兵 第一次吸附式以太炸弹 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11143"])]
+
+        public void 究极神兵_第一次吸附式以太炸弹_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            bool signalled=phase5_firstTankPurgeSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="究极神兵_第一次吸附式以太炸弹_范围";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=6250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 追踪射线 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11131"])]
+
+        public void 究极神兵_追踪射线_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(4);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
         
         #endregion
         
