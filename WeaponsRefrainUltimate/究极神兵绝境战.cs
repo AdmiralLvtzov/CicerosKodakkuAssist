@@ -238,6 +238,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase5sub2_ultimaWeaponAppearance1Semaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase5sub2_ultimaWeaponAppearance2Semaphore=new System.Threading.AutoResetEvent(false);
         
+        private System.Threading.AutoResetEvent phase5sub4_ultimateAnnihilationSemaphore=new System.Threading.AutoResetEvent(false);
+        
         // ----- End Of Major Phase 5 -----
         
         #endregion
@@ -376,6 +378,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase5sub2_ultimaWeaponAppearanceCounter=0;
             phase5sub2_ultimaWeaponAppearance1Semaphore.Reset();
             phase5sub2_ultimaWeaponAppearance2Semaphore.Reset();
+
+            phase5sub4_ultimateAnnihilationSemaphore.Reset();
 
             // ----- End Of Major Phase 5 -----
 
@@ -851,6 +855,29 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             accessory.Method.RemoveDraw($"通用_灼热_范围_{targetId}");
             
+        }
+        
+        [ScriptMethod(name:"通用 烈焰碎击 (范围)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:0075"])]
+
+        public void 通用_烈焰碎击_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(4);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5125;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
         }
         
         [ScriptMethod(name:"通用 大地之重 (精确范围)",
@@ -4401,41 +4428,6 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"伊弗利特 烈焰碎击 (范围)",
-            eventType:EventTypeEnum.TargetIcon,
-            eventCondition:["Id:0075"])]
-
-        public void 伊弗利特_烈焰碎击_范围(Event @event,ScriptAccessory accessory) {
-            
-            if(majorPhase!=2&&!skipPhaseChecks) {
-
-                return;
-
-            }
-
-            if(phase!=4&&!skipPhaseChecks) {
-
-                return;
-
-            }
-            
-            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
-                
-                return;
-                
-            }
-            
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Scale=new(4);
-            currentProperties.Owner=targetId;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=5125;
-            
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-
-        }
-        
         [ScriptMethod(name:"伊弗利特 烈焰碎击 (阶段控制)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:11101"],
@@ -7284,10 +7276,147 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
 
             phase=4;
+
+            phase5sub4_ultimateAnnihilationSemaphore.Set();
             
             if(enableDebugLogging) {
                 
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 (起始指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11596"])]
+
+        public void 究极神兵_爆击之究极幻想_起始指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase5sub4_ultimateAnnihilationSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            Vector3 leftPosition=new Vector3(94,0,96);
+            Vector3 rightPosition=new Vector3(100,0,96);
+            Vector3 aetheroplasmPosition=new Vector3(102,0,96);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=leftPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=11875;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,6);
+            currentProperties.Position=leftPosition;
+            currentProperties.TargetPosition=rightPosition;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=11875;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,6);
+            currentProperties.Position=rightPosition;
+            currentProperties.TargetPosition=leftPosition;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=14875;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex==7) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(20.5f);
+                currentProperties.InnerScale=new(18.5f);
+                currentProperties.Radian=float.Pi/3*2;
+                currentProperties.Position=new Vector3(100,0,119.5f);
+                currentProperties.TargetPosition=new Vector3(100,0,118.5f);
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=17875;
+                currentProperties.DestoryAt=2250;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=leftPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=20125;
+                currentProperties.DestoryAt=2000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            }
+            
+            if(myIndex==2||myIndex==3) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name="究极神兵_爆击之究极幻想_起始指路_治疗";
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,-(Math.PI/8*3));
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=17875;
+                currentProperties.DestoryAt=4250;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            }
+
+            if(myIndex==4||myIndex==5||myIndex==6) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=new Vector3(94,0,90);
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.Delay=17875;
+                currentProperties.DestoryAt=4250;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
                 
             }
 
