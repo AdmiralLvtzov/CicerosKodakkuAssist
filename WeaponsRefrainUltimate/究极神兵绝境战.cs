@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.3.5",
+        version:"0.0.3.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前三神阶段已经完工,本体阶段正在施工,进度为二运的前半部分。施工进度随缘,可能很慢。
+            目前三神阶段已经完工,本体阶段正在施工,进度为二运刚刚完工。施工进度随缘,可能很慢。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -59,6 +59,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         public ScriptColor colourOfExtremelyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("通用 启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
+        [UserSetting("通用 不绘制自身的热风")]
+        public bool disableSearingWindOnMe { get; set; } = false;
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
         [UserSetting("调试 忽略所有方法中的阶段检查")]
@@ -143,6 +145,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             Phase 2 - First half of Ultimate Predation 追击之究极幻想前半
             Phase 3 - Second half of Ultimate Predation 追击之究极幻想后半
             Phase 4 - Ultimate Annihilation 爆击之究极幻想
+            Phase 5 - Ultimate Suppression 乱击之究极幻想
 
         */
         
@@ -239,12 +242,16 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase5sub2_ultimaWeaponAppearance2Semaphore=new System.Threading.AutoResetEvent(false);
         
         private System.Threading.AutoResetEvent phase5sub4_ultimateAnnihilationSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase5sub4_discretizedIfritPosition=-1;
         private HashSet<ulong> phase5sub4_existingAetheroplasm=new HashSet<ulong>();
         private System.Threading.AutoResetEvent phase5sub4_aetheroplasmAppearance1Semaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase5sub4_aetheroplasmAppearance234Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase5sub4_aetheroplasmAppearance4Semaphore=new System.Threading.AutoResetEvent(false);
         private volatile int phase5sub4_aetheroplasmDetonationCounter=0;
         private System.Threading.AutoResetEvent phase5sub4_aetheroplasmDetonation1Semaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase5sub4_aetheroplasmDetonation2Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase5sub4_aetheroplasmDetonation3Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase5sub4_aetheroplasmDetonation4Semaphore=new System.Threading.AutoResetEvent(false);
         private volatile int phase5sub4_featherRainCounter=0;
         private System.Threading.AutoResetEvent phase5sub4_featherRainSemaphore1=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase5sub4_featherRainSemaphore2=new System.Threading.AutoResetEvent(false);
@@ -389,12 +396,16 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase5sub2_ultimaWeaponAppearance2Semaphore.Reset();
 
             phase5sub4_ultimateAnnihilationSemaphore.Reset();
+            phase5sub4_discretizedIfritPosition=-1;
             phase5sub4_existingAetheroplasm.Clear();
             phase5sub4_aetheroplasmAppearance1Semaphore.Reset();
             phase5sub4_aetheroplasmAppearance234Semaphore.Reset();
+            phase5sub4_aetheroplasmAppearance4Semaphore.Reset();
             phase5sub4_aetheroplasmDetonationCounter=0;
             phase5sub4_aetheroplasmDetonation1Semaphore.Reset();
             phase5sub4_aetheroplasmDetonation2Semaphore.Reset();
+            phase5sub4_aetheroplasmDetonation3Semaphore.Reset();
+            phase5sub4_aetheroplasmDetonation4Semaphore.Reset();
             phase5sub4_featherRainCounter=0;
             phase5sub4_featherRainSemaphore1.Reset();
             phase5sub4_featherRainSemaphore2.Reset();
@@ -780,6 +791,16 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
                 
                 return;
+                
+            }
+            
+            if(disableSearingWindOnMe) {
+
+                if(targetId==accessory.Data.Me) {
+
+                    return;
+
+                }
                 
             }
             
@@ -7307,6 +7328,57 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 伊弗利特 (数据收集)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["SourceDataId:8730"],
+            userControl:false)]
+
+        public void 究极神兵_爆击之究极幻想_伊弗利特_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(0<=phase5sub4_discretizedIfritPosition&&phase5sub4_discretizedIfritPosition<8) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
+
+            phase5sub4_discretizedIfritPosition=discretizedPosition;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"phase5sub4_discretizedIfritPosition={phase5sub4_discretizedIfritPosition}");
+                
+            }
+
+        }
+        
         [ScriptMethod(name:"究极神兵 爆击之究极幻想 中高压 (范围)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:0004"])]
@@ -7454,6 +7526,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                         case 4: {
 
                             phase5sub4_aetheroplasmAppearance234Semaphore.Set();
+                            phase5sub4_aetheroplasmAppearance4Semaphore.Set();
 
                             break;
 
@@ -7584,6 +7657,22 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                         case 2: {
 
                             phase5sub4_aetheroplasmDetonation2Semaphore.Set();
+
+                            break;
+
+                        }
+                        
+                        case 3: {
+
+                            phase5sub4_aetheroplasmDetonation3Semaphore.Set();
+
+                            break;
+
+                        }
+                        
+                        case 4: {
+
+                            phase5sub4_aetheroplasmDetonation4Semaphore.Set();
 
                             break;
 
@@ -8053,12 +8142,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"究极神兵 爆击之究极幻想 飞翎雨 (数据收集)",
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 飞翎雨 (数据收集与范围清除)",
             eventType:EventTypeEnum.PlayActionTimeline,
             eventCondition:["SourceDataId:8722"],
             userControl:false)]
 
-        public void 究极神兵_爆击之究极幻想_飞翎雨_数据收集(Event @event,ScriptAccessory accessory) {
+        public void 究极神兵_爆击之究极幻想_飞翎雨_数据收集与范围清除(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=5&&!skipPhaseChecks) {
 
@@ -8093,6 +8182,16 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                     phase5sub4_featherRainSemaphore1.Set();
                     phase5sub4_featherRainSemaphore2.Set();
 
+                }
+
+                if(phase5sub4_featherRainCounter==2) {
+
+                    System.Threading.Tasks.Task.Delay(500).ContinueWith(_ => {
+                        
+                        accessory.Method.RemoveDraw("究极神兵_爆击之究极幻想_第四个以太炸弹引爆_指路_仅ST");
+                        
+                    });
+                    
                 }
 
             }
@@ -8242,6 +8341,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.ScaleMode|=ScaleMode.YByDistance;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
             currentProperties.DestoryAt=MAXIMUM_DURATION;
+
+            if(phase5sub4_existingAetheroplasm.Count==3) {
+
+                currentProperties.Delay=875;
+
+            }
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
@@ -8252,6 +8357,12 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             currentProperties.Owner=sourceId;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
             currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            if(phase5sub4_existingAetheroplasm.Count==3) {
+
+                currentProperties.Delay=875;
+
+            }
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
 
@@ -8364,6 +8475,522 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             }
             
             accessory.Method.RemoveDraw("究极神兵_爆击之究极幻想_第二个以太炸弹引爆_指路_仅ST");
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 深红旋风 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11103"])]
+
+        public void 究极神兵_爆击之究极幻想_深红旋风_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(18,44);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10,44);
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.TargetPosition=new Vector3(ARENA_CENTER.X,ARENA_CENTER.Y,ARENA_CENTER.Z-1);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=3000;
+            currentProperties.DestoryAt=2000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(10,44);
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.TargetPosition=new Vector3(ARENA_CENTER.X+1,ARENA_CENTER.Y,ARENA_CENTER.Z);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=3000;
+            currentProperties.DestoryAt=2000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 (深红旋风后指路,除ST与有灼热状态的队员)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11103"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 究极神兵_爆击之究极幻想_深红旋风后指路_除ST与有灼热状态的队员(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex==1) {
+
+                return;
+
+            }
+
+            if(partyMembersWithSearingWind.Contains(accessory.Data.Me)) {
+
+                return;
+
+            }
+
+            Vector3 position1=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,-(Math.PI/4));
+            Vector3 position2=rotatePosition(new Vector3(100,0,89.5f),ARENA_CENTER,-(Math.PI/4));
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=position1;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=2750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Position=position1;
+            currentProperties.TargetPosition=position2;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=position2;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=2750;
+            currentProperties.DestoryAt=7500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 (深红旋风后指路,仅有灼热状态的队员)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11103"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 究极神兵_爆击之究极幻想_深红旋风后指路_仅有灼热状态的队员(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!partyMembersWithSearingWind.Contains(accessory.Data.Me)) {
+
+                return;
+
+            }
+
+            Vector3 position1=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,(Math.PI/4)*phase5sub4_discretizedIfritPosition);
+            Vector3 position2=new Vector3(100,0,110.5f);
+            Vector3 position3=new Vector3(100,0,118.5f);
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=position1;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=2750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Position=position1;
+            currentProperties.TargetPosition=position2;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=2750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=position2;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=2750;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Position=position2;
+            currentProperties.TargetPosition=position3;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=2750;
+            currentProperties.DestoryAt=3000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=position3;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=5750;
+            currentProperties.DestoryAt=4500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 (深红旋风后指路,仅ST)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11103"],
+            suppress:COMMON_INTERVAL)]
+
+        public void 究极神兵_爆击之究极幻想_深红旋风后指路_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=1) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(new List<int>{1,2,3}.Contains(phase5sub4_discretizedIfritPosition)) {
+
+                myPosition=new Vector3(107,0,93);
+
+            }
+            
+            if(new List<int>{5,6,7}.Contains(phase5sub4_discretizedIfritPosition)) {
+
+                myPosition=new Vector3(93,0,93);
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=2000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 第三个以太炸弹引爆 (指路,仅ST)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11137"])]
+
+        public void 究极神兵_爆击之究极幻想_第三个以太炸弹引爆_指路_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=1) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=8735) {
+
+                return;
+
+            }
+            
+            bool signalled=phase5sub4_aetheroplasmDetonation3Semaphore.WaitOne(8500);
+
+            if(!signalled) {
+
+                return;
+
+            }
+
+            if(phase5sub4_existingAetheroplasm.Count>=4) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="究极神兵_爆击之究极幻想_第三个以太炸弹引爆_指路_仅ST";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=new Vector3(100,0,89.5f);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=6000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 第三个以太炸弹引爆 (指路清除,仅ST)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:8735"],
+            userControl:false)]
+
+        public void 究极神兵_爆击之究极幻想_第三个以太炸弹引爆_指路清除_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase5sub4_aetheroplasmAppearance4Semaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            accessory.Method.RemoveDraw("究极神兵_爆击之究极幻想_第三个以太炸弹引爆_指路_仅ST");
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 爆击之究极幻想 第四个以太炸弹引爆 (指路,仅ST)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:11137"])]
+
+        public void 究极神兵_爆击之究极幻想_第四个以太炸弹引爆_指路_仅ST(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(myIndex!=1) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null) {
+
+                return;
+
+            }
+
+            if(sourceObject.DataId!=8735) {
+
+                return;
+
+            }
+            
+            bool signalled=phase5sub4_aetheroplasmDetonation4Semaphore.WaitOne(8500);
+
+            if(!signalled) {
+
+                return;
+
+            }
+
+            if(phase5sub4_featherRainCounter>=2) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="究极神兵_爆击之究极幻想_第四个以太炸弹引爆_指路_仅ST";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=new Vector3(106,0,89);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=3625;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 乱击之究极幻想 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11597"],
+            userControl:false)]
+
+        public void 究极神兵_乱击之究极幻想_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase=5;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
 
         }
         
