@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.3.6",
+        version:"0.0.3.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -40,6 +40,9 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
+            
+            支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
+            输入/e kuwuclear清除小队排序测试产生的目标标记。
 
             如果在使用过程中遇到了异常,请先检查可达鸭本体与脚本是否都更新到了最新版本,小队职能是否已正确设置,异常是否可以稳定复现。
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
@@ -59,6 +62,8 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         public ScriptColor colourOfExtremelyDangerousAttacks { get; set; } = new() { V4 = new Vector4(1,0,0,1) }; // Red by default.
         [UserSetting("通用 启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
+        [UserSetting("通用 小队排序测试文本发送到的频道")]
+        public PartyTestTextTypes partyTestTextType { get; set; } = PartyTestTextTypes.默语频道_仅自己可见;
         [UserSetting("通用 不绘制自身的热风")]
         public bool disableSearingWindOnMe { get; set; } = false;
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
@@ -272,7 +277,13 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Enumerations_And_Classes
         
-        
+        public enum PartyTestTextTypes {
+            
+            不发送到任何频道,
+            默语频道_仅自己可见,
+            小队频道_所有队员可见
+
+        }
         
         #endregion
         
@@ -505,6 +516,151 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         #endregion
         
         #region Global
+        
+        [ScriptMethod(name:"通用 小队排序测试",
+            eventType:EventTypeEnum.Chat,
+            eventCondition:["Type:Echo"])]
+
+        public void 通用_小队排序测试(Event @event,ScriptAccessory accessory) {
+
+            string processedText=(@event["Message"]).Trim().ToLower();
+            
+            if(!string.Equals(processedText,"kuwutest")) {
+
+                return;
+
+            }
+            
+            string text="请确认如下小队排序是否正确:\n";
+            string log=string.Empty;
+            KodakkuAssist.Data.IGameObject? sourceObject=null;
+            string[] roles=["MT",
+                            "ST",
+                            "H1",
+                            "H2",
+                            "D1",
+                            "D2",
+                            "D3",
+                            "D4"];
+            KodakkuAssist.Module.GameOperate.MarkType[] marks=[MarkType.Stop1, // MT
+                                                               MarkType.Stop2, // OT (ST)
+                                                               MarkType.Bind1, // H1
+                                                               MarkType.Bind2, // H2
+                                                               MarkType.Attack1, // M1 (D1)
+                                                               MarkType.Attack2, // M2 (D2)
+                                                               MarkType.Attack3, // R1 (D3)
+                                                               MarkType.Attack4]; // R2 (D4)
+
+            for(int i=0;i<marks.Length;++i) {
+                
+                accessory.Method.Mark(accessory.Data.PartyList[i],marks[i]);
+                
+                sourceObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[i]);
+                
+                if(sourceObject==null) {
+
+                    continue;
+                
+                }
+                
+                else {
+                
+                    if(sourceObject is not ICharacter sourceICharacter) {
+
+                        continue;
+                    
+                    }
+
+                    else {
+                        
+                        text+=$"{roles[i]}:{sourceObject.Name}，标记{marks[i].ToString()}。";
+
+                        if(i<marks.Length-1) {
+
+                            text+="\n";
+
+                        }
+                        
+                        log+=$"Mark {accessory.Data.PartyList[i]} as {marks[i].ToString()}\n";
+
+                    }
+                
+                }
+                
+            }
+
+            switch(partyTestTextType) {
+
+                case PartyTestTextTypes.不发送到任何频道: {
+
+                    break;
+
+                }
+                
+                case PartyTestTextTypes.默语频道_仅自己可见: {
+                    
+                    accessory.Method.SendChat($"/e \n{text}");
+
+                    break;
+
+                }
+                
+                case PartyTestTextTypes.小队频道_所有队员可见: {
+                    
+                    accessory.Method.SendChat($"/p \n{text}");
+
+                    break;
+
+                }
+                
+                default: {
+
+                    break;
+
+                }
+                
+            }
+
+            if(enablePrompts) {
+
+                accessory.Method.TextInfo(text,20000);
+                
+            }
+            
+            accessory.tts(text,enableVanillaTts,enableDailyRoutinesTts);
+
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"\n-----Party Test Text-----\n{text}\n\n-----Party Test Log-----\n{log}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"通用 小队排序测试清除",
+            eventType:EventTypeEnum.Chat,
+            eventCondition:["Type:Echo"],
+            userControl:false)]
+
+        public void 通用_小队排序测试清除(Event @event,ScriptAccessory accessory) {
+
+            string processedText=(@event["Message"]).Trim().ToLower();
+            
+            if(!string.Equals(processedText,"kuwuclear")) {
+
+                return;
+
+            }
+            
+            accessory.Method.MarkClear();
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug("Now trying to clear party test signs...");
+                
+            }
+
+        }
         
         [ScriptMethod(name:"通用 飞翎雨 (范围)",
             eventType:EventTypeEnum.StartCasting,
