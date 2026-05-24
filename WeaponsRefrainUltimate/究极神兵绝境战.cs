@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.3.9",
+        version:"0.0.4.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             究极神兵绝境战的脚本。
             由于先前的究极神兵绝境战脚本(作者@baelixac)已经停止维护很久了,在最新版本的可达鸭上会出现编译错误,因此我决定从零完全重写这个副本的脚本。
             
-            目前三神阶段已经完工,本体阶段也即将完工,进度为三运后撞球刚刚完工。
+            脚本已经完工,后续将仅有修复bug的更新(如有)而不会有大的改动。
 
             适配的攻略是国服野队一套。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
@@ -63,7 +63,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         [UserSetting("通用 启用搞怪")]
         public bool enableShenanigans { get; set; } = false;
         [UserSetting("通用 小队排序测试文本发送到的频道")]
-        public PartyTestTextTypes partyTestTextType { get; set; } = PartyTestTextTypes.默语频道_仅自己可见;
+        public PartyTestChannels partyTestChannel { get; set; } = PartyTestChannels.默语频道_仅自己可见;
         [UserSetting("通用 不绘制自身的热风")]
         public bool disableSearingWindOnMe { get; set; } = false;
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
@@ -274,6 +274,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase5sub6_ultimaSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile int phase5sub6_ultimaplasmStackCounter=0;
         private HashSet<ulong>[] phase5sub6_ultimaplasm={new HashSet<ulong>(),new HashSet<ulong>(),new HashSet<ulong>(),new HashSet<ulong>()};
+
+        private EnragePhasePatterns enragePhasePattern=EnragePhasePatterns.UNKNOWN;
+        private System.Threading.AutoResetEvent phase5sub6_ifritSemaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase5sub6_titanSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 5 -----
         
@@ -291,11 +295,20 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
         
         #region Enumerations_And_Classes
         
-        public enum PartyTestTextTypes {
+        public enum PartyTestChannels {
             
             不发送到任何频道,
             默语频道_仅自己可见,
             小队频道_所有队员可见
+
+        }
+        
+        public enum EnragePhasePatterns {
+            
+            GARUDA_IFRIT_TITAN,
+            TITAN_IFRIT_GARUDA,
+            IFRIT_GARUDA_TITAN,
+            UNKNOWN
 
         }
         
@@ -447,6 +460,10 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             phase5sub6_ultimaSemaphore.Reset();
             phase5sub6_ultimaplasmStackCounter=0;
             for(int i=0;i<phase5sub6_ultimaplasm.Length;++i)phase5sub6_ultimaplasm[i].Clear();
+
+            enragePhasePattern=EnragePhasePatterns.UNKNOWN;
+            phase5sub6_ifritSemaphore.Reset();
+            phase5sub6_titanSemaphore.Reset();
 
             // ----- End Of Major Phase 5 -----
 
@@ -616,15 +633,15 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 
             }
 
-            switch(partyTestTextType) {
+            switch(partyTestChannel) {
 
-                case PartyTestTextTypes.不发送到任何频道: {
+                case PartyTestChannels.不发送到任何频道: {
 
                     break;
 
                 }
                 
-                case PartyTestTextTypes.默语频道_仅自己可见: {
+                case PartyTestChannels.默语频道_仅自己可见: {
                     
                     accessory.Method.SendChat($"/e \n{text}");
 
@@ -632,7 +649,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
                 }
                 
-                case PartyTestTextTypes.小队频道_所有队员可见: {
+                case PartyTestChannels.小队频道_所有队员可见: {
                     
                     accessory.Method.SendChat($"/p \n{text}");
 
@@ -10772,6 +10789,313 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             accessory.Method.RemoveDraw($"究极神兵_以太波动_究极炸弹_范围_{sourceId}");
             
+        }
+        
+        [ScriptMethod(name:"究极神兵 狂暴前 邪气龙卷 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11086"])]
+
+        public void 究极神兵_狂暴前_邪气龙卷_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+            currentProperties.Scale=new(20);
+            currentProperties.InnerScale=new(8.5f);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=3000;
+            currentProperties.DestoryAt=2250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"究极神兵 狂暴前 深红旋风 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11103"])]
+
+        public void 究极神兵_狂暴前_深红旋风_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(18,44);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=3000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"究极神兵 狂暴前 (数据收集)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(11475|11476|11477)$"],
+            userControl:false)]
+
+        public void 究极神兵_狂暴前_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(enragePhasePattern!=EnragePhasePatterns.UNKNOWN) {
+
+                return;
+
+            }
+
+            else {
+
+                if(string.Equals(@event["ActionId"],"11475")) {
+
+                    enragePhasePattern=EnragePhasePatterns.GARUDA_IFRIT_TITAN;
+
+                }
+                
+                if(string.Equals(@event["ActionId"],"11476")) {
+
+                    enragePhasePattern=EnragePhasePatterns.IFRIT_GARUDA_TITAN;
+
+                }
+                
+                if(string.Equals(@event["ActionId"],"11477")) {
+
+                    enragePhasePattern=EnragePhasePatterns.TITAN_IFRIT_GARUDA;
+
+                }
+
+                phase5sub6_ifritSemaphore.Set();
+                phase5sub6_titanSemaphore.Set();
+
+                if(enableDebugLogging) {
+                    
+                    accessory.Log.Debug($"enragePhasePattern={enragePhasePattern}");
+                    
+                }
+
+            }
+            
+        }
+        
+        [ScriptMethod(name:"究极神兵 狂暴前 伊弗利特 (正北指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11476"])]
+
+        public void 究极神兵_狂暴前_伊弗利特_正北指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool signalled=phase5sub6_ifritSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+
+            int delay=-1;
+            int duration=-1;
+
+            switch(enragePhasePattern) {
+
+                case EnragePhasePatterns.GARUDA_IFRIT_TITAN: {
+
+                    delay=1625;
+                    duration=4625;
+                    
+                    break;
+
+                }
+                
+                case EnragePhasePatterns.IFRIT_GARUDA_TITAN: {
+
+                    delay=0;
+                    duration=6250;
+                    
+                    break;
+
+                }
+                
+                case EnragePhasePatterns.TITAN_IFRIT_GARUDA: {
+
+                    delay=0;
+                    duration=6250;
+                    
+                    break;
+
+                }
+                
+                default: {
+
+                    break;
+
+                }
+                
+            }
+
+            if(delay<0||duration<0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=new Vector3(100,0,81.5f);
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"究极神兵 狂暴前 泰坦 (正北或西北指路)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:11477"])]
+
+        public void 究极神兵_狂暴前_泰坦_正北或西北指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=5&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase!=6&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            bool signalled=phase5sub6_titanSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+
+            Vector3 myPosition=ARENA_CENTER;
+            int delay=-1;
+            int duration=-1;
+
+            switch(enragePhasePattern) {
+
+                case EnragePhasePatterns.GARUDA_IFRIT_TITAN: {
+
+                    myPosition=rotatePosition(new Vector3(100,0,81.5f),ARENA_CENTER,-(Math.PI/4));
+                    delay=0;
+                    duration=4125;
+                    
+                    break;
+
+                }
+                
+                case EnragePhasePatterns.IFRIT_GARUDA_TITAN: {
+
+                    myPosition=new Vector3(100,0,81.5f);
+                    delay=1625;
+                    duration=2500;
+                    
+                    break;
+
+                }
+                
+                case EnragePhasePatterns.TITAN_IFRIT_GARUDA: {
+
+                    myPosition=new Vector3(100,0,81.5f);
+                    delay=0;
+                    duration=4125;
+                    
+                    break;
+
+                }
+                
+                default: {
+
+                    break;
+
+                }
+                
+            }
+
+            if(delay<0||duration<0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
         }
         
         #endregion
