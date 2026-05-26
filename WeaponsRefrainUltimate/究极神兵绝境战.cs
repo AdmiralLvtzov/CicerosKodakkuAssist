@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.4.1",
+        version:"0.0.4.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -7179,7 +7179,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(8);
+            currentProperties.Scale=new(14);
             currentProperties.Position=sourcePosition;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=8125;
@@ -7188,7 +7188,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
             
             currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(8);
+            currentProperties.Scale=new(14);
             currentProperties.Position=sourcePosition;
             currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
             currentProperties.Delay=8125;
@@ -10296,8 +10296,6 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
         public void 究极神兵_以太波动_预站位指路(Event @event,ScriptAccessory accessory) {
             
-            accessory.Log.Debug("ms1 reached");
-            
             if(majorPhase!=5&&!skipPhaseChecks) {
 
                 return;
@@ -10325,8 +10323,6 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
                 return;
 
             }
-            
-            accessory.Log.Debug("ms2 reached");
 
             int myDiscretizedPosition=-1;
 
