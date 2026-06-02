@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.3",
+        version:"0.0.0.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -111,6 +111,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 1 -----
         
+        private volatile bool phase1_hasDrawnPulseWave=false;
         private volatile bool phase1_fakeFlagrantFire=false;
         private System.Threading.AutoResetEvent phase1_flagrantFireObfuscationSemaphore=new System.Threading.AutoResetEvent(false);
         private HashSet<ulong> phase1_partyMembersWithFlagrantFire=new HashSet<ulong>();
@@ -178,6 +179,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             // ----- Major Phase 1 -----
 
+            phase1_hasDrawnPulseWave=false;
             phase1_fakeFlagrantFire=false;
             phase1_flagrantFireObfuscationSemaphore.Reset();
             phase1_partyMembersWithFlagrantFire.Clear();
@@ -489,6 +491,43 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"P1 波动弹 (击退指示)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:48370"])]
+    
+        public void P1_波动弹_击退指示(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase1_hasDrawnPulseWave) {
+
+                return;
+
+            }
+
+            else {
+
+                phase1_hasDrawnPulseWave=true;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,13);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.FixRotation=true;
+            currentProperties.Rotation=0;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=9250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+        
+        }
+        
         [ScriptMethod(name:"P1 玄乎乎魔法 (数据收集)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:regex:^(02A1|02A2|02A3|02A4)$"],
@@ -775,6 +814,37 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=5000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P1 波动炮 (范围)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:002D"])]
+
+        public void P1_波动炮_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,100);
+            currentProperties.Position=new Vector3(100,0,65);
+            currentProperties.TargetObject=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=8250;
+            currentProperties.DestoryAt=4250;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
 
         }
         
