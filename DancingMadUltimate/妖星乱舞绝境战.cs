@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.2",
+        version:"0.0.0.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -111,6 +111,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 1 -----
         
+        private volatile bool phase1_fakeFlagrantFire=false;
+        private System.Threading.AutoResetEvent phase1_flagrantFireObfuscationSemaphore=new System.Threading.AutoResetEvent(false);
+        private HashSet<ulong> phase1_partyMembersWithFlagrantFire=new HashSet<ulong>();
+        private volatile bool phase1_stackFlagrantFireIcon=false;
+        private System.Threading.AutoResetEvent phase1_flagrantFireIconSemaphore=new System.Threading.AutoResetEvent(false);
+        
         // ----- End Of Major Phase 1 -----
         
         // ----- Major Phase 2 -----
@@ -171,6 +177,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase=1;
             
             // ----- Major Phase 1 -----
+
+            phase1_fakeFlagrantFire=false;
+            phase1_flagrantFireObfuscationSemaphore.Reset();
+            phase1_partyMembersWithFlagrantFire.Clear();
+            phase1_stackFlagrantFireIcon=false;
+            phase1_flagrantFireIconSemaphore.Reset();
 
             // ----- End Of Major Phase 1 -----
 
@@ -474,6 +486,295 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=3375;
         
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P1 玄乎乎魔法 (数据收集)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:regex:^(02A1|02A2|02A3|02A4)$"],
+            userControl:false)]
+
+        public void P1_玄乎乎魔法_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var targetObject=accessory.Data.Objects.SearchById(targetId);
+
+            if(targetObject==null) {
+
+                return;
+
+            }
+
+            else {
+
+                if(targetObject.DataId!=19504) {
+
+                    return;
+
+                }
+                
+            }
+            
+            string log=$"@event[\"Id\"]={@event["Id"]}, ";
+            
+            if(string.Equals(@event["Id"],"02A1")) {
+
+                phase1_fakeFlagrantFire=true;
+                phase1_flagrantFireObfuscationSemaphore.Set();
+
+                log+="fake Flagrant Fire";
+
+            }
+            
+            if(string.Equals(@event["Id"],"02A2")) {
+                
+                phase1_fakeFlagrantFire=false;
+                phase1_flagrantFireObfuscationSemaphore.Set();
+
+                log+="real Flagrant Fire";
+
+            }
+            
+            if(string.Equals(@event["Id"],"02A3")) {
+
+                log+="fake 扩大大冰封"; // To be changed in the future.
+
+            }
+            
+            if(string.Equals(@event["Id"],"02A4")) {
+                
+                log+="real 扩大大冰封"; // To be changed in the future.
+
+            }
+            
+            if(enableDebugLogging) {
+                    
+                accessory.Log.Debug(log);
+                    
+            }
+
+        }
+        
+        [ScriptMethod(name:"P1 呼啦啦爆炎 (数据收集)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:regex:^(0080|007F)$"],
+            userControl:false)]
+
+        public void P1_呼啦啦爆炎_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+
+            lock(phase1_partyMembersWithFlagrantFire) {
+                
+                phase1_partyMembersWithFlagrantFire.Add(targetId);
+
+                if(phase1_partyMembersWithFlagrantFire.Count==2) {
+                    
+                    if(string.Equals(@event["Id"],"0080")) {
+
+                        phase1_stackFlagrantFireIcon=true;
+                        phase1_flagrantFireIconSemaphore.Set();
+                        
+                        if(enableDebugLogging) {
+                        
+                            accessory.Log.Debug($"""
+                                                 phase1_stackFlagrantFireIcon={phase1_stackFlagrantFireIcon}
+                                                 phase1_partyMembersWithFlagrantFire:{string.Join(",",phase1_partyMembersWithFlagrantFire)}
+                                                 """);
+                        
+                        }
+
+                    }
+                    
+                }
+                
+                if(phase1_partyMembersWithFlagrantFire.Count==8) {
+                    
+                    if(string.Equals(@event["Id"],"007F")) {
+
+                        phase1_stackFlagrantFireIcon=false;
+                        phase1_flagrantFireIconSemaphore.Set();
+                        
+                        if(enableDebugLogging) {
+                        
+                            accessory.Log.Debug($"""
+                                                 phase1_stackFlagrantFireIcon={phase1_stackFlagrantFireIcon}
+                                                 phase1_partyMembersWithFlagrantFire:{string.Join(",",phase1_partyMembersWithFlagrantFire)}
+                                                 """);
+                        
+                        }
+
+                    }
+                    
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P1 呼啦啦爆炎 (范围与提示)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:regex:^(0080|007F)$"],
+            suppress:COMMON_INTERVAL)]
+
+        public void P1_呼啦啦爆炎_范围与提示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            phase1_flagrantFireObfuscationSemaphore.WaitOne();
+            phase1_flagrantFireIconSemaphore.WaitOne();
+
+            if(phase1_stackFlagrantFireIcon) {
+
+                if(!phase1_fakeFlagrantFire) {
+                    
+                    foreach(ulong i in phase1_partyMembersWithFlagrantFire) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(6);
+                        currentProperties.Owner=i;
+                        currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                        currentProperties.DestoryAt=5875;
+            
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+                    
+                }
+
+                else {
+
+                    for(int i=0;i<8;++i) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=accessory.Data.PartyList[i];
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.DestoryAt=5875;
+            
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+                    
+                }
+
+            }
+
+            else {
+                
+                if(!phase1_fakeFlagrantFire) {
+                    
+                    foreach(ulong i in phase1_partyMembersWithFlagrantFire) {
+                        
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=i;
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.DestoryAt=5875;
+            
+                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        
+                    }
+                    
+                }
+
+                else {
+
+                    string prompt="职能44分摊";
+
+                    if(enablePrompts) {
+                    
+                        accessory.Method.TextInfo(prompt,5875);
+                    
+                    }
+                    
+                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                    
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P1 呼啦啦爆炎 (数据清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:regex:^(47778|47779)$"],
+            suppress:COMMON_INTERVAL,
+            userControl:false)]
+
+        public void P1_呼啦啦爆炎_数据清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            phase1_flagrantFireIconSemaphore.Reset();
+            phase1_flagrantFireObfuscationSemaphore.Reset();
+            phase1_fakeFlagrantFire=false;
+            phase1_partyMembersWithFlagrantFire.Clear();
+            phase1_stackFlagrantFireIcon=false;
+
+        }
+        
+        [ScriptMethod(name:"P1 扩大大冰封 (范围,假)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47774"])]
+
+        public void P1_扩大大冰封_范围_假(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(40);
+            currentProperties.Radian=float.Pi/2;
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
 
         }
         
