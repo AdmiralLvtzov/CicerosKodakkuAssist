@@ -22,9 +22,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 {
 
     [ScriptType(name:"妖星乱舞绝境战",
-        territorys:[6324],
+        territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.1",
+        version:"0.0.0.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -129,6 +129,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private const int MAXIMUM_DURATION=7200000;
         
         private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
+        private const int ARENA_RADIUS=20;
         
         private const int SHENANIGAN_DELAY=5000;
         private const int SHENANIGAN_DURATION=10000;
@@ -233,7 +234,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         [ScriptMethod(name:"Shenanigans",
             eventType:EventTypeEnum.AddCombatant,
-            eventCondition:["DataId:6324"],
+            eventCondition:["DataId:19504"],
             suppress:SHENANIGAN_DELAY+SHENANIGAN_DURATION,
             userControl:false)]
 
@@ -419,6 +420,60 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 accessory.Log.Debug("Now trying to clear party test signs...");
                 
             }
+
+        }
+        
+        #endregion
+        
+        #region Major_Phase_1
+        
+        [ScriptMethod(name:"P1 恶狠狠毁荡 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:50179"])]
+
+        public void P1_恶狠狠毁荡_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(100);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=targetId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(100);
+            currentProperties.Radian=float.Pi/3*2;
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.OwnerEnmityOrder;
+            currentProperties.TargetOrderIndex=2;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Delay=5000;
+            currentProperties.DestoryAt=3375;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
         }
         
