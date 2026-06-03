@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.0",
+        version:"0.0.1.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,8 +36,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工,绘制部分的进度为P2开场。指路尚未开始施工,适配的攻略也尚未确定。
+            脚本刚刚开始施工。绘制部分的进度为P2开场,指路部分尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
+            
+            注意!P1技能特效屏蔽功能默认禁用。只应启用一个提供特效屏蔽功能的科技,否则可能会导致难以预料的异常,详见可达鸭Discord内的公告。
+            NyaDraw插件采用了不同的实现方法,不会产生冲突,但仍然推荐与NyaDraw同时运行时禁用此脚本的技能特效屏蔽功能。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
             输入/e kuwuclear清除小队排序测试产生的目标标记。
@@ -46,7 +49,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
             
             特别致谢:
-                Karlin - 提供了P1屏蔽假技能特效的方法。
+                Karlin - 提供了P1屏蔽技能特效的方法。
             """;
         
         #region User_Settings
@@ -77,6 +80,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         // ----- Major Phase 1 -----
         
         // ----- End Of Major Phase 1 -----
+        
+        [UserSetting("P1 启用技能特效屏蔽 !!!实验性功能!!!")]
+        public bool phase1_enableAnimationBlockade { get; set; } = false;
         
         // ----- Major Phase 2 -----
         
@@ -903,10 +909,23 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(40);
             currentProperties.Radian=float.Pi/2;
             currentProperties.Owner=sourceId;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+            if(phase1_enableAnimationBlockade) {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+            }
+
+            else {
+
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                
+            }
 
         }
         
@@ -915,6 +934,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             eventCondition:["ActionId:regex:^(47768|47771)$"])]
 
         public void P1_扩大大冰封_技能特效屏蔽_实验性功能(Event @event,ScriptAccessory accessory) {
+            
+            if(!phase1_enableAnimationBlockade) {
+
+                return;
+
+            }
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -966,10 +991,23 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             currentProperties.Scale=new(10,40);
             currentProperties.Owner=sourceId;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
-        
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+            if(phase1_enableAnimationBlockade) {
+                
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+            }
+
+            else {
+
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+                
+            }
 
         }
         
@@ -978,6 +1016,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             eventCondition:["ActionId:regex:^(47775|47776)$"])]
 
         public void P1_劈啪啪暴雷_技能特效屏蔽_实验性功能(Event @event,ScriptAccessory accessory) {
+
+            if(!phase1_enableAnimationBlockade) {
+
+                return;
+
+            }
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
