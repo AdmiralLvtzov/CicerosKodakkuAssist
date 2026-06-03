@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.6",
+        version:"0.0.0.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -121,6 +121,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private HashSet<ulong> phase1sub2_partyMembersWithFlagrantFire=new HashSet<ulong>();
         private volatile bool phase1sub2_stackFlagrantFireIcon=false;
         private System.Threading.AutoResetEvent phase1sub2_flagrantFireIconSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase1sub2_玄乎乎魔法Counter=0; // To be changed in the future.
+        private System.Threading.AutoResetEvent phase1sub2_waveCannonSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 1 -----
         
@@ -189,6 +191,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase1sub2_partyMembersWithFlagrantFire.Clear();
             phase1sub2_stackFlagrantFireIcon=false;
             phase1sub2_flagrantFireIconSemaphore.Reset();
+            phase1sub2_玄乎乎魔法Counter=0;
+            phase1sub2_waveCannonSemaphore.Reset();
 
             // ----- End Of Major Phase 1 -----
 
@@ -483,7 +487,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=actualDuration;
             
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
         }
         
@@ -624,12 +628,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         }
         
-        [ScriptMethod(name:"P1 众神之像1 玄乎乎魔法 (数据收集)",
+        [ScriptMethod(name:"P1 众神之像1 呼啦啦爆炎 (数据收集1)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:regex:^(02A1|02A2|02A3|02A4)$"],
             userControl:false)]
 
-        public void P1_众神之像1_玄乎乎魔法_数据收集(Event @event,ScriptAccessory accessory) {
+        public void P1_众神之像1_呼啦啦爆炎_数据收集1(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -719,12 +723,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P1 众神之像1 呼啦啦爆炎 (数据收集)",
+        [ScriptMethod(name:"P1 众神之像1 呼啦啦爆炎 (数据收集2)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:regex:^(0080|007F)$"],
             userControl:false)]
 
-        public void P1_众神之像1_呼啦啦爆炎_数据收集(Event @event,ScriptAccessory accessory) {
+        public void P1_众神之像1_呼啦啦爆炎_数据收集2(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -813,8 +817,21 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            phase1sub2_flagrantFireObfuscationSemaphore.WaitOne();
-            phase1sub2_flagrantFireIconSemaphore.WaitOne();
+            bool signalled=phase1sub2_flagrantFireObfuscationSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            signalled=phase1sub2_flagrantFireIconSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
 
             if(phase1sub2_stackFlagrantFireIcon) {
 
@@ -829,7 +846,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                         currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                         currentProperties.DestoryAt=5875;
             
-                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                         
                     }
                     
@@ -846,7 +863,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                         currentProperties.Color=accessory.Data.DefaultDangerColor;
                         currentProperties.DestoryAt=5875;
             
-                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                         
                     }
                     
@@ -867,7 +884,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                         currentProperties.Color=accessory.Data.DefaultDangerColor;
                         currentProperties.DestoryAt=5875;
             
-                        accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                        accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                         
                     }
                     
@@ -920,10 +937,10 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(40);
             currentProperties.Radian=float.Pi/2;
             currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
         
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
         }
         
@@ -967,6 +984,35 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"P1 众神之像1 玄乎乎魔法 (数据收集)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47764"],
+            userControl:false)]
+
+        public void P1_众神之像1_玄乎乎魔法_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            Interlocked.Increment(ref phase1sub2_玄乎乎魔法Counter);
+
+            if(phase1sub2_玄乎乎魔法Counter==1) {
+
+                phase1sub2_waveCannonSemaphore.Set();
+
+            }
+
+        }
+        
         [ScriptMethod(name:"P1 众神之像1 波动炮 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:47764"])]
@@ -980,6 +1026,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase1sub2_waveCannonSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
 
                 return;
 
@@ -1075,10 +1129,10 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             currentProperties.Scale=new(10,40);
             currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
         
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
 
         }
         
