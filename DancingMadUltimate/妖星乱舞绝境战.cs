@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.11",
+        version:"0.0.1.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工,绘制部分的进度为P1全程。指路尚未开始施工,适配的攻略也尚未确定。
+            脚本刚刚开始施工,绘制部分的进度为P2开场。指路尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -95,7 +95,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         /*
 
-        Major Phase 1 - ???:
+        Major Phase 1:
 
             Phases are separated by Graven Image.
             阶段由众神之像分隔。
@@ -1459,6 +1459,69 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
             
+        }
+        
+        #endregion
+
+        #region Major_Phase_2
+
+        [ScriptMethod(name:"P2 (阶段控制)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["Id:4565"],
+            userControl:false)]
+
+        public void P2_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["SourceDataId"],"19506")) {
+
+                return;
+
+            }
+
+            majorPhase=2;
+            phase=1;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P2 终末双腕 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:49740"])]
+
+        public void P2_终末双腕_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
         }
         
         #endregion
