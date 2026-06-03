@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.7",
+        version:"0.0.0.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工,适配的攻略尚未确定。
+            脚本刚刚开始施工,进度为P1众神之像1。指路适配的攻略尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -477,7 +477,23 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            int actualDuration=int.Min(durationMilliseconds,((int)(连环环陷阱Duration*1000)));
+            int standardDuration=((int)(连环环陷阱Duration*1000));
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -485,7 +501,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(6);
             currentProperties.Owner=targetId;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=actualDuration;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
