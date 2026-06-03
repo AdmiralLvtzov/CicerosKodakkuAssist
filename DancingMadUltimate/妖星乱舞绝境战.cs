@@ -13,6 +13,7 @@ using KodakkuAssist.Script;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Dalamud.Utility.Numerics;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.STD.Helper;
 using KodakkuAssist.Data;
@@ -24,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.5",
+        version:"0.0.0.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -43,6 +44,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             如果在使用过程中遇到了异常,请先检查可达鸭本体与脚本是否都更新到了最新版本,小队职能是否已正确设置,异常是否可以稳定复现。
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
+            
+            特别致谢:
+                Karlin - 提供了P1 众神之像1 屏蔽假技能特效的方法。
             """;
         
         #region User_Settings
@@ -61,6 +65,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         public bool enableShenanigans { get; set; } = false;
         [UserSetting("通用 小队排序测试文本发送到的频道")]
         public PartyTestChannels partyTestChannel { get; set; } = PartyTestChannels.默语频道_仅自己可见;
+        [UserSetting("通用 连环环陷阱状态消失前的绘制持续时间(秒)")]
+        public double 连环环陷阱Duration { get; set; } = 5; // To be changed in the future.
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
         [UserSetting("调试 忽略所有方法中的阶段检查")]
@@ -110,7 +116,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 1 -----
         
-        private System.Threading.AutoResetEvent phase1sub2_pulseWaveSemaphore=new System.Threading.AutoResetEvent(false);
         private volatile bool phase1sub2_fakeFlagrantFire=false;
         private System.Threading.AutoResetEvent phase1sub2_flagrantFireObfuscationSemaphore=new System.Threading.AutoResetEvent(false);
         private HashSet<ulong> phase1sub2_partyMembersWithFlagrantFire=new HashSet<ulong>();
@@ -140,6 +145,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private const int SHENANIGAN_DELAY=5000;
         private const int SHENANIGAN_DURATION=10000;
         private const int PARTY_TEST_DURATION=20000;
+        private const int VISIBILITY_RECOVERY_DELAY=125;
         
         #endregion
         
@@ -178,7 +184,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             // ----- Major Phase 1 -----
 
-            phase1sub2_pulseWaveSemaphore.Reset();
             phase1sub2_fakeFlagrantFire=false;
             phase1sub2_flagrantFireObfuscationSemaphore.Reset();
             phase1sub2_partyMembersWithFlagrantFire.Clear();
@@ -331,7 +336,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
                 sourceObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[i]);
                 
-                if(sourceObject==null) {
+                if(sourceObject==null||!sourceObject.IsValid()) {
 
                     continue;
                 
@@ -436,6 +441,69 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"通用 连环环陷阱 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5078"])]
+
+        public void 通用_连环环陷阱_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int actualDuration=int.Min(durationMilliseconds,((int)(连环环陷阱Duration*1000)));
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"通用_连环环陷阱_范围_{targetId}";
+            currentProperties.Scale=new(6);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=actualDuration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"通用 连环环陷阱 (范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:5078"],
+            userControl:false)]
+
+        public void 通用_连环环陷阱_范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"通用_连环环陷阱_范围_{targetId}");
+            
+        }
+        
         #endregion
         
         #region Major_Phase_1
@@ -505,12 +573,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             Interlocked.Increment(ref phase);
 
-            if(phase==2) {
-
-                phase1sub2_pulseWaveSemaphore.Set();
-
-            }
-
             if(enableDebugLogging) {
                 
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
@@ -520,20 +582,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         }
         
         [ScriptMethod(name:"P1 众神之像1 波动弹 (击退指示)",
-            eventType:EventTypeEnum.StartCasting,
-            eventCondition:["ActionId:48370"])]
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:002D"])]
     
         public void P1_众神之像1_波动弹_击退指示(Event @event,ScriptAccessory accessory) {
 
             if(majorPhase!=1&&!skipPhaseChecks) {
-
-                return;
-
-            }
-
-            bool signalled=phase1sub2_pulseWaveSemaphore.WaitOne(COMMON_INTERVAL);
-
-            if(!signalled) {
 
                 return;
 
@@ -545,14 +599,26 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             currentProperties.Scale=new(2,13);
-            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.Owner=targetId;
             currentProperties.FixRotation=true;
             currentProperties.Rotation=0;
             currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-            currentProperties.DestoryAt=9250;
+            currentProperties.DestoryAt=5125;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
         
@@ -585,7 +651,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var targetObject=accessory.Data.Objects.SearchById(targetId);
 
-            if(targetObject==null) {
+            if(targetObject==null||!targetObject.IsValid()) {
 
                 return;
 
@@ -809,7 +875,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 else {
 
-                    string prompt="职能44分摊";
+                    string prompt="职能四四分摊";
 
                     if(enablePrompts) {
                     
@@ -825,11 +891,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P1 众神之像1 扩大大冰封 (范围)",
+        [ScriptMethod(name:"P1 众神之像1 扩大大冰封 (实际范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47768|47774)$"])]
 
-        public void P1_众神之像1_扩大大冰封_假技能范围(Event @event,ScriptAccessory accessory) {
+        public void P1_众神之像1_扩大大冰封_实际范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -854,16 +920,56 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(40);
             currentProperties.Radian=float.Pi/2;
             currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(2);
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
             currentProperties.DestoryAt=5000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
 
         }
         
+        [ScriptMethod(name:"P1 众神之像1 扩大大冰封 (技能特效屏蔽) !!!实验性功能!!!",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47768|47771)$"])]
+
+        public void P1_众神之像1_扩大大冰封_技能特效屏蔽_实验性功能(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null||!sourceObject.IsValid()) {
+
+                return;
+
+            }
+
+            else {
+                
+                adjustVisibility(accessory,sourceObject,false,VISIBILITY_RECOVERY_DELAY+5000);
+                
+            }
+
+        }
+        
         [ScriptMethod(name:"P1 众神之像1 波动炮 (范围)",
-            eventType:EventTypeEnum.Tether,
-            eventCondition:["Id:002D"])]
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47764"])]
 
         public void P1_众神之像1_波动炮_范围(Event @event,ScriptAccessory accessory) {
             
@@ -879,30 +985,30 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
-                
-                return;
-                
-            }
-            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(6,100);
-            currentProperties.Position=new Vector3(100,0,65);
-            currentProperties.TargetObject=targetId;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.Delay=8250;
-            currentProperties.DestoryAt=4250;
+            for(int i=0;i<8;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(6,100);
+                currentProperties.Position=new Vector3(100,0,65);
+                currentProperties.TargetObject=accessory.Data.PartyList[i];
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=5625;
+                currentProperties.DestoryAt=4375;
         
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+            }
 
         }
         
-        [ScriptMethod(name:"P1 众神之像1 连环环陷阱 (范围)",
-            eventType:EventTypeEnum.StatusAdd,
-            eventCondition:["StatusID:5078"])]
+        [ScriptMethod(name:"P1 众神之像1 爆炸 (精确范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47786"])]
 
-        public void P1_众神之像1_连环环陷阱_范围(Event @event,ScriptAccessory accessory) {
+        public void P1_众神之像1_爆炸_精确范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -916,27 +1022,15 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
-                
-                return;
-                
-            }
-            
-            int durationMilliseconds=0;
+            Vector3 effectPosition=ARENA_CENTER;
 
             try {
 
-                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
 
             } catch(Exception e) {
                 
-                accessory.Log.Error("DurationMilliseconds deserialization failed.");
-
-                return;
-
-            }
-
-            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+                accessory.Log.Error("EffectPosition deserialization failed.");
 
                 return;
 
@@ -944,38 +1038,20 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Name=$"P1_众神之像1_连环环陷阱_范围_{targetId}";
-            currentProperties.Scale=new(6);
-            currentProperties.Owner=targetId;
-            currentProperties.Color=accessory.Data.DefaultDangerColor;
-            currentProperties.DestoryAt=durationMilliseconds;
+            currentProperties.Scale=new(4);
+            currentProperties.Position=effectPosition;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.DestoryAt=3000;
             
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-            
-        }
-        
-        [ScriptMethod(name:"P1 众神之像1 连环环陷阱 (范围清除)",
-            eventType:EventTypeEnum.StatusRemove,
-            eventCondition:["StatusID:5078"],
-            userControl:false)]
-
-        public void P1_众神之像1_连环环陷阱_范围清除(Event @event,ScriptAccessory accessory) {
-            
-            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
-                
-                return;
-                
-            }
-            
-            accessory.Method.RemoveDraw($"P1_众神之像1_连环环陷阱_范围_{targetId}");
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
         }
         
-        [ScriptMethod(name:"P1 众神之像1 劈啪啪暴雷 (范围)",
+        [ScriptMethod(name:"P1 众神之像1 劈啪啪暴雷 (实际范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47775|47777)$"])]
 
-        public void P1_众神之像1_劈啪啪暴雷_假技能范围(Event @event,ScriptAccessory accessory) {
+        public void P1_众神之像1_劈啪啪暴雷_实际范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -999,10 +1075,50 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             currentProperties.Scale=new(10,40);
             currentProperties.Owner=sourceId;
-            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(2);
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
             currentProperties.DestoryAt=5000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P1 众神之像1 劈啪啪暴雷 (技能特效屏蔽) !!!实验性功能!!!",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47775|47776)$"])]
+
+        public void P1_众神之像1_劈啪啪暴雷_技能特效屏蔽_实验性功能(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
+
+            if(sourceObject==null||!sourceObject.IsValid()) {
+
+                return;
+
+            }
+
+            else {
+                
+                adjustVisibility(accessory,sourceObject,false,VISIBILITY_RECOVERY_DELAY+5000);
+                
+            }
 
         }
         
@@ -1227,6 +1343,71 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             };
             
+        }
+        
+        #endregion
+        
+        #region Unsafe_Commons
+
+        public static unsafe void adjustVisibility(ScriptAccessory accessory,IGameObject? targetIGameObject,bool isVisible,int recoveryDelay=-1) {
+
+            if(targetIGameObject==null||!targetIGameObject.IsValid()) {
+
+                return;
+                    
+            }
+
+            try {
+                
+                var targetGameObject=((GameObject*)(targetIGameObject.Address));
+                var originalVisibility=targetGameObject->RenderFlags;
+
+                if(isVisible) {
+
+                    targetGameObject->RenderFlags=VisibilityFlags.None;
+
+                }
+
+                else {
+                    
+                    targetGameObject->RenderFlags=VisibilityFlags.Model;
+                    
+                }
+                
+                if(recoveryDelay<=0) {
+                
+                    return;
+                
+                }
+                
+                System.Threading.Tasks.Task.Delay(recoveryDelay).ContinueWith(_=> {
+
+                    if(targetIGameObject==null||!targetIGameObject.IsValid()) {
+                        
+                        return;
+                        
+                    }
+
+                    try {
+                        
+                        var targetGameObject=((GameObject*)(targetIGameObject.Address));
+                        
+                        targetGameObject->RenderFlags=originalVisibility;
+                        
+                    } catch(Exception e) {
+                        
+                        accessory.Log.Error(e.ToString());
+                        
+                    }
+                    
+                });
+                
+            } catch(Exception e) {
+                
+                accessory.Log.Error(e.ToString());
+                
+            }
+                
         }
         
         #endregion
