@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.0.9",
+        version:"0.0.0.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工,进度为P1众神之像1。指路尚未开始施工,适配的攻略也尚未确定。
+            脚本刚刚开始施工,进度为P1众神之像2。指路尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -125,6 +125,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile int phase1sub2_玄乎乎魔法Counter=0; // To be changed in the future.
         private System.Threading.AutoResetEvent phase1sub2_waveCannonSemaphore=new System.Threading.AutoResetEvent(false);
         
+        private volatile bool phase1sub3_isFirstHalf=true;
+        
         // ----- End Of Major Phase 1 -----
         
         // ----- Major Phase 2 -----
@@ -141,14 +143,15 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         private const int COMMON_INTERVAL=2500;
         private const int MAXIMUM_DURATION=7200000;
-        
-        private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
-        private const int ARENA_RADIUS=20;
+        private const double COMMON_DEVIATION=1;
+        private const int VISIBILITY_RECOVERY_DELAY=125;
         
         private const int SHENANIGAN_DELAY=5000;
         private const int SHENANIGAN_DURATION=10000;
         private const int PARTY_TEST_DURATION=20000;
-        private const int VISIBILITY_RECOVERY_DELAY=125;
+        
+        private static readonly Vector3 ARENA_CENTER=new Vector3(100,0,100);
+        private const int ARENA_RADIUS=20;
         
         #endregion
         
@@ -192,8 +195,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase1_partyMembersWithFlagrantFire.Clear();
             phase1_stackFlagrantFireIcon=false;
             phase1_flagrantFireIconSemaphore.Reset();
+            
             phase1sub2_玄乎乎魔法Counter=0;
             phase1sub2_waveCannonSemaphore.Reset();
+
+            phase1sub3_isFirstHalf=true;
 
             // ----- End Of Major Phase 1 -----
 
@@ -452,7 +458,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         public void 通用_连环环陷阱_范围(Event @event,ScriptAccessory accessory) {
             
-            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
                 
                 return;
                 
@@ -516,7 +522,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         public void 通用_连环环陷阱_范围清除(Event @event,ScriptAccessory accessory) {
             
-            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
                 
                 return;
                 
@@ -1187,6 +1193,200 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=3000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P1 众神之像2 重力弹与岩石弹 (范围)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:002D"])]
+
+        public void P1_众神之像2_重力弹与岩石弹_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            int delay=-1;
+            int duration=-1;
+            var colour=accessory.Data.DefaultDangerColor;
+
+            if(Vector3.Distance(sourcePosition,new Vector3(102.5f,22.5f,27))<COMMON_DEVIATION) {
+
+                if(phase1sub3_isFirstHalf) {
+
+                    delay=0;
+                    duration=6500;
+
+                }
+
+                else {
+                    
+                    delay=3875;
+                    duration=4625;
+                    
+                }
+
+                colour=colourOfDirectionIndicators.V4.WithW(1);
+
+            }
+
+            if(Vector3.Distance(sourcePosition,new Vector3(126,7,41.5f))<COMMON_DEVIATION) {
+
+                if(phase1sub3_isFirstHalf) {
+
+                    delay=6500;
+
+                }
+
+                else {
+                    
+                    delay=8500;
+                    
+                }
+                
+                duration=4000;
+                
+                colour=accessory.Data.DefaultDangerColor;
+
+            }
+
+            if(delay<0||duration<0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=colour;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P1 众神之像2 恶狠狠毁荡 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:50179"],
+            userControl:false)]
+
+        public void P1_众神之像2_恶狠狠毁荡_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase1sub3_isFirstHalf=false;
+
+        }
+        
+        [ScriptMethod(name:"P1 众神之像2 重力波与扑杀的神气 (范围)",
+            eventType:EventTypeEnum.ObjectEffect,
+            eventCondition:["Id1:64"])]
+
+        public void P1_众神之像2_重力波与扑杀的神气_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Id2"],"128")) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            Vector3 orientation=ARENA_CENTER;
+            
+            if(Vector3.Distance(sourcePosition,new Vector3(92,15,27))<COMMON_DEVIATION) {
+
+                orientation=new Vector3(ARENA_CENTER.X-10,ARENA_CENTER.Y,ARENA_CENTER.Z);
+
+            }
+
+            if(Vector3.Distance(sourcePosition,new Vector3(116,6.5f,43))<COMMON_DEVIATION) {
+                
+                orientation=new Vector3(ARENA_CENTER.X+10,ARENA_CENTER.Y,ARENA_CENTER.Z);
+
+            }
+            
+            if(Vector3.Distance(orientation,ARENA_CENTER)<COMMON_DEVIATION) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(100);
+            currentProperties.Radian=float.Pi;
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.TargetPosition=orientation;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
             
         }
         
