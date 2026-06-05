@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.7",
+        version:"0.0.1.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -2043,6 +2043,135 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 });
                 
             }
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 过去终结与未来终结 (引导范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47826|47827)$"])]
+
+        public void P2_遗弃末世_过去终结与未来终结_引导范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(uint i=1;i<=4;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+                currentProperties.Scale=new(5);
+                currentProperties.Owner=sourceId;
+                currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                currentProperties.CentreOrderIndex=i;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.DestoryAt=6750;
+
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 消灭之脚 (引导范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47826|47827)$"])]
+
+        public void P2_遗弃末世_消灭之脚_引导范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+            currentProperties.Scale=new(100);
+            currentProperties.Radian=float.Pi;
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetObject=accessory.Data.Me;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=6750;
+            currentProperties.DestoryAt=6500;
+
+            if(string.Equals(@event["ActionId"],"47826")) {
+
+                currentProperties.Rotation=0;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47827")) {
+
+                currentProperties.Rotation=float.Pi;
+
+            }
+
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 消灭之脚 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47836|47837)$"])]
+
+        public void P2_遗弃末世_消灭之脚_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+            currentProperties.Scale=new(100);
+            currentProperties.Radian=float.Pi;
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
         }
         
