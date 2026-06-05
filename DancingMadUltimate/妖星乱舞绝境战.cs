@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.9",
+        version:"0.0.1.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工。绘制部分的进度为P2异三角,指路部分尚未开始施工,适配的攻略也尚未确定。
+            脚本刚刚开始施工。绘制部分的进度为P2末尾,指路部分尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -47,8 +47,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             特别致谢:
                 Karlin - 紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子,not all heroes wear capes.
-                RyougiMio - 提供了P2咏唱危机的类型数据与塔的EnvControl数据给我抄。
-                南云铁虎 - 提供了P2过去破灭、未来破灭与破坏之翼的绘制数据给我抄。
+                RyougiMio - 提供了P2咏唱危机的类型数据与塔的EnvControl数据。
+                南云铁虎 - 提供了P2过去破灭、未来破灭与破坏之翼的绘制数据。
             """;
         
         #region User_Settings
@@ -105,8 +105,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         Major Phase 2:
 
             Phase 1 - (~,Forsaken 遗弃末世)
-            Phase 2 - [Forsaken 遗弃末世,
-            Phase 3 - Placeholder 占位符
+            Phase 2 - [Forsaken 遗弃末世,Light of Judgment 制裁之光)
+            Phase 3 - [Light of Judgment 制裁之光,~)
             
         Major Phase 3 - ???:
 
@@ -909,8 +909,19 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                         currentProperties.Scale=new(6);
                         currentProperties.Owner=i;
-                        currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                         currentProperties.DestoryAt=5875;
+
+                        if(i==accessory.Data.Me) {
+
+                            currentProperties.Color=accessory.Data.DefaultSafeColor;
+
+                        }
+
+                        else {
+                            
+                            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                            
+                        }
             
                         accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                         
@@ -962,14 +973,84 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                     currentProperties.Scale=new(6);
                     currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                    currentProperties.Color=accessory.Data.DefaultSafeColor;
                     currentProperties.DestoryAt=5875;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
+                    int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+                    if(!isLegalPartyIndex(myIndex)) {
+
+                        return;
+
+                    }
+
+                    if(isSupporter(myIndex)) {
+
+                        for(int i=4;i<8;++i) {
+                            
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(6);
+                            currentProperties.Owner=accessory.Data.PartyList[i];
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                            currentProperties.DestoryAt=5875;
+            
+                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                            
+                        }
+                        
+                    }
+                    
+                    if(isDps(myIndex)) {
+
+                        for(int i=0;i<4;++i) {
+                            
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(6);
+                            currentProperties.Owner=accessory.Data.PartyList[i];
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                            currentProperties.DestoryAt=5875;
+            
+                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                            
+                        }
+                        
+                    }
+                    
                 }
                 
             }
+
+        }
+        
+        [ScriptMethod(name:"P1 呼啦啦爆炎 (技能特效屏蔽)",
+            eventType:EventTypeEnum.VfxEvent,
+            eventCondition:["Id:regex:^(128|127)$"])]
+
+        public void P1_呼啦啦爆炎_技能特效屏蔽(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Type"],"LockOn")) {
+
+                return;
+
+            }
+            
+            if(!convertHandleIdToDecimal(@event["Handle"],out var handleId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveVfx(handleId,VfxType.LockOn);
 
         }
         
@@ -1516,7 +1597,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Scale=new(5);
                 currentProperties.Owner=targetId;
                 currentProperties.Color=accessory.Data.DefaultDangerColor;
-                currentProperties.DestoryAt=9000;
+                currentProperties.Delay=3000;
+                currentProperties.DestoryAt=6000;
             
                 accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
 
@@ -2222,6 +2304,101 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
                 
             }
+
+        }
+        
+        [ScriptMethod(name:"P2 破坏之翼 (单翼范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47821|47822)$"])]
+
+        public void P2_破坏之翼_单翼范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+            currentProperties.Scale=new(40,80);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=4000;
+            
+            if(string.Equals(@event["ActionId"],"47821")) {
+
+                currentProperties.Rotation=float.Pi/2;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47822")) {
+
+                currentProperties.Rotation=-float.Pi/2;
+
+            }
+
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P2 破坏之翼 (双翼范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:50311"])]
+
+        public void P2_破坏之翼_双翼范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+            currentProperties.Scale=new(7);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=4000;
+
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+            currentProperties.Scale=new(7);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=4000;
+
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
 
         }
         
