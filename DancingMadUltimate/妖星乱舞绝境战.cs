@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.4",
+        version:"0.0.1.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -52,7 +52,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 Karlin - 提供了P1屏蔽技能特效的方法。
             """;
         
-        #region User_Settings
+            #region User_Settings
         
         [UserSetting("通用 启用文字提示")]
         public bool enablePrompts { get; set; } = false;
@@ -892,15 +892,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 else {
 
-                    string prompt="职能四四分摊";
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-                    if(enablePrompts) {
-                    
-                        accessory.Method.TextInfo(prompt,5875);
-                    
-                    }
-                    
-                    accessory.tts(prompt,enableVanillaTts,enableDailyRoutinesTts);
+                    currentProperties.Scale=new(6);
+                    currentProperties.Owner=accessory.Data.Me;
+                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                    currentProperties.DestoryAt=5875;
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                     
                 }
                 
