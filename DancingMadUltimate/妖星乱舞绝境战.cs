@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.5",
+        version:"0.0.1.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -39,9 +39,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             脚本刚刚开始施工。绘制部分的进度为P2遗弃末世,指路部分尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
-            注意!P1技能特效屏蔽功能默认禁用。只应启用一个提供特效屏蔽功能的科技,否则可能会导致难以预料的异常,详见可达鸭Discord内的公告。
-            NyaDraw插件采用了不同的实现方法,不会产生冲突,但仍然推荐与NyaDraw同时运行时禁用此脚本的技能特效屏蔽功能。
-            
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
             输入/e kuwuclear清除小队排序测试产生的目标标记。
 
@@ -49,10 +46,10 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
             
             特别致谢:
-                Karlin - 提供了P1屏蔽技能特效的方法。
+                Karlin - 紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子。
             """;
         
-            #region User_Settings
+        #region User_Settings
         
         [UserSetting("通用 启用文字提示")]
         public bool enablePrompts { get; set; } = false;
@@ -80,9 +77,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         // ----- Major Phase 1 -----
         
         // ----- End Of Major Phase 1 -----
-        
-        [UserSetting("P1 启用技能特效屏蔽 !!!实验性功能!!!")]
-        public bool phase1_enableAnimationBlockade { get; set; } = false;
         
         // ----- Major Phase 2 -----
         
@@ -543,12 +537,79 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"通用 连环环陷阱 (范围清除)",
+        [ScriptMethod(name:"通用 连环环陷阱 (击退指示)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5078"])]
+
+        public void 通用_连环环陷阱_击退指示(Event @event,ScriptAccessory accessory) {
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int standardDuration=((int)(连环环陷阱Duration*1000));
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"通用_连环环陷阱_击退指示_{targetId}";
+            currentProperties.Scale=new(2,14);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetObject=targetId;
+            currentProperties.Rotation=float.Pi;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.FadeDistance=6;
+            currentProperties.FadeCentreObject=targetId;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"通用 连环环陷阱 (范围与击退指示清除)",
             eventType:EventTypeEnum.StatusRemove,
             eventCondition:["StatusID:5078"],
             userControl:false)]
 
-        public void 通用_连环环陷阱_范围清除(Event @event,ScriptAccessory accessory) {
+        public void 通用_连环环陷阱_范围与击退指示清除(Event @event,ScriptAccessory accessory) {
             
             if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
                 
@@ -557,6 +618,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             accessory.Method.RemoveDraw($"通用_连环环陷阱_范围_{targetId}");
+            accessory.Method.RemoveDraw($"通用_连环环陷阱_击退指示_{targetId}");
             
         }
         
@@ -802,12 +864,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P1 呼啦啦爆炎 (范围与提示)",
+        [ScriptMethod(name:"P1 呼啦啦爆炎 (范围)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:regex:^(0080|007F)$"],
             suppress:COMMON_INTERVAL)]
 
-        public void P1_呼啦啦爆炎_范围与提示(Event @event,ScriptAccessory accessory) {
+        public void P1_呼啦啦爆炎_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -907,11 +969,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P1 扩大大冰封 (实际范围)",
+        [ScriptMethod(name:"P1 扩大大冰封 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47768|47774)$"])]
 
-        public void P1_扩大大冰封_实际范围(Event @event,ScriptAccessory accessory) {
+        public void P1_扩大大冰封_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -931,36 +993,17 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Radian=float.Pi/2;
             currentProperties.Owner=sourceId;
             currentProperties.DestoryAt=5000;
-
-            if(phase1_enableAnimationBlockade) {
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 
-                currentProperties.Color=accessory.Data.DefaultDangerColor;
-                
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
-                
-            }
-
-            else {
-
-                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-                
-                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
-                
-            }
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
         }
         
-        [ScriptMethod(name:"P1 扩大大冰封 (技能特效屏蔽) !!!实验性功能!!!",
-            eventType:EventTypeEnum.StartCasting,
-            eventCondition:["ActionId:regex:^(47768|47771)$"])]
+        [ScriptMethod(name:"P1 扩大大冰封 (技能特效屏蔽)",
+            eventType:EventTypeEnum.VfxEvent,
+            eventCondition:["Id:737"])]
 
-        public void P1_扩大大冰封_技能特效屏蔽_实验性功能(Event @event,ScriptAccessory accessory) {
-            
-            if(!phase1_enableAnimationBlockade) {
-
-                return;
-
-            }
+        public void P1_扩大大冰封_技能特效屏蔽(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -968,33 +1011,21 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+            if(!convertHandleIdToDecimal(@event["Handle"],out var handleId)) {
                 
                 return;
                 
             }
             
-            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
-
-            if(sourceObject==null||!sourceObject.IsValid()) {
-
-                return;
-
-            }
-
-            else {
-                
-                adjustVisibility(accessory,sourceObject,false,VISIBILITY_RECOVERY_DELAY+5000);
-                
-            }
+            accessory.Method.RemoveOmen(handleId);
 
         }
         
-        [ScriptMethod(name:"P1 劈啪啪暴雷 (实际范围)",
+        [ScriptMethod(name:"P1 劈啪啪暴雷 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47775|47777)$"])]
 
-        public void P1_劈啪啪暴雷_实际范围(Event @event,ScriptAccessory accessory) {
+        public void P1_劈啪啪暴雷_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -1013,36 +1044,17 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(10,40);
             currentProperties.Owner=sourceId;
             currentProperties.DestoryAt=5000;
-
-            if(phase1_enableAnimationBlockade) {
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 
-                currentProperties.Color=accessory.Data.DefaultDangerColor;
-                
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
-                
-            }
-
-            else {
-
-                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-                
-                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
-                
-            }
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
 
         }
         
-        [ScriptMethod(name:"P1 劈啪啪暴雷 (技能特效屏蔽) !!!实验性功能!!!",
-            eventType:EventTypeEnum.StartCasting,
-            eventCondition:["ActionId:regex:^(47775|47776)$"])]
+        [ScriptMethod(name:"P1 劈啪啪暴雷 (技能特效屏蔽)",
+            eventType:EventTypeEnum.VfxEvent,
+            eventCondition:["Id:171"])]
 
-        public void P1_劈啪啪暴雷_技能特效屏蔽_实验性功能(Event @event,ScriptAccessory accessory) {
-
-            if(!phase1_enableAnimationBlockade) {
-
-                return;
-
-            }
+        public void P1_劈啪啪暴雷_技能特效屏蔽(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -1050,25 +1062,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+            if(!convertHandleIdToDecimal(@event["Handle"],out var handleId)) {
                 
                 return;
                 
             }
             
-            var sourceObject=accessory.Data.Objects.SearchById(sourceId);
-
-            if(sourceObject==null||!sourceObject.IsValid()) {
-
-                return;
-
-            }
-
-            else {
-                
-                adjustVisibility(accessory,sourceObject,false,VISIBILITY_RECOVERY_DELAY+5000);
-                
-            }
+            accessory.Method.RemoveOmen(handleId);
 
         }
         
@@ -2056,6 +2056,24 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
+        public static bool convertHandleIdToDecimal(string? rawHandle,out nint result) {
+            
+            result=0;
+
+            if(string.IsNullOrWhiteSpace(rawHandle)) {
+                
+                return false;
+                
+            }
+
+            string handleId=rawHandle.Trim();
+
+            handleId=handleId.StartsWith("0x",StringComparison.OrdinalIgnoreCase)?handleId.Substring(2):handleId;
+
+            return nint.TryParse(handleId,System.Globalization.NumberStyles.HexNumber,null,out result);
+            
+        }
+        
         public static bool convertStringToSignedInteger(string? rawString,out int result) {
     
             result=0;
@@ -2255,71 +2273,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             };
             
-        }
-        
-        #endregion
-        
-        #region Unsafe_Commons
-
-        public static unsafe void adjustVisibility(ScriptAccessory accessory,IGameObject? targetIGameObject,bool isVisible,int recoveryDelay=-1) {
-
-            if(targetIGameObject==null||!targetIGameObject.IsValid()) {
-
-                return;
-                    
-            }
-
-            try {
-                
-                var targetGameObject=((GameObject*)(targetIGameObject.Address));
-                var originalVisibility=targetGameObject->RenderFlags;
-
-                if(isVisible) {
-
-                    targetGameObject->RenderFlags=VisibilityFlags.None;
-
-                }
-
-                else {
-                    
-                    targetGameObject->RenderFlags=VisibilityFlags.Model;
-                    
-                }
-                
-                if(recoveryDelay<=0) {
-                
-                    return;
-                
-                }
-                
-                System.Threading.Tasks.Task.Delay(recoveryDelay).ContinueWith(_=> {
-
-                    if(targetIGameObject==null||!targetIGameObject.IsValid()) {
-                        
-                        return;
-                        
-                    }
-
-                    try {
-                        
-                        var targetGameObject=((GameObject*)(targetIGameObject.Address));
-                        
-                        targetGameObject->RenderFlags=originalVisibility;
-                        
-                    } catch(Exception e) {
-                        
-                        accessory.Log.Error(e.ToString());
-                        
-                    }
-                    
-                });
-                
-            } catch(Exception e) {
-                
-                accessory.Log.Error(e.ToString());
-                
-            }
-                
         }
         
         #endregion
