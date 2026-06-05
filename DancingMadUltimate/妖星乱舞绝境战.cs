@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.2",
+        version:"0.0.1.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -778,7 +778,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                     
                 }
                 
-                if(phase1_partyMembersWithFlagrantFire.Count==8) {
+                if(phase1_partyMembersWithFlagrantFire.Count==1) {
                     
                     if(string.Equals(@event["Id"],"007F")) {
 
@@ -875,12 +875,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
                 if(!phase1_fakeFlagrantFire) {
                     
-                    foreach(ulong i in phase1_partyMembersWithFlagrantFire) {
+                    for(int i=0;i<8;++i) {
                         
                         currentProperties=accessory.Data.GetDefaultDrawProperties();
 
                         currentProperties.Scale=new(5);
-                        currentProperties.Owner=i;
+                        currentProperties.Owner=accessory.Data.PartyList[i];
                         currentProperties.Color=accessory.Data.DefaultDangerColor;
                         currentProperties.DestoryAt=5875;
             
@@ -1711,7 +1711,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                                     currentProperties.Color=accessory.Data.DefaultDangerColor;
                                     currentProperties.DestoryAt=MAXIMUM_DURATION;
 
-                                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
                                     break;
 
@@ -1866,7 +1866,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                                             currentProperties.Color=accessory.Data.DefaultDangerColor;
                                             currentProperties.DestoryAt=MAXIMUM_DURATION;
 
-                                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
 
                                             break;
                                         
