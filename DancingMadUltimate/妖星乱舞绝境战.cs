@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.8",
+        version:"0.0.1.9",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工。绘制部分的进度为P2遗弃末世,指路部分尚未开始施工,适配的攻略也尚未确定。
+            脚本刚刚开始施工。绘制部分的进度为P2异三角,指路部分尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -46,7 +46,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
             
             特别致谢:
-                Karlin - 紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子。
+                Karlin - 紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子,not all heroes wear capes.
+                RyougiMio - 提供了P2咏唱危机的类型数据与塔的EnvControl数据给我抄。
+                南云铁虎 - 提供了P2过去破灭、未来破灭与破坏之翼的绘制数据给我抄。
             """;
         
         #region User_Settings
@@ -134,7 +136,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private Phase2Sub2_IconTypes[] phase2sub2_iconType=Enumerable.Range(0,8).Select(i=>Phase2Sub2_IconTypes.UNKNOWN).ToArray();
         private List<int> phase2sub2_towers=new List<int>();
         private ConcurrentDictionary<ulong,int> phase2sub2_drawingCounter=new ConcurrentDictionary<ulong,int>();
-        private volatile int phase2sub2_temporaryTowerCounter=0;
+        private volatile int phase2sub2_towerCounter=0; // Its read-write lock is PHASE2_SUB2_TOWER_COUNTER_LOCK.
         
         // ----- End Of Major Phase 2 -----
         
@@ -160,6 +162,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         private static readonly Vector3 PHASE2_SUB2_RAW_TOWER_POSITION=new Vector3(100,0,92);
         private const int PHASE2_SUB2_TOWER_RADIUS=4;
+        
+        private readonly object PHASE2_SUB2_TOWER_COUNTER_LOCK=new object();
         
         #endregion
         
@@ -225,7 +229,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             for(int i=0;i<phase2sub2_iconType.Length;++i)phase2sub2_iconType[i]=Phase2Sub2_IconTypes.UNKNOWN;
             phase2sub2_towers.Clear();
             phase2sub2_drawingCounter.Clear();
-            phase2sub2_temporaryTowerCounter=0;
+            phase2sub2_towerCounter=0;
 
             // ----- End Of Major Phase 2 -----
 
@@ -1689,11 +1693,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围更新)",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围更新1)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:regex:^(02CD|02CC|02CB)$"])]
 
-        public void P2_遗弃末世_咏唱危机_数据收集与范围更新(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_数据收集与范围更新1(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -1843,11 +1847,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 塔 (数据收集与范围更新)",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围更新2)",
             eventType:EventTypeEnum.EnvControl,
             eventCondition:["Flag:2"])]
 
-        public void P2_遗弃末世_塔_数据收集与范围更新(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_数据收集与范围更新2(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -2002,11 +2006,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (范围清除) !!!临时函数,将来会移除!!!",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (范围清除)",
             eventType:EventTypeEnum.EnvControl,
-            eventCondition:["Flag:2"])]
+            eventCondition:["Flag:2"],
+            userControl:false)]
 
-        public void P2_遗弃末世_咏唱危机_范围清除_临时函数_将来会移除(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_范围清除(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -2032,15 +2037,19 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
 
-            Interlocked.Increment(ref phase2sub2_temporaryTowerCounter);
-
-            if(phase2sub2_temporaryTowerCounter==16) {
+            lock(PHASE2_SUB2_TOWER_COUNTER_LOCK) {
                 
-                System.Threading.Tasks.Task.Delay(11000).ContinueWith(_=> {
+                Interlocked.Increment(ref phase2sub2_towerCounter);
+
+                if(phase2sub2_towerCounter==16) {
+                
+                    System.Threading.Tasks.Task.Delay(10000).ContinueWith(_=> {
                     
-                    accessory.Method.RemoveDraw(@"^P2_遗弃末世_范围_.*$");
+                        accessory.Method.RemoveDraw(@"^P2_遗弃末世_范围_.*$");
                     
-                });
+                    });
+                
+                }
                 
             }
 
@@ -2170,8 +2179,49 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Owner=sourceId;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
+            
+            if(string.Equals(@event["ActionId"],"47836")) {
+
+                currentProperties.Rotation=0;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47837")) {
+
+                currentProperties.Rotation=float.Pi;
+
+            }
 
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P2 制裁之光 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47805"],
+            userControl:false)]
+
+        public void P2_制裁之光_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            phase=3;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
 
         }
         
