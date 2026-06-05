@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.6",
+        version:"0.0.1.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -1011,13 +1011,19 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
+            if(!string.Equals(@event["Type"],"Omen")) {
+
+                return;
+
+            }
+            
             if(!convertHandleIdToDecimal(@event["Handle"],out var handleId)) {
                 
                 return;
                 
             }
             
-            accessory.Method.RemoveOmen(handleId);
+            accessory.Method.RemoveVfx(handleId,VfxType.Omen);
 
         }
         
@@ -1062,13 +1068,19 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
+            if(!string.Equals(@event["Type"],"Omen")) {
+
+                return;
+
+            }
+            
             if(!convertHandleIdToDecimal(@event["Handle"],out var handleId)) {
                 
                 return;
                 
             }
             
-            accessory.Method.RemoveOmen(handleId);
+            accessory.Method.RemoveVfx(handleId,VfxType.Omen);
 
         }
         
