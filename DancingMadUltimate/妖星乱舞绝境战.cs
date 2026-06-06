@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.0",
+        version:"0.0.2.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -81,6 +81,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         // ----- End Of Major Phase 1 -----
         
         // ----- Major Phase 2 -----
+        
+        [UserSetting("P2 遗弃末世 塔辅助线的颜色")]
+        public ScriptColor phase2sub2_colourOfAuxiliaryLine { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
         
         // ----- End Of Major Phase 2 -----
         
@@ -2047,6 +2050,66 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 }
                     
             }
+            
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 (塔辅助线) !!!临时函数,将来可能会移除!!!",
+            eventType:EventTypeEnum.EnvControl,
+            eventCondition:["Flag:2"])]
+
+        public void P2_遗弃末世_塔辅助线_临时函数_将来可能会移除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["Index"], out var index)) {
+                
+                return;
+                
+            }
+
+            if(index<1||index>8) {
+
+                return;
+
+            }
+            
+            Vector3 towerCenter=PHASE2_SUB2_RAW_TOWER_POSITION;
+            Vector3 relativeNorth=new Vector3(PHASE2_SUB2_RAW_TOWER_POSITION.X,PHASE2_SUB2_RAW_TOWER_POSITION.Y,PHASE2_SUB2_RAW_TOWER_POSITION.Z+1);
+            Vector3 relativeWest=new Vector3(PHASE2_SUB2_RAW_TOWER_POSITION.X+1,PHASE2_SUB2_RAW_TOWER_POSITION.Y,PHASE2_SUB2_RAW_TOWER_POSITION.Z);
+            
+            towerCenter=rotatePosition(towerCenter,ARENA_CENTER,Math.PI/4*(index-1));
+            relativeNorth=rotatePosition(relativeNorth,ARENA_CENTER,Math.PI/4*(index-1));
+            relativeWest=rotatePosition(relativeWest,ARENA_CENTER,Math.PI/4*(index-1));
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(0.125f,8);
+            currentProperties.Position=towerCenter;
+            currentProperties.TargetPosition=relativeNorth;
+            currentProperties.Color=phase2sub2_colourOfAuxiliaryLine.V4.WithW(1);
+            currentProperties.DestoryAt=10000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(0.125f,8);
+            currentProperties.Position=towerCenter;
+            currentProperties.TargetPosition=relativeWest;
+            currentProperties.Color=phase2sub2_colourOfAuxiliaryLine.V4.WithW(1);
+            currentProperties.DestoryAt=10000;
+        
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
             
         }
         
