@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.1",
+        version:"0.0.2.2",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -558,6 +558,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
                 return;
                 
+            }
+
+            if(targetId==accessory.Data.Me) {
+
+                return;
+
             }
             
             int durationMilliseconds=0;
@@ -1323,11 +1329,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P1 众神之像2 重力弹与岩石弹 (范围)",
+        [ScriptMethod(name:"P1 众神之像2 重力弹 (范围)",
             eventType:EventTypeEnum.Tether,
             eventCondition:["Id:002D"])]
 
-        public void P1_众神之像2_重力弹与岩石弹_范围(Event @event,ScriptAccessory accessory) {
+        public void P1_众神之像2_重力弹_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=1&&!skipPhaseChecks) {
 
@@ -1360,49 +1366,28 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 return;
 
             }
+            
+            if(Vector3.Distance(sourcePosition,new Vector3(102.5f,22.5f,27))>COMMON_DEVIATION) {
 
-            int delay=-1;
-            int duration=-1;
-            var colour=accessory.Data.DefaultDangerColor;
-
-            if(Vector3.Distance(sourcePosition,new Vector3(102.5f,22.5f,27))<COMMON_DEVIATION) {
-
-                if(phase1sub3_isFirstHalf) {
-
-                    delay=0;
-                    duration=6500;
-
-                }
-
-                else {
-                    
-                    delay=3875;
-                    duration=4625;
-                    
-                }
-
-                colour=colourOfDirectionIndicators.V4.WithW(1);
+                return;
 
             }
 
-            if(Vector3.Distance(sourcePosition,new Vector3(126,7,41.5f))<COMMON_DEVIATION) {
+            int delay=-1;
+            int duration=-1;
+            
+            if(phase1sub3_isFirstHalf) {
 
-                if(phase1sub3_isFirstHalf) {
+                delay=0;
+                duration=6500;
 
-                    delay=6500;
+            }
 
-                }
-
-                else {
+            else {
                     
-                    delay=8500;
+                delay=3875;
+                duration=4625;
                     
-                }
-                
-                duration=4000;
-                
-                colour=accessory.Data.DefaultDangerColor;
-
             }
 
             if(delay<0||duration<0) {
@@ -1415,9 +1400,85 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             currentProperties.Scale=new(5);
             currentProperties.Owner=targetId;
-            currentProperties.Color=colour;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
             currentProperties.Delay=delay;
             currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P1 众神之像2 岩石弹 (范围)",
+            eventType:EventTypeEnum.Tether,
+            eventCondition:["Id:002D"])]
+
+        public void P1_众神之像2_岩石弹_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            if(Vector3.Distance(sourcePosition,new Vector3(126,7,41.5f))>COMMON_DEVIATION) {
+
+                return;
+
+            }
+
+            int delay=-1;
+            
+            if(phase1sub3_isFirstHalf) {
+
+                delay=6500;
+
+            }
+
+            else {
+                    
+                delay=8500;
+                    
+            }
+
+            if(delay<0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=4000;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
