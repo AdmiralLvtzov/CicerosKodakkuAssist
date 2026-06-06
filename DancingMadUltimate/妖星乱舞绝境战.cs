@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.2",
+        version:"0.0.2.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -2569,6 +2569,20 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             if(string.Equals(@event["DataId"],"2015155")) {
 
                 position=new Vector3(sourcePosition.X+3,sourcePosition.Y,sourcePosition.Z+5);
+
+            }
+            
+            if(string.Equals(@event["DataId"],"2015154")
+               &&
+               Vector3.Distance(sourcePosition,new Vector3(88.45f,0,90))<COMMON_DEVIATION) {
+
+                position=new Vector3(sourcePosition.X+3,sourcePosition.Y,sourcePosition.Z+5); // To be changed in the future.
+
+            }
+            
+            if(Vector3.Distance(position,sourcePosition)<COMMON_DEVIATION) {
+
+                return;
 
             }
             
