@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.10",
+        version:"0.0.1.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -977,48 +977,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                     currentProperties.DestoryAt=5875;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-                    
-                    int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
-            
-                    if(!isLegalPartyIndex(myIndex)) {
-
-                        return;
-
-                    }
-
-                    if(isSupporter(myIndex)) {
-
-                        for(int i=4;i<8;++i) {
-                            
-                            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-                            currentProperties.Scale=new(6);
-                            currentProperties.Owner=accessory.Data.PartyList[i];
-                            currentProperties.Color=accessory.Data.DefaultDangerColor;
-                            currentProperties.DestoryAt=5875;
-            
-                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-                            
-                        }
-                        
-                    }
-                    
-                    if(isDps(myIndex)) {
-
-                        for(int i=0;i<4;++i) {
-                            
-                            currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-                            currentProperties.Scale=new(6);
-                            currentProperties.Owner=accessory.Data.PartyList[i];
-                            currentProperties.Color=accessory.Data.DefaultDangerColor;
-                            currentProperties.DestoryAt=5875;
-            
-                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-                            
-                        }
-                        
-                    }
                     
                 }
                 
