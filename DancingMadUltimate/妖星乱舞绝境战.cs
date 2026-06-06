@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.1.11",
+        version:"0.0.2.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本刚刚开始施工。绘制部分的进度为P2末尾,指路部分尚未开始施工,适配的攻略也尚未确定。
+            脚本正在施工中。绘制部分的进度为P3刚刚开始,指路部分尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -48,7 +48,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             特别致谢:
                 Karlin - 紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子,not all heroes wear capes.
                 RyougiMio - 提供了P2咏唱危机的类型数据与塔的EnvControl数据。
-                南云铁虎 - 提供了P2过去破灭、未来破灭与破坏之翼的绘制数据。
+                南云铁虎 - 提供了P2消灭之脚、破坏之翼与异三角的绘制数据。
             """;
         
         #region User_Settings
@@ -108,10 +108,10 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             Phase 2 - [Forsaken 遗弃末世,Light of Judgment 制裁之光)
             Phase 3 - [Light of Judgment 制裁之光,~)
             
-        Major Phase 3 - ???:
+        Major Phase 3:
 
-            Phase 1 - Placeholder 占位符
-            Phase 2 - Placeholder 占位符
+            Phase 1 - (~,Bowels of Agony 深层痛楚)
+            Phase 2 - [Bowels of Agony 深层痛楚,
             Phase 3 - Placeholder 占位符
 
         */
@@ -138,6 +138,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private ConcurrentDictionary<ulong,int> phase2sub2_drawingCounter=new ConcurrentDictionary<ulong,int>();
         private volatile int phase2sub2_towerCounter=0; // Its read-write lock is PHASE2_SUB2_TOWER_COUNTER_LOCK.
         
+        private volatile int phase2sub3_trineCounter=0; // Its read-write lock is PHASE2_SUB3_TRINE_COUNTER_LOCK.
+        
         // ----- End Of Major Phase 2 -----
         
         // ----- Major Phase 3 -----
@@ -151,7 +153,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private const int COMMON_INTERVAL=2500;
         private const int MAXIMUM_DURATION=7200000;
         private const double COMMON_DEVIATION=1;
-        private const int VISIBILITY_RECOVERY_DELAY=125;
         
         private const int SHENANIGAN_DELAY=5000;
         private const int SHENANIGAN_DURATION=10000;
@@ -162,8 +163,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         private static readonly Vector3 PHASE2_SUB2_RAW_TOWER_POSITION=new Vector3(100,0,92);
         private const int PHASE2_SUB2_TOWER_RADIUS=4;
-        
         private readonly object PHASE2_SUB2_TOWER_COUNTER_LOCK=new object();
+        
+        private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
         
         #endregion
         
@@ -230,6 +232,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase2sub2_towers.Clear();
             phase2sub2_drawingCounter.Clear();
             phase2sub2_towerCounter=0;
+            
+            phase2sub3_trineCounter=0;
 
             // ----- End Of Major Phase 2 -----
 
@@ -1733,11 +1737,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围更新1)",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围1)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:regex:^(02CD|02CC|02CB)$"])]
 
-        public void P2_遗弃末世_咏唱危机_数据收集与范围更新1(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_数据收集与范围1(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -1887,11 +1891,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围更新2)",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围2)",
             eventType:EventTypeEnum.EnvControl,
             eventCondition:["Flag:2"])]
 
-        public void P2_遗弃末世_咏唱危机_数据收集与范围更新2(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_数据收集与范围2(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -2357,6 +2361,183 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=4000;
 
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P2 异三角 (数据收集与范围)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:regex:^(2015154|2015155)$"])]
+
+        public void P2_异三角_数据收集与范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+
+            if(phase2sub3_trineCounter>=7) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+
+            int delay=-1;
+            int duration1=-1;
+            int duration2=-1;
+
+            lock(PHASE2_SUB3_TRINE_COUNTER_LOCK) {
+
+                Interlocked.Increment(ref phase2sub3_trineCounter);
+
+                if(phase2sub3_trineCounter<=3) {
+
+                    delay=0;
+                    duration1=9875;
+                    duration2=2000;
+
+                }
+
+                else {
+
+                    delay=7875;
+                    duration1=2000;
+                    duration2=2000;
+                    
+                }
+
+            }
+
+            Vector3 position=sourcePosition;
+            
+            if(string.Equals(@event["DataId"],"2015154")) {
+
+                position=new Vector3(sourcePosition.X-3,sourcePosition.Y,sourcePosition.Z+5);
+
+            }
+            
+            if(string.Equals(@event["DataId"],"2015155")) {
+
+                position=new Vector3(sourcePosition.X+3,sourcePosition.Y,sourcePosition.Z+5);
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            for(int i=0;i<3;++i) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+                currentProperties.Scale=new(6);
+                currentProperties.Position=rotatePosition(position,sourcePosition,Math.PI/3*2*i);
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration1;
+
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+                currentProperties.Scale=new(6);
+                currentProperties.Position=rotatePosition(position,sourcePosition,Math.PI/3*2*i);
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                currentProperties.Delay=delay+duration1;
+                currentProperties.DestoryAt=duration2;
+
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P3 (阶段控制)",
+            eventType:EventTypeEnum.PlayActionTimeline,
+            eventCondition:["Id:3218"],
+            userControl:false)]
+
+        public void P3_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["SourceDataId"],"19504")) {
+
+                return;
+
+            }
+            
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+
+            majorPhase=3;
+            phase=1;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47858"],
+            userControl:false)]
+
+        public void P3_深层痛楚_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=1&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            phase=2;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
 
         }
         
