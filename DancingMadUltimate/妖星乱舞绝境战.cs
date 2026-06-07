@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.3",
+        version:"0.0.2.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -1021,7 +1021,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
             }
             
-            accessory.Method.RemoveVfx(handleId,VfxType.LockOn);
+            accessory.Method.VfxMethod.RemoveVfx(handleId,VfxType.LockOn);
 
         }
         
@@ -1079,7 +1079,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
             }
             
-            accessory.Method.RemoveVfx(handleId,VfxType.Omen);
+            accessory.Method.VfxMethod.RemoveVfx(handleId,VfxType.Omen);
 
         }
         
@@ -1136,7 +1136,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
             }
             
-            accessory.Method.RemoveVfx(handleId,VfxType.Omen);
+            accessory.Method.VfxMethod.RemoveVfx(handleId,VfxType.Omen);
 
         }
         
@@ -2614,6 +2614,10 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        #endregion
+
+        #region Major_Phase_3
+
         [ScriptMethod(name:"P3 (阶段控制)",
             eventType:EventTypeEnum.PlayActionTimeline,
             eventCondition:["Id:3218"],
@@ -2679,6 +2683,41 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"P3 深层痛楚 暴雷 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47890"])]
+
+        public void P3_深层痛楚_暴雷_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(11);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=7000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+
         #endregion
         
         #region Commons
