@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.4",
+        version:"0.0.2.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -396,7 +396,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                     else {
                         
-                        text+=$"{roles[i]}:{sourceObject.Name}，标记{marks[i].ToString()}。";
+                        text+=$"{roles[i]}:{sourceICharacter.Name}，标记{marks[i].ToString()}。";
 
                         if(i<marks.Length-1) {
 
@@ -2709,7 +2709,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(11);
+            currentProperties.Scale=new(14.8f);
             currentProperties.Owner=sourceId;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=7000;

@@ -24,7 +24,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
     [ScriptType(name:"究极神兵绝境战",
         territorys:[777],
         guid:"ba05255f-37df-413f-8ddb-f0a61a9bacbe",
-        version:"0.0.4.2",
+        version:"0.0.4.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -636,7 +636,7 @@ namespace CicerosKodakkuAssist.WeaponsRefrainUltimate.ChinaDataCenter
 
                     else {
                         
-                        text+=$"{roles[i]}:{sourceObject.Name}，标记{marks[i].ToString()}。";
+                        text+=$"{roles[i]}:{sourceICharacter.Name}，标记{marks[i].ToString()}。";
 
                         if(i<marks.Length-1) {
 
