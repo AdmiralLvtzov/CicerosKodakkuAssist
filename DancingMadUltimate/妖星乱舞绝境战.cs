@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.7",
+        version:"0.0.2.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -3109,7 +3109,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.CentreOrderIndex=2;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.Delay=delay;
-            currentProperties.DestoryAt=duration+1000;
+            currentProperties.DestoryAt=duration+2500;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
             
@@ -3124,7 +3124,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.CentreOrderIndex=1;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.Delay=delay;
-            currentProperties.DestoryAt=duration+1000;
+            currentProperties.DestoryAt=duration+2500;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
             
@@ -3354,7 +3354,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.CentreOrderIndex=2;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.Delay=delay;
-            currentProperties.DestoryAt=duration+1000;
+            currentProperties.DestoryAt=duration+2500;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
@@ -3367,7 +3367,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.CentreOrderIndex=1;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.Delay=delay;
-            currentProperties.DestoryAt=duration+1000;
+            currentProperties.DestoryAt=duration+2500;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
@@ -3448,6 +3448,252 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=8125;
             
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 本影爆碎 (引导指示)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47870|47869)$"])]
+
+        public void P3_深层痛楚_本影爆碎_引导指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="P3_深层痛楚_本影爆碎_引导指示";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+            currentProperties.TargetOrderIndex=1;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.Delay=9875;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 本影爆碎 (引导指示清除)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47872"],
+            userControl:false)]
+
+        public void P3_深层痛楚_本影爆碎_引导指示清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            accessory.Method.RemoveDraw("P3_深层痛楚_本影爆碎_引导指示");
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 本影爆碎 (落点指示)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47872"])]
+
+        public void P3_深层痛楚_本影爆碎_落点指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=sourceId;
+            currentProperties.TargetPosition=effectPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(1);
+            currentProperties.Position=effectPosition;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 地震 (阶段控制)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:50546"],
+            userControl:false)]
+
+        public void P3_地震_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            phase=3;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P3 地震 黑洞 (碰撞箱范围)",
+            eventType:EventTypeEnum.AddCombatant,
+            eventCondition:["DataId:19512"])]
+
+        public void P3_地震_黑洞_碰撞箱范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_地震_黑洞_碰撞箱范围_{sourceId}";
+            currentProperties.Scale=new(1);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 地震 黑洞 (碰撞箱范围清除)",
+            eventType:EventTypeEnum.RemoveCombatant,
+            eventCondition:["DataId:19512"],
+            userControl:false)]
+
+        public void P3_地震_黑洞_碰撞箱范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+
+            accessory.Method.RemoveDraw($"P3_地震_黑洞_碰撞箱范围_{sourceId}");
+
+        }
+        
+        [ScriptMethod(name:"P3 地震 诅咒敕令 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47873"])]
+
+        public void P3_地震_诅咒敕令_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(80,60);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
 
         }
 
