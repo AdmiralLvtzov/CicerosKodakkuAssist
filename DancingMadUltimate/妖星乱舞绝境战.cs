@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.5",
+        version:"0.0.2.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -147,6 +147,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 3 -----
         
+        private volatile int phase3sub2_crystalCounter=0; // Its read-write lock is PHASE3_SUB2_CRYSTAL_COUNTER_LOCK.
+        private Vector3 phase3sub2_windCrystalPosition=ARENA_CENTER;
+        private Vector3 phase3sub2_fireCrystalPosition=ARENA_CENTER;
+        private Vector3 phase3sub2_waterCrystalPosition=ARENA_CENTER;
+        private System.Threading.ManualResetEvent phase3sub2_crystalSemaphore=new System.Threading.ManualResetEvent(false);
+        
         // ----- End Of Major Phase 3 -----
         
         #endregion
@@ -169,6 +175,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private readonly object PHASE2_SUB2_TOWER_COUNTER_LOCK=new object();
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
+        
+        private readonly object PHASE3_SUB2_CRYSTAL_COUNTER_LOCK=new object();
         
         #endregion
         
@@ -241,6 +249,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             // ----- End Of Major Phase 2 -----
 
             // ----- Major Phase 3 -----
+
+            phase3sub2_crystalCounter=0;
+            phase3sub2_windCrystalPosition=ARENA_CENTER;
+            phase3sub2_fireCrystalPosition=ARENA_CENTER;
+            phase3sub2_waterCrystalPosition=ARENA_CENTER;
+            phase3sub2_crystalSemaphore.Reset();
 
             // ----- End Of Major Phase 3 -----
 
@@ -922,19 +936,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                         currentProperties.Scale=new(6);
                         currentProperties.Owner=i;
+                        currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                         currentProperties.DestoryAt=5875;
-
-                        if(i==accessory.Data.Me) {
-
-                            currentProperties.Color=accessory.Data.DefaultSafeColor;
-
-                        }
-
-                        else {
-                            
-                            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-                            
-                        }
             
                         accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
                         
@@ -986,7 +989,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                     currentProperties.Scale=new(6);
                     currentProperties.Owner=accessory.Data.Me;
-                    currentProperties.Color=accessory.Data.DefaultSafeColor;
+                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
                     currentProperties.DestoryAt=5875;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
@@ -2654,6 +2657,132 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"P3 经度聚爆与纬度聚爆 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47870|47869)$"])]
+
+        public void P3_经度聚爆与纬度聚爆_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            if(string.Equals(@event["ActionId"],"47869")) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=0;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=float.Pi/2;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=5750;
+                currentProperties.DestoryAt=2000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=-(float.Pi/2);
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=5750;
+                currentProperties.DestoryAt=2000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47870")) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=float.Pi/2;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=-(float.Pi/2);
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=0;
+                currentProperties.DestoryAt=5750;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=0;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=5750;
+                currentProperties.DestoryAt=2000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(40);
+                currentProperties.Radian=float.Pi/2;
+                currentProperties.Owner=sourceId;
+                currentProperties.Rotation=float.Pi;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=5750;
+                currentProperties.DestoryAt=2000;
+        
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+            }
+
+        }
+        
         [ScriptMethod(name:"P3 深层痛楚 (阶段控制)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:47858"],
@@ -2673,6 +2802,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
+            phase3sub2_crystalSemaphore.Reset();
+            
             phase=2;
             
             if(enableDebugLogging) {
@@ -2683,11 +2814,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P3 深层痛楚 暴雷 (范围)",
+        [ScriptMethod(name:"P3 深层痛楚 暴雷 (钢铁范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:47890"])]
 
-        public void P3_深层痛楚_暴雷_范围(Event @event,ScriptAccessory accessory) {
+        public void P3_深层痛楚_暴雷_钢铁范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=3&&!skipPhaseChecks) {
 
@@ -2713,6 +2844,291 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Owner=sourceId;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=7000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 混沌之炎 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1600"])]
+
+        public void P3_深层痛楚_混沌之炎_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+
+            int standardDuration=0;
+
+            if(durationMilliseconds<=32500) {
+                
+                standardDuration=6750;
+                
+            }
+
+            else {
+                
+                standardDuration=4000;
+                
+            }
+            
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_深层痛楚_混沌之炎_范围_{targetId}";
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 混沌之炎 (范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1600"],
+            userControl:false)]
+
+        public void P3_深层痛楚_混沌之炎_范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P3_深层痛楚_混沌之炎_范围_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 混沌之水 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1601"])]
+
+        public void P3_深层痛楚_混沌之水_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+
+            int standardDuration=0;
+
+            if(durationMilliseconds<=32500) {
+                
+                standardDuration=6750;
+                
+            }
+
+            else {
+                
+                standardDuration=4000;
+                
+            }
+            
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_深层痛楚_混沌之水_范围_{targetId}";
+            currentProperties.Scale=new(10);
+            currentProperties.InnerScale=new(5);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Owner=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 混沌之水 (范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:1601"],
+            userControl:false)]
+
+        public void P3_深层痛楚_混沌之水_范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P3_深层痛楚_混沌之水_范围_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 暴雷 (死刑范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47881"])]
+
+        public void P3_深层痛楚_暴雷_死刑范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=8125;
             
             accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
 
