@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.6",
+        version:"0.0.2.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本正在施工中。绘制部分的进度为P3刚刚开始,指路部分尚未开始施工,适配的攻略也尚未确定。
+            脚本正在施工中。绘制部分的进度为P3深层痛楚(一运),指路部分尚未开始施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -147,11 +147,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 3 -----
         
-        private volatile int phase3sub2_crystalCounter=0; // Its read-write lock is PHASE3_SUB2_CRYSTAL_COUNTER_LOCK.
-        private Vector3 phase3sub2_windCrystalPosition=ARENA_CENTER;
         private Vector3 phase3sub2_fireCrystalPosition=ARENA_CENTER;
+        private System.Threading.AutoResetEvent phase3sub2_fireCrystalSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase3sub2_infernoCounter=2;
         private Vector3 phase3sub2_waterCrystalPosition=ARENA_CENTER;
-        private System.Threading.ManualResetEvent phase3sub2_crystalSemaphore=new System.Threading.ManualResetEvent(false);
+        private System.Threading.AutoResetEvent phase3sub2_waterCrystalSemaphore=new System.Threading.AutoResetEvent(false);
+        private volatile int phase3sub2_tsunamiCounter=2;
         
         // ----- End Of Major Phase 3 -----
         
@@ -175,8 +176,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private readonly object PHASE2_SUB2_TOWER_COUNTER_LOCK=new object();
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
-        
-        private readonly object PHASE3_SUB2_CRYSTAL_COUNTER_LOCK=new object();
         
         #endregion
         
@@ -250,11 +249,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             // ----- Major Phase 3 -----
 
-            phase3sub2_crystalCounter=0;
-            phase3sub2_windCrystalPosition=ARENA_CENTER;
             phase3sub2_fireCrystalPosition=ARENA_CENTER;
+            phase3sub2_fireCrystalSemaphore.Reset();
+            phase3sub2_infernoCounter=2;
             phase3sub2_waterCrystalPosition=ARENA_CENTER;
-            phase3sub2_crystalSemaphore.Reset();
+            phase3sub2_waterCrystalSemaphore.Reset();
+            phase3sub2_tsunamiCounter=2;
 
             // ----- End Of Major Phase 3 -----
 
@@ -2802,14 +2802,91 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            phase3sub2_crystalSemaphore.Reset();
-            
             phase=2;
             
             if(enableDebugLogging) {
                 
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
                 
+            }
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 水晶 (数据收集)",
+            eventType:EventTypeEnum.ObjectChanged,
+            eventCondition:["DataId:regex:^(2015290|2015291)$"],
+            userControl:false)]
+
+        public void P3_深层痛楚_水晶_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Operate"],"Add")) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["DataId"],"2015290")) {
+
+                if(Vector3.Distance(phase3sub2_fireCrystalPosition,ARENA_CENTER)>COMMON_DEVIATION) {
+
+                    return;
+
+                }
+
+                phase3sub2_fireCrystalPosition=sourcePosition;
+                phase3sub2_fireCrystalSemaphore.Set();
+                
+                if(enableDebugLogging) {
+                        
+                    accessory.Log.Debug($"phase3sub2_fireCrystalPosition={phase3sub2_fireCrystalPosition}");
+                        
+                }
+
+            }
+                
+            if(string.Equals(@event["DataId"],"2015291")) {
+                
+                if(Vector3.Distance(phase3sub2_waterCrystalPosition,ARENA_CENTER)>COMMON_DEVIATION) {
+
+                    return;
+
+                }
+
+                phase3sub2_waterCrystalPosition=sourcePosition;
+                phase3sub2_waterCrystalSemaphore.Set();
+                
+                if(enableDebugLogging) {
+                        
+                    accessory.Log.Debug($"phase3sub2_waterCrystalPosition={phase3sub2_waterCrystalPosition}");
+                        
+                }
+
             }
 
         }
@@ -2943,12 +3020,122 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P3 深层痛楚 混沌之炎 (范围清除)",
+        [ScriptMethod(name:"P3 深层痛楚 烈焰 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1600","SourceId:E0000000"],
+            suppress:COMMON_INTERVAL)]
+
+        public void P3_深层痛楚_烈焰_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+
+            int standardDuration=0;
+
+            if(durationMilliseconds<=32500) {
+                
+                standardDuration=6750;
+                
+            }
+
+            else {
+                
+                standardDuration=4000;
+                
+            }
+            
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            bool signalled=phase3sub2_fireCrystalSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_深层痛楚_烈焰_范围_2";
+            currentProperties.Scale=new(10);
+            currentProperties.InnerScale=new(5);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Position=phase3sub2_fireCrystalPosition;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=2;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration+1000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_深层痛楚_烈焰_范围_1";
+            currentProperties.Scale=new(10);
+            currentProperties.InnerScale=new(5);
+            currentProperties.Radian=float.Pi*2;
+            currentProperties.Position=phase3sub2_fireCrystalPosition;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration+1000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Donut,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 混沌之炎与烈焰 (范围清除)",
             eventType:EventTypeEnum.StatusRemove,
             eventCondition:["StatusID:1600"],
             userControl:false)]
 
-        public void P3_深层痛楚_混沌之炎_范围清除(Event @event,ScriptAccessory accessory) {
+        public void P3_深层痛楚_混沌之炎与烈焰_范围清除(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=3&&!skipPhaseChecks) {
 
@@ -2969,6 +3156,18 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             accessory.Method.RemoveDraw($"P3_深层痛楚_混沌之炎_范围_{targetId}");
+
+            lock(phase3sub2_fireCrystalSemaphore) {
+
+                if(phase3sub2_infernoCounter>=1) {
+                    
+                    accessory.Method.RemoveDraw($"P3_深层痛楚_烈焰_范围_{phase3sub2_infernoCounter}");
+
+                    --phase3sub2_infernoCounter;
+                    
+                }
+
+            }
             
         }
         
@@ -3068,12 +3267,118 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P3 深层痛楚 混沌之水 (范围清除)",
+        [ScriptMethod(name:"P3 深层痛楚 海啸 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:1601","SourceId:E0000000"],
+            suppress:COMMON_INTERVAL)]
+
+        public void P3_深层痛楚_海啸_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+
+            int standardDuration=0;
+
+            if(durationMilliseconds<=32500) {
+                
+                standardDuration=6750;
+                
+            }
+
+            else {
+                
+                standardDuration=4000;
+                
+            }
+            
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            bool signalled=phase3sub2_waterCrystalSemaphore.WaitOne(COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_深层痛楚_海啸_范围_2";
+            currentProperties.Scale=new(5);
+            currentProperties.Position=phase3sub2_waterCrystalPosition;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=2;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration+1000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P3_深层痛楚_海啸_范围_1";
+            currentProperties.Scale=new(5);
+            currentProperties.Position=phase3sub2_waterCrystalPosition;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration+1000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 混沌之水与海啸 (范围清除)",
             eventType:EventTypeEnum.StatusRemove,
             eventCondition:["StatusID:1601"],
             userControl:false)]
 
-        public void P3_深层痛楚_混沌之水_范围清除(Event @event,ScriptAccessory accessory) {
+        public void P3_深层痛楚_混沌之水与海啸_范围清除(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=3&&!skipPhaseChecks) {
 
@@ -3094,6 +3399,18 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             accessory.Method.RemoveDraw($"P3_深层痛楚_混沌之水_范围_{targetId}");
+            
+            lock(phase3sub2_waterCrystalSemaphore) {
+
+                if(phase3sub2_tsunamiCounter>=1) {
+                    
+                    accessory.Method.RemoveDraw($"P3_深层痛楚_海啸_范围_{phase3sub2_tsunamiCounter}");
+
+                    --phase3sub2_tsunamiCounter;
+                    
+                }
+
+            }
             
         }
         
