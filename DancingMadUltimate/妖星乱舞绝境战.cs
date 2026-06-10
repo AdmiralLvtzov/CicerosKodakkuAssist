@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.11",
+        version:"0.0.2.12",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本正在施工中。绘制部分的进度为P3深层痛楚(一运),指路部分尚未开始施工,适配的攻略也尚未确定。
+            脚本正在施工中。绘制部分的进度为P3深层痛楚(一运)全程,指路部分除了P3深层痛楚(一运)究极冲击波以外尚未施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -169,8 +169,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile int phase3sub2_tsunamiCounter=2;
         private Vector3 phase3sub2_windCrystalPosition=ARENA_CENTER;
         private bool[] phase3sub2_shouldFaceBoss=Enumerable.Range(0,8).Select(i=>false).ToArray();
-        private volatile int phase3sub2_究极冲击波Counter=0; // To be changed in the future.
-        private volatile int phase3sub2_first究极冲击波Position=0; // To be changed in the future.
+        private volatile int phase3sub2_究极冲击波Counter=0; // To be changed in the future. Its read-write lock is PHASE3_SUB2_究极冲击波_COUNTER_LOCK.
+        private volatile int phase3sub2_first究极冲击波Position=-1; // To be changed in the future.
         private volatile bool phase3sub2_baitClockwise=false;
         
         // ----- End Of Major Phase 3 -----
@@ -196,6 +196,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private readonly object PHASE2_SUB2_TOWER_COUNTER_LOCK=new object();
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
+        
+        private readonly object PHASE3_SUB2_究极冲击波_COUNTER_LOCK=new object(); // To be changed in the future.
         
         #endregion
         
@@ -293,7 +295,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase3sub2_windCrystalPosition=ARENA_CENTER;
             for(int i=0;i<phase3sub2_shouldFaceBoss.Length;++i)phase3sub2_shouldFaceBoss[i]=false;
             phase3sub2_究极冲击波Counter=0;
-            phase3sub2_first究极冲击波Position=0;
+            phase3sub2_first究极冲击波Position=-1;
             phase3sub2_baitClockwise=false;
 
             // ----- End Of Major Phase 3 -----
@@ -3986,6 +3988,315 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
                 
             }
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 究极冲击波 (数据收集)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:47843"])]
+
+        public void P3_深层痛楚_究极冲击波_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+
+            if(phase3sub2_究极冲击波Counter>=8) {
+
+                return;
+
+            }
+            
+            Vector3 sourcePosition=ARENA_CENTER;
+
+            try {
+
+                sourcePosition=JsonConvert.DeserializeObject<Vector3>(@event["SourcePosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("SourcePosition deserialization failed.");
+
+                return;
+
+            }
+            
+            int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
+
+            lock(PHASE3_SUB2_究极冲击波_COUNTER_LOCK) {
+
+                Interlocked.Increment(ref phase3sub2_究极冲击波Counter);
+
+                if(phase3sub2_究极冲击波Counter==1) {
+
+                    phase3sub2_first究极冲击波Position=discretizedPosition;
+
+                }
+                
+                if(phase3sub2_究极冲击波Counter==2) {
+
+                    if((discretizedPosition-1+8)%8==phase3sub2_first究极冲击波Position) {
+
+                        phase3sub2_baitClockwise=false;
+
+                    }
+
+                    if((discretizedPosition+1+8)%8==phase3sub2_first究极冲击波Position) {
+
+                        phase3sub2_baitClockwise=true;
+
+                    }
+
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"phase3sub2_first究极冲击波Position={phase3sub2_first究极冲击波Position}\nphase3sub2_baitClockwise={phase3sub2_baitClockwise}");
+                        
+                    }
+
+                }
+
+            }
+
+        }
+
+        private int getTargetIconNumber(string id) {
+
+            if(string.Equals(id,"0150")) {
+
+                return 1;
+
+            }
+            
+            if(string.Equals(id,"0151")) {
+
+                return 2;
+
+            }
+            
+            if(string.Equals(id,"0152")) {
+
+                return 3;
+
+            }
+            
+            if(string.Equals(id,"0153")) {
+
+                return 4;
+
+            }
+            
+            if(string.Equals(id,"01B5")) {
+
+                return 5;
+
+            }
+            
+            if(string.Equals(id,"01B6")) {
+
+                return 6;
+
+            }
+            
+            if(string.Equals(id,"01B7")) {
+
+                return 7;
+
+            }
+            
+            if(string.Equals(id,"01B8")) {
+
+                return 8;
+
+            }
+
+            return -1;
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 究极冲击波 (范围)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:regex:^(0150|0151|0152|0153|01B5|01B6|01B7|01B8)$"])]
+
+        public void P3_深层痛楚_究极冲击波_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+
+            int targetIconNumber=getTargetIconNumber(@event["Id"]);
+
+            if(!isLegalPartyIndex(targetIconNumber-1)) {
+
+                return;
+
+            }
+
+            int discretizedPosition=-1;
+
+            if(phase3sub2_baitClockwise) {
+
+                discretizedPosition=(phase3sub2_first究极冲击波Position+(targetIconNumber-1)+16)%8;
+
+            }
+
+            else {
+                
+                discretizedPosition=(phase3sub2_first究极冲击波Position-(targetIconNumber-1)+16)%8;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6,100);
+            currentProperties.Position=rotatePosition(new Vector3(100,0,80),ARENA_CENTER,Math.PI/4*discretizedPosition);
+            currentProperties.TargetObject=targetId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.Delay=1125;
+            currentProperties.DestoryAt=11000+250*(targetIconNumber-1);
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 深层痛楚 究极冲击波 (指路)",
+            eventType:EventTypeEnum.TargetIcon,
+            eventCondition:["Id:regex:^(0150|0151|0152|0153|01B5|01B6|01B7|01B8)$"])]
+
+        public void P3_深层痛楚_究极冲击波_指路(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+
+            if(targetId!=accessory.Data.Me) {
+
+                return;
+
+            }
+
+            int targetIconNumber=getTargetIconNumber(@event["Id"]);
+
+            if(!isLegalPartyIndex(targetIconNumber-1)) {
+
+                return;
+
+            }
+
+            int discretizedPosition=-1;
+
+            if(phase3sub2_baitClockwise) {
+
+                discretizedPosition=(phase3sub2_first究极冲击波Position+(targetIconNumber-1)+16)%8;
+
+            }
+
+            else {
+                
+                discretizedPosition=(phase3sub2_first究极冲击波Position-(targetIconNumber-1)+16)%8;
+                
+            }
+            
+            discretizedPosition=(discretizedPosition+4+16)%8;
+
+            Vector3 myPosition=rotatePosition(new Vector3(100,0,81),ARENA_CENTER,Math.PI/4*discretizedPosition);
+
+            switch(phase3sub2_究极冲击波Strat) {
+
+                case Phase3Sub2_究极冲击波Strats.与预兆的顺逆相反: {
+
+                    if(phase3sub2_baitClockwise) {
+                        
+                        myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/8);
+                        
+                    }
+
+                    else {
+                        
+                        myPosition=rotatePosition(myPosition,ARENA_CENTER,-(Math.PI/8));
+                        
+                    }
+
+                    break;
+
+                }
+                
+                case Phase3Sub2_究极冲击波Strats.固定顺时针: {
+                    
+                    myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/8);
+
+                    break;
+
+                }
+                
+                case Phase3Sub2_究极冲击波Strats.固定逆时针: {
+                    
+                    myPosition=rotatePosition(myPosition,ARENA_CENTER,-(Math.PI/8));
+
+                    break;
+
+                }
+                
+                default: {
+
+                    break;
+
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.Delay=1125;
+            currentProperties.DestoryAt=11000+250*(targetIconNumber-1);
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
         }
         
