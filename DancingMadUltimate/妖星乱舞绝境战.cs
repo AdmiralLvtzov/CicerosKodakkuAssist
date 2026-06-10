@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.10",
+        version:"0.0.2.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -72,7 +72,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         [UserSetting("通用 小队排序测试文本发送到的频道")]
         public PartyTestChannels partyTestChannel { get; set; } = PartyTestChannels.默语频道_仅自己可见;
         [UserSetting("通用 连环环陷阱状态消失前的绘制持续时间(秒)")]
-        public double 连环环陷阱Duration { get; set; } = 5; // To be changed in the future.
+        public double doubleTroubleTrapDuration { get; set; } = 5;
         [UserSetting("调试 启用调试日志并输出到Dalamud日志中")]
         public bool enableDebugLogging { get; set; } = false;
         [UserSetting("调试 忽略所有方法中的阶段检查")]
@@ -92,14 +92,16 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         // ----- Major Phase 2 -----
         
         [UserSetting("P2 遗弃末世 塔辅助线的颜色")]
-        public ScriptColor phase2sub2_colourOfAuxiliaryLine { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
+        public ScriptColor phase2sub2_colourOfAuxiliaryLines { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
         
         // ----- End Of Major Phase 2 -----
         
         // ----- Major Phase 3 -----
         
-        [UserSetting("P3 深层痛楚(一运) 坦克LB解法")]
+        [UserSetting("P3 深层痛楚(一运) 启用坦克LB解法")]
         public bool phase3sub2_tankLimitBreakStrat { get; set; } = false;
+        [UserSetting("P3 深层痛楚(一运) 究极冲击波的解法")]
+        public Phase3Sub2_究极冲击波Strats phase3sub2_究极冲击波Strat { get; set; } = Phase3Sub2_究极冲击波Strats.与预兆的顺逆相反;
         
         // ----- End Of Major Phase 3 -----
 
@@ -139,7 +141,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile bool phase1_stackFlagrantFireIcon=false;
         private System.Threading.AutoResetEvent phase1_flagrantFireIconSemaphore=new System.Threading.AutoResetEvent(false);
         
-        private volatile int phase1sub2_玄乎乎魔法Counter=0; // To be changed in the future.
+        private volatile int phase1sub2_mysteryMagicCounter=0;
         private System.Threading.AutoResetEvent phase1sub2_waveCannonSemaphore=new System.Threading.AutoResetEvent(false);
         
         private volatile bool phase1sub3_isFirstHalf=true;
@@ -167,6 +169,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile int phase3sub2_tsunamiCounter=2;
         private Vector3 phase3sub2_windCrystalPosition=ARENA_CENTER;
         private bool[] phase3sub2_shouldFaceBoss=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private volatile int phase3sub2_究极冲击波Counter=0; // To be changed in the future.
+        private volatile int phase3sub2_first究极冲击波Position=0; // To be changed in the future.
+        private volatile bool phase3sub2_baitClockwise=false;
         
         // ----- End Of Major Phase 3 -----
         
@@ -220,6 +225,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        public enum Phase3Sub2_究极冲击波Strats { // To be changed in the future.
+            
+            与预兆的顺逆相反,
+            固定顺时针,
+            固定逆时针
+
+        }
+        
         #endregion
         
         #region Initialization
@@ -251,7 +264,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase1_stackFlagrantFireIcon=false;
             phase1_flagrantFireIconSemaphore.Reset();
             
-            phase1sub2_玄乎乎魔法Counter=0;
+            phase1sub2_mysteryMagicCounter=0;
             phase1sub2_waveCannonSemaphore.Reset();
 
             phase1sub3_isFirstHalf=true;
@@ -279,6 +292,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase3sub2_tsunamiCounter=2;
             phase3sub2_windCrystalPosition=ARENA_CENTER;
             for(int i=0;i<phase3sub2_shouldFaceBoss.Length;++i)phase3sub2_shouldFaceBoss[i]=false;
+            phase3sub2_究极冲击波Counter=0;
+            phase3sub2_first究极冲击波Position=0;
+            phase3sub2_baitClockwise=false;
 
             // ----- End Of Major Phase 3 -----
 
@@ -555,7 +571,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            int standardDuration=((int)(连环环陷阱Duration*1000));
+            int standardDuration=((int)(doubleTroubleTrapDuration*1000));
             int delay=0;
             int duration=0;
 
@@ -624,7 +640,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            int standardDuration=((int)(连环环陷阱Duration*1000));
+            int standardDuration=((int)(doubleTroubleTrapDuration*1000));
             int delay=0;
             int duration=0;
 
@@ -822,13 +838,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             if(string.Equals(@event["Id"],"02A3")) {
 
-                log+="fake 扩大大冰封"; // To be changed in the future.
+                log+="fake Blizzard Blowout";
 
             }
             
             if(string.Equals(@event["Id"],"02A4")) {
                 
-                log+="real 扩大大冰封"; // To be changed in the future.
+                log+="real Blizzard Blowout";
 
             }
             
@@ -1406,9 +1422,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
 
-            Interlocked.Increment(ref phase1sub2_玄乎乎魔法Counter);
+            Interlocked.Increment(ref phase1sub2_mysteryMagicCounter);
 
-            if(phase1sub2_玄乎乎魔法Counter==1) {
+            if(phase1sub2_mysteryMagicCounter==1) {
 
                 phase1sub2_waveCannonSemaphore.Set();
 
@@ -2332,7 +2348,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(0.125f,8);
             currentProperties.Position=towerCenter;
             currentProperties.TargetPosition=relativeNorth;
-            currentProperties.Color=phase2sub2_colourOfAuxiliaryLine.V4.WithW(1);
+            currentProperties.Color=phase2sub2_colourOfAuxiliaryLines.V4.WithW(1);
             currentProperties.DestoryAt=10000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
@@ -2342,7 +2358,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Scale=new(0.125f,8);
             currentProperties.Position=towerCenter;
             currentProperties.TargetPosition=relativeWest;
-            currentProperties.Color=phase2sub2_colourOfAuxiliaryLine.V4.WithW(1);
+            currentProperties.Color=phase2sub2_colourOfAuxiliaryLines.V4.WithW(1);
             currentProperties.DestoryAt=10000;
         
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
