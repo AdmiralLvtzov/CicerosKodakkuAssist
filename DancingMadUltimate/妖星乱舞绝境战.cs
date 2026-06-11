@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.14",
+        version:"0.0.2.15",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本正在施工中。绘制部分的进度为P3地震(二运)刚开始,指路部分除了P3深层痛楚(一运)究极冲击波以外尚未施工,适配的攻略也尚未确定。
+            脚本正在施工中。绘制部分的进度为P3地震(二运)轰隆隆跺脚,指路部分除了P3深层痛楚(一运)究极冲击波以外尚未施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -128,7 +128,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             Phase 1 - (~,Bowels of Agony 深层痛楚)
             Phase 2 - [Bowels of Agony 深层痛楚,Earthquake 地震)
-            Phase 3 - [Earthquake 地震,
+            Phase 3 - [Earthquake 地震,~)
 
         */
         
@@ -171,6 +171,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile int phase3sub2_究极冲击波Counter=0; // To be changed in the future. Its read-write lock is PHASE3_SUB2_究极冲击波_COUNTER_LOCK.
         private volatile int phase3sub2_first究极冲击波Position=-1; // To be changed in the future.
         private volatile bool phase3sub2_baitClockwise=false;
+        
+        private ConcurrentDictionary<ulong,int> phase3sub3_blackHoleDrawingCounter=new ConcurrentDictionary<ulong,int>();
         
         // ----- End Of Major Phase 3 -----
         
@@ -296,6 +298,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase3sub2_究极冲击波Counter=0;
             phase3sub2_first究极冲击波Position=-1;
             phase3sub2_baitClockwise=false;
+            
+            phase3sub3_blackHoleDrawingCounter.Clear();
 
             // ----- End Of Major Phase 3 -----
 
@@ -2814,6 +2818,37 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"P3 暴雷 (死刑范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47881"])]
+
+        public void P3_暴雷_死刑范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(5);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=8125;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+
+        }
+        
         [ScriptMethod(name:"P3 经度聚爆与纬度聚爆 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47870|47869)$"])]
@@ -2831,6 +2866,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 return;
                 
             }
+
+            var drawModeEnum=DrawModeEnum.Default;
+
+            if(phase==3) {
+                
+                drawModeEnum=DrawModeEnum.Imgui;
+                
+            }
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
             
@@ -2846,7 +2889,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=0;
                 currentProperties.DestoryAt=5750;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
             
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2858,7 +2901,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=0;
                 currentProperties.DestoryAt=5750;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2870,7 +2913,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=5750;
                 currentProperties.DestoryAt=2000;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
             
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2882,7 +2925,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=5750;
                 currentProperties.DestoryAt=2000;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
 
             }
             
@@ -2898,7 +2941,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=0;
                 currentProperties.DestoryAt=5750;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
             
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2910,7 +2953,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=0;
                 currentProperties.DestoryAt=5750;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
                 
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2922,7 +2965,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=5750;
                 currentProperties.DestoryAt=2000;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
             
                 currentProperties=accessory.Data.GetDefaultDrawProperties();
 
@@ -2934,7 +2977,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Delay=5750;
                 currentProperties.DestoryAt=2000;
         
-                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                accessory.Method.SendDraw(drawModeEnum,DrawTypeEnum.Fan,currentProperties);
 
             }
 
@@ -3646,43 +3689,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P3 深层痛楚 暴雷 (死刑范围)",
-            eventType:EventTypeEnum.StartCasting,
-            eventCondition:["ActionId:47881"])]
-
-        public void P3_深层痛楚_暴雷_死刑范围(Event @event,ScriptAccessory accessory) {
-            
-            if(majorPhase!=3&&!skipPhaseChecks) {
-
-                return;
-
-            }
-            
-            if(phase!=2&&!skipPhaseChecks) {
-
-                return;
-
-            }
-            
-            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
-                
-                return;
-                
-            }
-            
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-            currentProperties.Scale=new(5);
-            currentProperties.Owner=sourceId;
-            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
-            currentProperties.CentreOrderIndex=1;
-            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-            currentProperties.DestoryAt=8125;
-            
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
-
-        }
-        
         [ScriptMethod(name:"P3 深层痛楚 本影爆碎 (引导指示)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47870|47869)$"])]
@@ -4290,11 +4296,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P3 响亮亮耳光 (范围)",
+        [ScriptMethod(name:"P3 地震 响亮亮耳光 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47846|47847)$"])]
 
-        public void P3_响亮亮耳光_范围(Event @event,ScriptAccessory accessory) {
+        public void P3_地震_响亮亮耳光_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=3&&!skipPhaseChecks) {
 
@@ -4389,23 +4395,22 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             if(string.Equals(@event["ActionId"],"47847")) {
+                
+                int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+                if(!isLegalPartyIndex(myIndex)) {
+
+                    return;
+
+                }
 
                 for(int i=0;i<8;++i) {
                     
-                    currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-                    currentProperties.Scale=new(100);
-                    currentProperties.Radian=float.Pi/3;
-                    currentProperties.Position=ARENA_CENTER;
-                    currentProperties.TargetObject=accessory.Data.PartyList[i];
-                    currentProperties.DestoryAt=8500;
-                    
-                    int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
                     int currentIndex=accessory.Data.PartyList.IndexOf(accessory.Data.PartyList[i]);
             
-                    if(!isLegalPartyIndex(myIndex)||!isLegalPartyIndex(currentIndex)) {
+                    if(!isLegalPartyIndex(currentIndex)) {
 
-                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        continue;
 
                     }
 
@@ -4417,19 +4422,26 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                            &&
                            isDps(currentIndex)==isDps(myIndex)) {
                         
+                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                            currentProperties.Scale=new(100);
+                            currentProperties.Radian=float.Pi/3;
+                            currentProperties.Position=ARENA_CENTER;
+                            currentProperties.TargetObject=accessory.Data.PartyList[i];
                             currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                            currentProperties.DestoryAt=8500;
+                    
+                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
                         
                         }
 
                         else {
-                        
-                            currentProperties.Color=accessory.Data.DefaultDangerColor;
-                        
+
+                            continue;
+
                         }
                         
                     }
-            
-                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
                     
                 }
 
@@ -4496,6 +4508,95 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
+        [ScriptMethod(name:"P3 地震 黑洞 (连线范围)",
+            eventType:EventTypeEnum.VfxEvent,
+            eventCondition:["Id:84"])]
+    
+        public void P3_地震_黑洞_连线范围(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(!string.Equals(@event["Type"],"Channeling")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"], out var targetId)) {
+                
+                return;
+                
+            }
+
+            lock(phase3sub3_blackHoleDrawingCounter) {
+                
+                int lastDrawing=phase3sub3_blackHoleDrawingCounter.GetOrAdd(sourceId,0);
+            
+                accessory.Method.RemoveDraw($"P3_地震_黑洞_连线范围_{sourceId}_{lastDrawing}");
+
+                Interlocked.Increment(ref lastDrawing);
+                phase3sub3_blackHoleDrawingCounter[sourceId]=lastDrawing;
+            
+                var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P3_地震_黑洞_连线范围_{sourceId}_{lastDrawing}";
+                currentProperties.Scale=new(6,125);
+                currentProperties.Owner=sourceId;
+                currentProperties.TargetObject=targetId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+                
+            }
+        
+        }
+        
+        [ScriptMethod(name:"P3 地震 黑洞 (连线范围清除)",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:47868"],
+            userControl:false)]
+    
+        public void P3_地震_黑洞_连线范围清除(Event @event,ScriptAccessory accessory) {
+
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"], out var sourceId)) {
+                
+                return;
+                
+            }
+
+            lock(phase3sub3_blackHoleDrawingCounter) {
+                
+                accessory.Method.RemoveDraw(@$"^P3_地震_黑洞_连线范围_{sourceId}_.*$");
+
+                phase3sub3_blackHoleDrawingCounter.TryRemove(sourceId,out _);
+
+            }
+        
+        }
+        
         [ScriptMethod(name:"P3 地震 诅咒敕令 (范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:47873"])]
@@ -4527,7 +4628,42 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
             
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P3 地震 本色出演的我 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:47854"])]
+
+        public void P3_地震_本色出演的我_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(16,100);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5000;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Straight,currentProperties);
 
         }
 
