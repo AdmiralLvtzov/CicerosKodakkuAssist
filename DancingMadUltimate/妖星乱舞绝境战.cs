@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.3.0",
+        version:"0.0.3.1",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -4376,7 +4376,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.Delay=5125;
             currentProperties.DestoryAt=3250;
             
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
             
             if(string.Equals(@event["ActionId"],"47846")) {
 
