@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.2.13",
+        version:"0.0.2.14",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -36,7 +36,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             """
             妖星乱舞绝境战的脚本。
             
-            脚本正在施工中。绘制部分的进度为P3深层痛楚(一运)全程,指路部分除了P3深层痛楚(一运)究极冲击波以外尚未施工,适配的攻略也尚未确定。
+            脚本正在施工中。绘制部分的进度为P3地震(二运)刚开始,指路部分除了P3深层痛楚(一运)究极冲击波以外尚未施工,适配的攻略也尚未确定。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
@@ -4286,6 +4286,153 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
                 accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
                 
+            }
+
+        }
+        
+        [ScriptMethod(name:"P3 响亮亮耳光 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47846|47847)$"])]
+
+        public void P3_响亮亮耳光_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=3&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+
+            int xOffset=0;
+            
+            if(string.Equals(@event["ActionId"],"47846")) {
+
+                xOffset=10;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47847")) {
+
+                xOffset=-10;
+
+            }
+
+            if(xOffset==0) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(13);
+            currentProperties.Owner=sourceId;
+            currentProperties.Offset=new Vector3(xOffset,0,10);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=5750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(13);
+            currentProperties.Owner=sourceId;
+            currentProperties.Offset=new Vector3(xOffset,0,0);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=6375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(13);
+            currentProperties.Owner=sourceId;
+            currentProperties.Offset=new Vector3(xOffset,0,-10);
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=6875;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(6);
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.Color=accessory.Data.DefaultDangerColor;
+            currentProperties.DestoryAt=8375;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+            
+            if(string.Equals(@event["ActionId"],"47846")) {
+
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Scale=new(100);
+                currentProperties.Radian=float.Pi/3;
+                currentProperties.Position=ARENA_CENTER;
+                currentProperties.TargetObject=accessory.Data.Me;
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                currentProperties.DestoryAt=8500;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47847")) {
+
+                for(int i=0;i<8;++i) {
+                    
+                    currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                    currentProperties.Scale=new(100);
+                    currentProperties.Radian=float.Pi/3;
+                    currentProperties.Position=ARENA_CENTER;
+                    currentProperties.TargetObject=accessory.Data.PartyList[i];
+                    currentProperties.DestoryAt=8500;
+                    
+                    int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+                    int currentIndex=accessory.Data.PartyList.IndexOf(accessory.Data.PartyList[i]);
+            
+                    if(!isLegalPartyIndex(myIndex)||!isLegalPartyIndex(currentIndex)) {
+
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+
+                    }
+
+                    else {
+                        
+                        if(isTank(currentIndex)==isTank(myIndex)
+                           &&
+                           isHealer(currentIndex)==isHealer(myIndex)
+                           &&
+                           isDps(currentIndex)==isDps(myIndex)) {
+                        
+                            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                        
+                        }
+
+                        else {
+                        
+                            currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        
+                        }
+                        
+                    }
+            
+                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                    
+                }
+
             }
 
         }
