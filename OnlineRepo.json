@@ -56,10 +56,10 @@
   {
     "Name":"妖星乱舞绝境战",
     "Guid":"f9948da9-ce35-44d1-b410-02375c941458",
-    "Version":"0.0.2.12",
+    "Version":"0.0.2.13",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1363],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/DancingMadUltimate/%E5%A6%96%E6%98%9F%E4%B9%B1%E8%88%9E%E7%BB%9D%E5%A2%83%E6%88%98.cs",
-    "UpdateInfo":"上次更新: 2026年6月10日\n更新内容:\nP3 深层痛楚(一运)的全部绘制以及究极冲击波的指路。\n应大量要求,提前完成了P3 地震(二运)的黑洞碰撞箱范围与诅咒敕令范围。\n在用户设置中提供两种不同的P1 技能特效屏蔽的方法,以缓解绘制丢失的问题。该措施可能在将来移除也可能永久化。"
+    "UpdateInfo":"上次更新: 2026年6月11日\n更新内容:\nP3 深层痛楚(一运)的全部绘制,以及究极冲击波的指路。\n移除了呼啦啦爆炎、扩大大冰封和劈啪啪暴雷相关函数的阶段检查,现在这些函数应该也在P4生效。\n在用户设置中提供两种不同的P1 技能特效屏蔽的方法,以缓解绘制丢失的问题。该措施可能在将来移除也可能永久化。"
   }
 ]
