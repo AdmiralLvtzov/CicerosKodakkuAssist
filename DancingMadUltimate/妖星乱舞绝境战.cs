@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.3.1",
+        version:"0.0.4.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -34,25 +34,45 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         public const string scriptNotes=
             """
-            妖星乱舞绝境战的脚本。
+            妖星乱舞绝境战的脚本。脚本应该算是...完工了?
+            和灵视以往的作品不同,这次可能不会为妖星乱舞绝境战制作一个包含全程绘制与指路的全能型脚本。此脚本仅提供P1到P4的绘制与极少量指路。
+            完整的妖星乱舞绝境战可达鸭体验将由数个不同作者的作品组成,包括但不限于如下作者(按副本阶段排序):
+                Coda - P1的指路。
+                RyougiMio - P2与P4的指路。
+                Usami - P3的指路。
+                Errer - P5的绘制与指路。
+            此脚本将是灵视最后一个作品,灵视即将收手退休。也许灵视会在未来回归,但短期内将不再制作新的脚本。感谢陪伴!
             
-            脚本正在施工中。绘制部分的进度为P4刚开始,指路部分除了P3深层痛楚(一运)究极冲击波以外尚未施工,适配的攻略也尚未确定。
+            此脚本仅在P3深层痛楚(一运)的究极冲击波和P4生者黑暗光与死者黑暗光(鸳鸯锅)提供指路。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
             支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
             输入/e kuwuclear清除小队排序测试产生的目标标记。
             
             P1技能特效屏蔽需要在用户设置中手动启用。目前提供两种不同的方法,以缓解当前可达鸭版本的绘制丢失问题:
-             - 传统方法,即改变透明施法者的可见性。该方法不会丢失绘制,但极其不建议与其他任何提供相似功能的科技同时运行。
-             - 引擎方法,即根据handle移除指定特效。该方法目前有丢失绘制的报告,正在着手修复与优化。该方法可以与其他提供相似功能的科技同时运行。
+                传统方法 - 即改变透明施法者的可见性。该方法不会丢失绘制,但极其不建议与其他任何提供相似功能的科技同时运行。
+                引擎方法 - 即根据handle移除指定特效。该方法目前有丢失绘制的报告,正在着手修复与优化。该方法可以与其他提供相似功能的科技同时运行。
 
             如果在使用过程中遇到了异常,请先检查可达鸭本体与脚本是否都更新到了最新版本,小队职能是否已正确设置,异常是否可以稳定复现。
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
             
-            特别致谢:
-                Karlin - 紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子,not all heroes wear capes.
-                RyougiMio - 提供了P2咏唱危机的类型数据与塔的EnvControl数据。
-                南云铁虎 - 提供了P2消灭之脚、破坏之翼与异三角的绘制数据。
+            特别致谢(按副本阶段排序):
+                Karlin - 提供了两种技能特效屏蔽的实现,还紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子,not all heroes wear capes.
+                RyougiMio - 提供了P2遗弃末世的绘制数据。
+                南云铁虎 - 提供了大量P2与P3的绘制数据。
+                莫灵喵 - 提供了大量P4的绘制数据。
+                以及每一位录像提供者,出于隐私保护的目的没有列出常用名。
+            
+            
+            
+            社会的确是一种契约。...因为它并不是一种仅服务于短暂易逝的粗浅动物性存在的合伙契约。
+            它是关于一切科学的合伙契约,是关于一切艺术的合伙契约,是关于每一种美德,关于于一切完善(过程)的合伙契约。
+            由于这样一种合伙契约的目标无法在数代人之内实现,它(便)不仅仅是生者之间的合伙契约,而是生者,逝者以及尚未出生者之间的合伙契约。
+            ......
+            偏见在紧急情况下可以立即发挥作用;它将人的思想预先引导到一条稳定的智慧与美德之路上,使人在做决定时不再犹豫不决,怀疑一切,困惑迷惘,迟迟不付诸行动。
+            偏见使人的德性成为他的习惯,而不是一连串孤立的行为。通过正当的偏见,人的义务便成为其本性的一部分。
+            
+            ——埃德蒙·伯克,《法国革命论》,1790年
             """;
         
         #region User_Settings
@@ -129,6 +149,16 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             Phase 1 - (~,Bowels of Agony 深层痛楚)
             Phase 2 - [Bowels of Agony 深层痛楚,Earthquake 地震)
             Phase 3 - [Earthquake 地震,~)
+            
+        Major Phase 4:
+
+            No phase separation.
+            无阶段分隔。
+            
+        Major Phase 5:
+        
+            I'm retired! For now :D
+            我退休了!
 
         */
         
@@ -178,6 +208,17 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase3sub3_bigBangSemaphore=new System.Threading.AutoResetEvent(false);
         
         // ----- End Of Major Phase 3 -----
+        
+        // ----- Major Phase 4 -----
+        
+        private volatile bool phase4_fakeNeoExdeathAction=false;
+        private volatile bool phase4_fakeChaosAction=false;
+        private bool[] phase4_isFakeStrayFlames=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private bool[] phase4_isFakeStraySpray=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private bool[] phase4_isBeyondDeath=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private bool[] phase4_isWhiteWound=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        
+        // ----- End Of Major Phase 4 -----
         
         #endregion
         
@@ -308,6 +349,17 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase3sub3_bigBangSemaphore.Reset();
 
             // ----- End Of Major Phase 3 -----
+            
+            // ----- Major Phase 4 -----
+
+            phase4_fakeNeoExdeathAction=false;
+            phase4_fakeChaosAction=false;
+            for(int i=0;i<phase4_isFakeStrayFlames.Length;++i)phase4_isFakeStrayFlames[i]=false;
+            for(int i=0;i<phase4_isFakeStraySpray.Length;++i)phase4_isFakeStraySpray[i]=false;
+            for(int i=0;i<phase4_isBeyondDeath.Length;++i)phase4_isBeyondDeath[i]=false;
+            for(int i=0;i<phase4_isWhiteWound.Length;++i)phase4_isWhiteWound[i]=false;
+            
+            // ----- End Of Major Phase 4 -----
 
         }
         
@@ -4949,6 +5001,1132 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
 
             majorPhase=4;
+            phase=1;
+            
+            if(enableDebugLogging) {
+                
+                accessory.Log.Debug($"majorPhase={majorPhase}\nphase={phase}");
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 新生艾克斯迪司 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:2056"],
+            userControl:false)]
+
+        public void P4_新生艾克斯迪司_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var targetObject=accessory.Data.Objects.SearchById(targetId);
+
+            if(targetObject==null||!targetObject.IsValid()) {
+
+                return;
+
+            }
+
+            else {
+
+                if(targetObject.DataId!=19510) {
+
+                    return;
+
+                }
+                
+            }
+            
+            if(string.Equals(@event["Param"],"1122")) {
+
+                phase4_fakeNeoExdeathAction=false;
+
+            }
+            
+            if(string.Equals(@event["Param"],"1121")) {
+
+                phase4_fakeNeoExdeathAction=true;
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 卡奥斯 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:2056"],
+            userControl:false)]
+
+        public void P4_卡奥斯_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            var targetObject=accessory.Data.Objects.SearchById(targetId);
+
+            if(targetObject==null||!targetObject.IsValid()) {
+
+                return;
+
+            }
+
+            else {
+
+                if(targetObject.DataId!=19507) {
+
+                    return;
+
+                }
+                
+            }
+            
+            if(string.Equals(@event["Param"],"1120")) {
+
+                phase4_fakeChaosAction=false;
+
+            }
+            
+            if(string.Equals(@event["Param"],"1119")) {
+
+                phase4_fakeChaosAction=true;
+
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 诅咒之嚎 (指示)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5543"])]
+
+        public void P4_诅咒之嚎_指示(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int standardDuration=8000;
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(!phase4_fakeNeoExdeathAction) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_诅咒之嚎_指示1_{targetId}";
+                currentProperties.Scale=new(0.125f,6);
+                currentProperties.Owner=targetId;
+                currentProperties.FixRotation=true;
+                currentProperties.Rotation=float.Pi/4;
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(2);
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_诅咒之嚎_指示2_{targetId}";
+                currentProperties.Scale=new(0.125f,6);
+                currentProperties.Owner=targetId;
+                currentProperties.FixRotation=true;
+                currentProperties.Rotation=-(float.Pi/4);
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(2);
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Straight,currentProperties);
+                
+            }
+
+            else {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_诅咒之嚎_指示1_{targetId}";
+                currentProperties.Scale=new(0.125f,2);
+                currentProperties.Owner=targetId;
+                currentProperties.FixRotation=true;
+                currentProperties.Rotation=-(float.Pi/4*3);
+                currentProperties.Color=accessory.Data.DefaultSafeColor.WithW(2);
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_诅咒之嚎_指示2_{targetId}";
+                currentProperties.Scale=new(0.125f,4);
+                currentProperties.Owner=targetId;
+                currentProperties.FixRotation=true;
+                currentProperties.Rotation=float.Pi/4*3;
+                currentProperties.Color=accessory.Data.DefaultSafeColor.WithW(2);
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"P4 诅咒之嚎 (指示清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:5543"],
+            userControl:false)]
+
+        public void P4_诅咒之嚎_指示清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P4_诅咒之嚎_指示1_{targetId}");
+            accessory.Method.RemoveDraw($"P4_诅咒之嚎_指示2_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P4 叉形闪电 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5544"])]
+
+        public void P4_叉形闪电_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int standardDuration=4250;
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Name=$"P4_叉形闪电_范围_{targetId}";
+            currentProperties.Scale=new(8);
+            currentProperties.Owner=targetId;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+
+            if(!phase4_fakeNeoExdeathAction) {
+                
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                
+            }
+
+            else {
+                
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P4 叉形闪电 (范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:5544"],
+            userControl:false)]
+
+        public void P4_叉形闪电_范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P4_叉形闪电_范围_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P4 水属性压缩 (范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5545"])]
+
+        public void P4_水属性压缩_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int standardDuration=4250;
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            currentProperties.Name=$"P4_水属性压缩_范围_{targetId}";
+            currentProperties.Scale=new(8);
+            currentProperties.Owner=targetId;
+            currentProperties.Delay=delay;
+            currentProperties.DestoryAt=duration;
+
+            if(!phase4_fakeNeoExdeathAction) {
+                
+                currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                
+            }
+
+            else {
+                
+                currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            
+        }
+        
+        [ScriptMethod(name:"P4 水属性压缩 (范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:5545"],
+            userControl:false)]
+
+        public void P4_水属性压缩_范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P4_水属性压缩_范围_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P4 混沌之炎 (引导范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5547"])]
+
+        public void P4_混沌之炎_引导范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int standardDuration=5500;
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(!phase4_fakeChaosAction) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_混沌之炎_引导范围_{targetId}";
+                currentProperties.Scale=new(6);
+                currentProperties.Owner=targetId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+            else {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_混沌之炎_引导范围_{targetId}";
+                currentProperties.Scale=new(40);
+                currentProperties.InnerScale=new(6);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Owner=targetId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"P4 混沌之炎 (引导范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:5547"],
+            userControl:false)]
+
+        public void P4_混沌之炎_引导范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P4_混沌之炎_引导范围_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P4 混沌之水 (引导范围)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:5548"])]
+
+        public void P4_混沌之水_引导范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int durationMilliseconds=0;
+
+            try {
+
+                durationMilliseconds=JsonConvert.DeserializeObject<int>(@event["DurationMilliseconds"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("DurationMilliseconds deserialization failed.");
+
+                return;
+
+            }
+
+            if(durationMilliseconds<=0||durationMilliseconds>MAXIMUM_DURATION) {
+
+                return;
+
+            }
+            
+            int standardDuration=5500;
+            int delay=0;
+            int duration=0;
+
+            if(durationMilliseconds<=standardDuration) {
+
+                delay=0;
+                duration=durationMilliseconds;
+
+            }
+
+            else {
+
+                delay=durationMilliseconds-standardDuration;
+                duration=standardDuration;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(!phase4_fakeChaosAction) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_混沌之水_引导范围_{targetId}";
+                currentProperties.Scale=new(40);
+                currentProperties.InnerScale=new(6);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Owner=targetId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+            }
+
+            else {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Name=$"P4_混沌之水_引导范围_{targetId}";
+                currentProperties.Scale=new(6);
+                currentProperties.Owner=targetId;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.Delay=delay;
+                currentProperties.DestoryAt=duration;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+            
+        }
+        
+        [ScriptMethod(name:"P4 混沌之水 (引导范围清除)",
+            eventType:EventTypeEnum.StatusRemove,
+            eventCondition:["StatusID:5548"],
+            userControl:false)]
+
+        public void P4_混沌之水_引导范围清除(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            accessory.Method.RemoveDraw($"P4_混沌之水_引导范围_{targetId}");
+            
+        }
+        
+        [ScriptMethod(name:"P4 混沌之炎 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47906|47907)$"])]
+
+        public void P4_混沌之炎_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            if(string.Equals(@event["ActionId"],"47906")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(6);
+                currentProperties.Position=effectPosition;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=5000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"47907")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(40);
+                currentProperties.InnerScale=new(6);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Position=effectPosition;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=5000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 混沌之水 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47908|47909)$"])]
+
+        public void P4_混沌之水_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            Vector3 effectPosition=ARENA_CENTER;
+
+            try {
+
+                effectPosition=JsonConvert.DeserializeObject<Vector3>(@event["EffectPosition"]);
+
+            } catch(Exception e) {
+                
+                accessory.Log.Error("EffectPosition deserialization failed.");
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            if(string.Equals(@event["ActionId"],"47908")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(40);
+                currentProperties.InnerScale=new(6);
+                currentProperties.Radian=float.Pi*2;
+                currentProperties.Position=effectPosition;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=5000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Donut,currentProperties);
+                
+            }
+            
+            if(string.Equals(@event["ActionId"],"47909")) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+                
+                currentProperties.Scale=new(6);
+                currentProperties.Position=effectPosition;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=5000;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 超越死亡与亚拉戈领域 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(1382|454)$"],
+            userControl:false)]
+
+        public void P4_超越死亡与亚拉戈领域_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(phase4_isBeyondDeath) {
+                
+                if(string.Equals(@event["StatusID"],"1382")) {
+
+                    phase4_isBeyondDeath[targetIndex]=true;
+
+                }
+                
+                if(string.Equals(@event["StatusID"],"454")) {
+
+                    phase4_isBeyondDeath[targetIndex]=false;
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 生者之伤与死者之伤 (数据收集)",
+            eventType:EventTypeEnum.StatusAdd,
+            eventCondition:["StatusID:regex:^(5541|5542)$"],
+            userControl:false)]
+
+        public void P4_生者之伤与死者之伤_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
+                
+                return;
+                
+            }
+            
+            int targetIndex=accessory.Data.PartyList.IndexOf(((uint)targetId));
+            
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return;
+
+            }
+
+            lock(phase4_isWhiteWound) {
+                
+                if(string.Equals(@event["StatusID"],"5541")) {
+
+                    phase4_isWhiteWound[targetIndex]=true;
+
+                }
+                
+                if(string.Equals(@event["StatusID"],"5542")) {
+
+                    phase4_isWhiteWound[targetIndex]=false;
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P4 生死之境 (范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:50070"])]
+
+        public void P4_生死之境_范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2,48);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+            currentProperties.DestoryAt=5500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Rect,currentProperties);
+
+        }
+        
+        [ScriptMethod(name:"P4 生者黑暗光与死者黑暗光 (安全区范围)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(50068|50069)$"])]
+
+        public void P4_生者黑暗光与死者黑暗光_安全区范围(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!convertObjectIdToDecimal(@event["SourceId"],out var sourceId)) {
+                
+                return;
+                
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+
+            if(phase4_isBeyondDeath[myIndex]) {
+
+                if(phase4_isWhiteWound[myIndex]) {
+                    
+                    if(string.Equals(@event["ActionId"],"50069")) {
+
+                        return;
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(string.Equals(@event["ActionId"],"50068")) {
+
+                        return;
+
+                    }
+                    
+                }
+                
+            }
+
+            else {
+                
+                if(phase4_isWhiteWound[myIndex]) {
+                    
+                    if(string.Equals(@event["ActionId"],"50068")) {
+
+                        return;
+
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(string.Equals(@event["ActionId"],"50069")) {
+
+                        return;
+
+                    }
+                    
+                }
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(21,47);
+            currentProperties.Owner=sourceId;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5500;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Rect,currentProperties);
+
+        }
+
+        #endregion
+
+        #region Major_Phase_5
+        
+        [ScriptMethod(name:"P5 (阶段控制)",
+            eventType:EventTypeEnum.Targetable,
+            eventCondition:["DataId:19511"],
+            userControl:false)]
+
+        public void P5_阶段控制(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=4&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["Targetable"],"True")) {
+
+                return;
+
+            }
+            
+            if(!preserveDrawingsWhileSwitchingPhase) {
+                
+                accessory.Method.RemoveDraw(".*");
+                
+            }
+
+            majorPhase=5;
             phase=1;
             
             if(enableDebugLogging) {
