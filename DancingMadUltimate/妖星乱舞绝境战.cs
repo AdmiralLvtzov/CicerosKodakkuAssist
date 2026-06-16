@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.2",
+        version:"0.0.4.3",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -5889,7 +5889,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         [ScriptMethod(name:"P4 超越死亡与亚拉戈领域 (数据收集)",
             eventType:EventTypeEnum.StatusAdd,
-            eventCondition:["StatusID:regex:^(1382|454)$"],
+            eventCondition:["StatusID:regex:^(1382|454|5464)$"],
             userControl:false)]
 
         public void P4_超越死亡与亚拉戈领域_数据收集(Event @event,ScriptAccessory accessory) {
@@ -5923,6 +5923,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             lock(phase4_isBeyondDeath) {
                 
                 if(string.Equals(@event["StatusID"],"1382")) {
+
+                    phase4_isBeyondDeath[targetIndex]=true;
+
+                }
+                
+                if(string.Equals(@event["StatusID"],"5464")) { // Square Enix sucks.
 
                     phase4_isBeyondDeath[targetIndex]=true;
 
