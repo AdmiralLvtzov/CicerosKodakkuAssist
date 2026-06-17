@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.4",
+        version:"0.0.4.5",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -120,7 +120,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         [UserSetting("P3 深层痛楚(一运) 启用坦克LB解法")]
         public bool phase3sub2_tankLimitBreakStrat { get; set; } = false;
         [UserSetting("P3 深层痛楚(一运) 究极冲击波的解法")]
-        public Phase3Sub2_究极冲击波Strats phase3sub2_究极冲击波Strat { get; set; } = Phase3Sub2_究极冲击波Strats.与预兆的顺逆相反;
+        public Phase3Sub2_UltimaBlasterStrats phase3sub2_ultimaBlasterStrat { get; set; } = Phase3Sub2_UltimaBlasterStrats.与预兆的顺逆相反;
         
         // ----- End Of Major Phase 3 -----
         
@@ -205,8 +205,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile int phase3sub2_tsunamiCounter=2;
         private Vector3 phase3sub2_windCrystalPosition=ARENA_CENTER;
         private bool[] phase3sub2_shouldFaceBoss=Enumerable.Range(0,8).Select(i=>false).ToArray();
-        private volatile int phase3sub2_究极冲击波Counter=0; // To be changed in the future. Its read-write lock is PHASE3_SUB2_究极冲击波_COUNTER_LOCK.
-        private volatile int phase3sub2_first究极冲击波Position=-1; // To be changed in the future.
+        private volatile int phase3sub2_ultimaBlasterCounter=0; // Its read-write lock is PHASE3_SUB2_ULTIMA_BLASTER_COUNTER_LOCK.
+        private volatile int phase3sub2_firstUltimaBlasterPosition=-1;
         private volatile bool phase3sub2_baitClockwise=false;
         
         private ConcurrentDictionary<ulong,int> phase3sub3_blackHoleDrawingCounter=new ConcurrentDictionary<ulong,int>();
@@ -249,7 +249,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
         
-        private readonly object PHASE3_SUB2_究极冲击波_COUNTER_LOCK=new object(); // To be changed in the future.
+        private readonly object PHASE3_SUB2_ULTIMA_BLASTER_COUNTER_LOCK=new object();
         
         #endregion
         
@@ -279,7 +279,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        public enum Phase3Sub2_究极冲击波Strats { // To be changed in the future.
+        public enum Phase3Sub2_UltimaBlasterStrats {
             
             与预兆的顺逆相反,
             固定顺时针,
@@ -346,8 +346,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase3sub2_tsunamiCounter=2;
             phase3sub2_windCrystalPosition=ARENA_CENTER;
             for(int i=0;i<phase3sub2_shouldFaceBoss.Length;++i)phase3sub2_shouldFaceBoss[i]=false;
-            phase3sub2_究极冲击波Counter=0;
-            phase3sub2_first究极冲击波Position=-1;
+            phase3sub2_ultimaBlasterCounter=0;
+            phase3sub2_firstUltimaBlasterPosition=-1;
             phase3sub2_baitClockwise=false;
             
             phase3sub3_blackHoleDrawingCounter.Clear();
@@ -4039,7 +4039,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
 
-            if(phase3sub2_究极冲击波Counter>=8) {
+            if(phase3sub2_ultimaBlasterCounter>=8) {
 
                 return;
 
@@ -4061,25 +4061,25 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             int discretizedPosition=discretizePosition(sourcePosition,ARENA_CENTER,8);
 
-            lock(PHASE3_SUB2_究极冲击波_COUNTER_LOCK) {
+            lock(PHASE3_SUB2_ULTIMA_BLASTER_COUNTER_LOCK) {
 
-                Interlocked.Increment(ref phase3sub2_究极冲击波Counter);
+                Interlocked.Increment(ref phase3sub2_ultimaBlasterCounter);
 
-                if(phase3sub2_究极冲击波Counter==1) {
+                if(phase3sub2_ultimaBlasterCounter==1) {
 
-                    phase3sub2_first究极冲击波Position=discretizedPosition;
+                    phase3sub2_firstUltimaBlasterPosition=discretizedPosition;
 
                 }
                 
-                if(phase3sub2_究极冲击波Counter==2) {
+                if(phase3sub2_ultimaBlasterCounter==2) {
 
-                    if((discretizedPosition-1+8)%8==phase3sub2_first究极冲击波Position) {
+                    if((discretizedPosition-1+8)%8==phase3sub2_firstUltimaBlasterPosition) {
 
                         phase3sub2_baitClockwise=false;
 
                     }
 
-                    if((discretizedPosition+1+8)%8==phase3sub2_first究极冲击波Position) {
+                    if((discretizedPosition+1+8)%8==phase3sub2_firstUltimaBlasterPosition) {
 
                         phase3sub2_baitClockwise=true;
 
@@ -4087,7 +4087,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                     if(enableDebugLogging) {
                         
-                        accessory.Log.Debug($"phase3sub2_first究极冲击波Position={phase3sub2_first究极冲击波Position}\nphase3sub2_baitClockwise={phase3sub2_baitClockwise}");
+                        accessory.Log.Debug($"phase3sub2_firstUltimaBlasterPosition={phase3sub2_firstUltimaBlasterPosition}\nphase3sub2_baitClockwise={phase3sub2_baitClockwise}");
                         
                     }
 
@@ -4187,13 +4187,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             if(phase3sub2_baitClockwise) {
 
-                discretizedPosition=(phase3sub2_first究极冲击波Position+(targetIconNumber-1)+16)%8;
+                discretizedPosition=(phase3sub2_firstUltimaBlasterPosition+(targetIconNumber-1)+16)%8;
 
             }
 
             else {
                 
-                discretizedPosition=(phase3sub2_first究极冲击波Position-(targetIconNumber-1)+16)%8;
+                discretizedPosition=(phase3sub2_firstUltimaBlasterPosition-(targetIconNumber-1)+16)%8;
                 
             }
             
@@ -4252,13 +4252,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             if(phase3sub2_baitClockwise) {
 
-                discretizedPosition=(phase3sub2_first究极冲击波Position+(targetIconNumber-1)+16)%8;
+                discretizedPosition=(phase3sub2_firstUltimaBlasterPosition+(targetIconNumber-1)+16)%8;
 
             }
 
             else {
                 
-                discretizedPosition=(phase3sub2_first究极冲击波Position-(targetIconNumber-1)+16)%8;
+                discretizedPosition=(phase3sub2_firstUltimaBlasterPosition-(targetIconNumber-1)+16)%8;
                 
             }
             
@@ -4266,9 +4266,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             Vector3 myPosition=rotatePosition(new Vector3(100,0,81),ARENA_CENTER,Math.PI/4*discretizedPosition);
 
-            switch(phase3sub2_究极冲击波Strat) {
+            switch(phase3sub2_ultimaBlasterStrat) {
 
-                case Phase3Sub2_究极冲击波Strats.与预兆的顺逆相反: {
+                case Phase3Sub2_UltimaBlasterStrats.与预兆的顺逆相反: {
 
                     if(phase3sub2_baitClockwise) {
                         
@@ -4286,7 +4286,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 }
                 
-                case Phase3Sub2_究极冲击波Strats.固定顺时针: {
+                case Phase3Sub2_UltimaBlasterStrats.固定顺时针: {
                     
                     myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/8);
 
@@ -4294,7 +4294,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 }
                 
-                case Phase3Sub2_究极冲击波Strats.固定逆时针: {
+                case Phase3Sub2_UltimaBlasterStrats.固定逆时针: {
                     
                     myPosition=rotatePosition(myPosition,ARENA_CENTER,-(Math.PI/8));
 
