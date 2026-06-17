@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.3",
+        version:"0.0.4.4",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -121,6 +121,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         public bool phase3sub2_tankLimitBreakStrat { get; set; } = false;
         [UserSetting("P3 深层痛楚(一运) 究极冲击波的解法")]
         public Phase3Sub2_究极冲击波Strats phase3sub2_究极冲击波Strat { get; set; } = Phase3Sub2_究极冲击波Strats.与预兆的顺逆相反;
+        
+        // ----- End Of Major Phase 3 -----
+        
+        // ----- Major Phase 3 -----
+        
+        [UserSetting("P4 诅咒之嚎 不指示自身的诅咒之嚎")]
+        public bool phase4_disableCursedShriekOnMe { get; set; } = false;
         
         // ----- End Of Major Phase 3 -----
 
@@ -5151,7 +5158,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             if(targetId==accessory.Data.Me) {
 
-                return;
+                if(phase4_disableCursedShriekOnMe) {
+
+                    return;
+
+                }
 
             }
             
