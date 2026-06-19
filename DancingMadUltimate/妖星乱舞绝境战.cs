@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.5",
+        version:"0.0.4.6",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -222,7 +222,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile bool phase4_fakeChaosAction=false;
         private bool[] phase4_isFakeStrayFlames=Enumerable.Range(0,8).Select(i=>false).ToArray();
         private bool[] phase4_isFakeStraySpray=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private volatile int phase4_statusWithDurationCounter=0;
         private bool[] phase4_isBeyondDeath=Enumerable.Range(0,8).Select(i=>false).ToArray();
+        private volatile int phase4_statusWithoutDurationCounter=0;
         private bool[] phase4_isWhiteWound=Enumerable.Range(0,8).Select(i=>false).ToArray();
         
         // ----- End Of Major Phase 4 -----
@@ -363,7 +365,9 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase4_fakeChaosAction=false;
             for(int i=0;i<phase4_isFakeStrayFlames.Length;++i)phase4_isFakeStrayFlames[i]=false;
             for(int i=0;i<phase4_isFakeStraySpray.Length;++i)phase4_isFakeStraySpray[i]=false;
+            phase4_statusWithDurationCounter=0;
             for(int i=0;i<phase4_isBeyondDeath.Length;++i)phase4_isBeyondDeath[i]=false;
+            phase4_statusWithoutDurationCounter=0;
             for(int i=0;i<phase4_isWhiteWound.Length;++i)phase4_isWhiteWound[i]=false;
             
             // ----- End Of Major Phase 4 -----
@@ -5917,6 +5921,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
+            if(phase4_statusWithDurationCounter>=8) {
+
+                return;
+
+            }
+            
             if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
                 
                 return;
@@ -5951,13 +5961,27 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 }
                 
+                Interlocked.Increment(ref phase4_statusWithDurationCounter);
+
+                if(phase4_statusWithDurationCounter==8) {
+                    
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             phase4_isBeyondDeath:{string.Join(",",phase4_isBeyondDeath)}
+                                             """);
+                        
+                    }
+                    
+                }
+
             }
 
         }
         
         [ScriptMethod(name:"P4 生者之伤与死者之伤 (数据收集)",
             eventType:EventTypeEnum.StatusAdd,
-            eventCondition:["StatusID:regex:^(5541|5542)$"],
+            eventCondition:["StatusID:regex:^(5541|5542|4887|4888)$"],
             userControl:false)]
 
         public void P4_生者之伤与死者之伤_数据收集(Event @event,ScriptAccessory accessory) {
@@ -5969,6 +5993,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             if(string.Equals(@event["SourceId"],"00000000")) {
+
+                return;
+
+            }
+            
+            if(phase4_statusWithoutDurationCounter>=8) {
 
                 return;
 
@@ -5996,10 +6026,36 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 }
                 
+                if(string.Equals(@event["StatusID"],"4887")) { // Square Enix sucks again.
+
+                    phase4_isWhiteWound[targetIndex]=true;
+
+                }
+                
                 if(string.Equals(@event["StatusID"],"5542")) {
 
                     phase4_isWhiteWound[targetIndex]=false;
 
+                }
+                
+                if(string.Equals(@event["StatusID"],"4888")) { // Square Enix sucks again.
+
+                    phase4_isWhiteWound[targetIndex]=false;
+
+                }
+                
+                Interlocked.Increment(ref phase4_statusWithoutDurationCounter);
+
+                if(phase4_statusWithoutDurationCounter==8) {
+                    
+                    if(enableDebugLogging) {
+                        
+                        accessory.Log.Debug($"""
+                                             phase4_isWhiteWound:{string.Join(",",phase4_isWhiteWound)}
+                                             """);
+                        
+                    }
+                    
                 }
                 
             }
