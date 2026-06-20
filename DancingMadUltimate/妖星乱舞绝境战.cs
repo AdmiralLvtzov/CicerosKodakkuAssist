@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.6",
+        version:"0.0.4.7",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -2347,11 +2347,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 (塔辅助线) !!!临时函数,将来可能会移除!!!",
+        [ScriptMethod(name:"P2 遗弃末世 (塔辅助线)",
             eventType:EventTypeEnum.EnvControl,
             eventCondition:["Flag:2"])]
 
-        public void P2_遗弃末世_塔辅助线_临时函数_将来可能会移除(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_塔辅助线(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -4772,11 +4772,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P3 地震 轰击 (范围与指路)",
+        [ScriptMethod(name:"P3 地震 轰击 (范围)",
             eventType:EventTypeEnum.TargetIcon,
             eventCondition:["Id:00A1"])]
 
-        public void P3_地震_轰击_范围与指路(Event @event,ScriptAccessory accessory) {
+        public void P3_地震_轰击_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=3&&!skipPhaseChecks) {
 
@@ -4841,6 +4841,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                     currentProperties.DestoryAt=5125;
             
                     accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
+                    
+                    /*
                 
                     currentProperties=accessory.Data.GetDefaultDrawProperties();
             
@@ -4852,6 +4854,10 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                     currentProperties.DestoryAt=5125;
             
                     accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                    
+                    // The guidance part has been removed to prevent confusion.
+                    
+                    */
                     
                 }
 
