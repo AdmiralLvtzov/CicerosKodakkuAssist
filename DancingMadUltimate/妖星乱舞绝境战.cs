@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.7",
+        version:"0.0.4.8",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -35,7 +35,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         public const string scriptNotes=
             """
             妖星乱舞绝境战的脚本。脚本应该算是...完工了?
-            和灵视以往的作品不同,这次可能不会为妖星乱舞绝境战制作一个包含全程绘制与指路的全能型脚本。此脚本仅提供P1到P4的绘制与极少量指路。
+            和灵视以往的作品不同,这次可能不会为妖星乱舞绝境战制作一个包含全程绘制与指路的全能型脚本。此脚本仅提供P1到P4的绘制与少数几处指路。
             完整的妖星乱舞绝境战可达鸭体验将由数个不同作者的作品组成,包括但不限于如下作者(按副本阶段排序):
                 Coda - P1的指路。
                 RyougiMio - P2与P4的指路。
@@ -46,8 +46,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             此脚本仅在P3深层痛楚(一运)的究极冲击波和P4生者黑暗光与死者黑暗光(鸳鸯锅)提供指路。
             如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
             
-            支持进行小队排序测试,可以在聊天框中输入/e kuwutest来检查小队排序是否正确。
-            输入/e kuwuclear清除小队排序测试产生的目标标记。
+            支持进行小队排序测试,可以在聊天框中输入/e kdmutest来检查小队排序是否正确。
+            输入/e kdmuclear清除小队排序测试产生的目标标记。
             
             P1技能特效屏蔽需要在用户设置中手动启用。目前提供两种不同的方法,以缓解当前可达鸭版本的绘制丢失问题:
                 传统方法 - 即改变透明施法者的可见性。该方法不会丢失绘制,但极其不建议与其他任何提供相似功能的科技同时运行。
@@ -91,6 +91,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         public bool enableShenanigans { get; set; } = false;
         [UserSetting("通用 小队排序测试文本发送到的频道")]
         public PartyTestChannels partyTestChannel { get; set; } = PartyTestChannels.默语频道_仅自己可见;
+        [UserSetting("通用 团灭后清除目标标记")]
+        public bool clearSignsAfterWipe { get; set; } = false;
         [UserSetting("通用 为呼啦啦爆炎、扩大大冰封和劈啪啪暴雷启用技能特效屏蔽")]
         public bool enableAnimationBlockade { get; set; } = false;
         [UserSetting("通用 技能特效屏蔽的方法")]
@@ -124,12 +126,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- End Of Major Phase 3 -----
         
-        // ----- Major Phase 3 -----
+        // ----- Major Phase 4 -----
         
         [UserSetting("P4 诅咒之嚎 不指示自身的诅咒之嚎")]
         public bool phase4_disableCursedShriekOnMe { get; set; } = false;
+        [UserSetting("P4 混沌之炎与混沌之水 仅绘制自身的引导范围")]
+        public bool phase4_disableStrayBaitOnOthers { get; set; } = true;
         
-        // ----- End Of Major Phase 3 -----
+        // ----- End Of Major Phase 4 -----
 
         #endregion
         
@@ -296,6 +300,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         public void Init(ScriptAccessory accessory) {
             
             accessory.Method.RemoveDraw(".*");
+            
+            if(clearSignsAfterWipe) {
+
+                accessory.Method.MarkClear();
+                
+            }
             
             VariableAndSemaphoreInitialization();
             
@@ -476,7 +486,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             string processedText=(@event["Message"]).Trim().ToLower();
             
-            if(!string.Equals(processedText,"kuwutest")) {
+            if(!string.Equals(processedText,"kdmutest")) {
 
                 return;
 
@@ -597,7 +607,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             string processedText=(@event["Message"]).Trim().ToLower();
             
-            if(!string.Equals(processedText,"kuwuclear")) {
+            if(!string.Equals(processedText,"kdmuclear")) {
 
                 return;
 
@@ -3776,7 +3786,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Name="P3_深层痛楚_本影爆碎_引导指示";
+            currentProperties.Name="P3_深层痛楚_本影爆碎_引导指示1";
             currentProperties.Scale=new(2);
             currentProperties.Owner=sourceId;
             currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
@@ -3787,6 +3797,19 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=MAXIMUM_DURATION;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="P3_深层痛楚_本影爆碎_引导指示2";
+            currentProperties.Scale=new(20);
+            currentProperties.Owner=sourceId;
+            currentProperties.CentreResolvePattern=PositionResolvePatternEnum.PlayerFarestOrder;
+            currentProperties.CentreOrderIndex=1;
+            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+            currentProperties.Delay=9875;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
 
         }
         
@@ -3803,7 +3826,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
 
-            accessory.Method.RemoveDraw("P3_深层痛楚_本影爆碎_引导指示");
+            accessory.Method.RemoveDraw("P3_深层痛楚_本影爆碎_引导指示1");
+            accessory.Method.RemoveDraw("P3_深层痛楚_本影爆碎_引导指示2");
 
         }
         
@@ -3858,12 +3882,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(1);
+            currentProperties.Scale=new(20);
             currentProperties.Position=effectPosition;
             currentProperties.Color=accessory.Data.DefaultDangerColor;
             currentProperties.DestoryAt=5000;
             
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Circle,currentProperties);
 
         }
         
@@ -3907,13 +3931,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Scale=new(3);
-            currentProperties.Radian=float.Pi/2;
+            currentProperties.Scale=new(1,3);
             currentProperties.Owner=accessory.Data.Me;
             currentProperties.TargetObject=sourceId;
             currentProperties.Color=accessory.Data.DefaultSafeColor;
-            currentProperties.Delay=5000;
-            currentProperties.DestoryAt=4000;
+            currentProperties.Delay=4750;
+            currentProperties.DestoryAt=4250;
 
             if(phase3sub2_shouldFaceBoss[myIndex]) {
 
@@ -3927,9 +3950,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
 
         }
+        
+        /*
         
         [ScriptMethod(name:"P3 深层痛楚 真空波 (正确处理时的击退指示,仅坦克LB解法)",
             eventType:EventTypeEnum.StartCasting,
@@ -3974,6 +3999,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Arrow,currentProperties);
 
         }
+        
+        */
         
         [ScriptMethod(name:"P3 深层痛楚 龙卷风 (范围,仅坦克LB解法)",
             eventType:EventTypeEnum.StartCasting,
@@ -5561,6 +5588,16 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 return;
                 
             }
+
+            if(phase4_disableStrayBaitOnOthers) {
+
+                if(targetId!=accessory.Data.Me) {
+
+                    return;
+
+                }
+                
+            }
             
             int durationMilliseconds=0;
 
@@ -5686,6 +5723,16 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             if(!convertObjectIdToDecimal(@event["TargetId"],out var targetId)) {
                 
                 return;
+                
+            }
+            
+            if(phase4_disableStrayBaitOnOthers) {
+
+                if(targetId!=accessory.Data.Me) {
+
+                    return;
+
+                }
                 
             }
             
