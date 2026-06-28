@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.8",
+        version:"0.0.4.9",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -112,6 +112,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 2 -----
         
+        [UserSetting("P2 遗弃末世 绘制的视觉类型")]
+        public Phase2Sub2_DrawingTypes phase2sub2_drawingType { get; set; } = Phase2Sub2_DrawingTypes.默认;
+        [UserSetting("P2 遗弃末世 咏唱危机 塔判定前的绘制持续时间(秒,最多7)")]
+        public double phase2sub2_drawingDuration { get; set; } = 5;
+        [UserSetting("P2 遗弃末世 咏唱危机 仅绘制咏唱危机·波动(扇形)")]
+        public bool phase2sub2_spellwaveOnly { get; set; } = false;
         [UserSetting("P2 遗弃末世 塔辅助线的颜色")]
         public ScriptColor phase2sub2_colourOfAuxiliaryLines { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
         
@@ -282,6 +288,15 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             SPREAD,
             STACK,
             UNKNOWN
+
+        }
+        
+        public enum Phase2Sub2_DrawingTypes {
+            
+            默认,
+            全VFX,
+            作者推荐_圆形ImGui_其余VFX,
+            全ImGui
 
         }
         
@@ -2044,11 +2059,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围1)",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集)",
             eventType:EventTypeEnum.TargetIcon,
-            eventCondition:["Id:regex:^(02CD|02CC|02CB)$"])]
+            eventCondition:["Id:regex:^(02CD|02CC|02CB)$"],
+            userControl:false)]
 
-        public void P2_遗弃末世_咏唱危机_数据收集与范围1(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_数据收集(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -2075,8 +2091,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 return;
 
             }
-            
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             lock(phase2sub2_iconType) {
                 
@@ -2098,111 +2112,63 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 }
                 
-                lock(phase2sub2_drawingCounter) {
+            }
+
+        }
+
+        private DrawModeEnum getDrawModeEnum(DrawTypeEnum currentType) {
+
+            switch(phase2sub2_drawingType) {
                 
-                    int lastDrawing=phase2sub2_drawingCounter.GetOrAdd(targetId,0);
+                case Phase2Sub2_DrawingTypes.默认: {
+
+                    return DrawModeEnum.Default;
+
+                }
+
+                case Phase2Sub2_DrawingTypes.全VFX: {
+
+                    return DrawModeEnum.Vfx;
+
+                }
                 
-                    accessory.Method.RemoveDraw($"P2_遗弃末世_范围_{targetId}_{lastDrawing}_0");
-                    accessory.Method.RemoveDraw($"P2_遗弃末世_范围_{targetId}_{lastDrawing}_1");
+                case Phase2Sub2_DrawingTypes.作者推荐_圆形ImGui_其余VFX: {
 
-                    Interlocked.Increment(ref lastDrawing);
-                    phase2sub2_drawingCounter[targetId]=lastDrawing;
+                    if(currentType==DrawTypeEnum.Circle) {
 
-                    lock(phase2sub2_towers) {
+                        return DrawModeEnum.Imgui;
 
-                        for(int i=0;i<int.Min(2,phase2sub2_towers.Count);++i) {
+                    }
 
-                            switch(phase2sub2_iconType[targetIndex]) {
+                    else {
 
-                                case Phase2Sub2_IconTypes.FAN: {
-                                    
-                                    currentProperties=accessory.Data.GetDefaultDrawProperties();
-                                    
-                                    currentProperties.Name=$"P2_遗弃末世_范围_{targetId}_{lastDrawing}_{i}";
-                                    currentProperties.Scale=new(40);
-                                    currentProperties.Radian=float.Pi/2;
-                                    currentProperties.Owner=targetId;
-                                    currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
-                                    currentProperties.TargetOrderIndex=1;
-                                    currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(phase2sub2_towers[i]-1));
-                                    currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
-                                    currentProperties.FadeMode=FadeMode.OmenCentre;
-                                    currentProperties.Color=accessory.Data.DefaultDangerColor;
-                                    currentProperties.DestoryAt=MAXIMUM_DURATION;
+                        return DrawModeEnum.Vfx;
 
-                                    accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
-
-                                    break;
-
-                                }
-                                
-                                case Phase2Sub2_IconTypes.SPREAD: {
-                                    
-                                    currentProperties=accessory.Data.GetDefaultDrawProperties();
-                                    
-                                    currentProperties.Name=$"P2_遗弃末世_范围_{targetId}_{lastDrawing}_{i}";
-                                    currentProperties.Scale=new(5);
-                                    currentProperties.Owner=targetId;
-                                    currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(phase2sub2_towers[i]-1));
-                                    currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
-                                    currentProperties.FadeMode=FadeMode.OmenCentre;
-                                    currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-                                    currentProperties.DestoryAt=MAXIMUM_DURATION;
-
-                                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-
-                                    break;
-
-                                }
-                                
-                                case Phase2Sub2_IconTypes.STACK: {
-                                    
-                                    currentProperties=accessory.Data.GetDefaultDrawProperties();
-                                    
-                                    currentProperties.Name=$"P2_遗弃末世_范围_{targetId}_{lastDrawing}_{i}";
-                                    currentProperties.Scale=new(5);
-                                    currentProperties.Owner=targetId;
-                                    currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(phase2sub2_towers[i]-1));
-                                    currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
-                                    currentProperties.FadeMode=FadeMode.OmenCentre;
-                                    currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-                                    currentProperties.DestoryAt=MAXIMUM_DURATION;
-
-                                    accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-
-                                    break;
-
-                                }
-
-                                case Phase2Sub2_IconTypes.UNKNOWN: {
-
-                                    break;
-                                
-                                }
-                            
-                                default: {
-
-                                    break;
-
-                                }
-                            
-                            }
-                        
-                        }
-                    
                     }
 
                 }
                 
-            }
+                case Phase2Sub2_DrawingTypes.全ImGui: {
 
+                    return DrawModeEnum.Imgui;
+
+                }
+
+                default: {
+
+                    return DrawModeEnum.Default;
+
+                }
+                
+            }
+            
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集与范围2)",
+        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (范围)",
             eventType:EventTypeEnum.EnvControl,
-            eventCondition:["Flag:2"])]
+            eventCondition:["Flag:8"])]
 
-        public void P2_遗弃末世_咏唱危机_数据收集与范围2(Event @event,ScriptAccessory accessory) {
+        public void P2_遗弃末世_咏唱危机_范围(Event @event,ScriptAccessory accessory) {
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
@@ -2228,129 +2194,127 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
+            int drawingDuration=((int)(phase2sub2_drawingDuration*1000));
+
+            if(drawingDuration<=0) {
+
+                return;
+
+            }
+            
+            int delay=0;
+            int duration=0;
+
+            if(drawingDuration>7000) {
+
+                delay=125;
+                duration=7000;
+
+            }
+
+            else {
+
+                delay=7125-drawingDuration;
+                duration=drawingDuration;
+
+            }
+            
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            lock(phase2sub2_towers) {
-
-                if(phase2sub2_towers.Count>=2) {
+            for(int i=0;i<8;++i) {
+                
+                if(phase2sub2_iconType[i]==Phase2Sub2_IconTypes.UNKNOWN) {
                     
-                    phase2sub2_towers.Clear();
-
+                    continue;
+                    
                 }
                 
-                phase2sub2_towers.Add(index);
+                switch(phase2sub2_iconType[i]) {
 
-                if(phase2sub2_towers.Count==2) {
-                    
-                    lock(phase2sub2_iconType) {
-
-                        for(int i=0;i<8;++i) {
-
-                            if(phase2sub2_iconType[i]==Phase2Sub2_IconTypes.UNKNOWN) {
-
-                                continue;
-
-                            }
-                            
-                            ulong currentId=accessory.Data.PartyList[i];
-                            int currentIndex=i;
-                        
-                            lock(phase2sub2_drawingCounter) {
-                            
-                                int lastDrawing=phase2sub2_drawingCounter.GetOrAdd(currentId,0);
-                            
-                                accessory.Method.RemoveDraw($"P2_遗弃末世_范围_{currentId}_{lastDrawing}_0");
-                                accessory.Method.RemoveDraw($"P2_遗弃末世_范围_{currentId}_{lastDrawing}_1"); 
-                            
-                                Interlocked.Increment(ref lastDrawing);
-                                phase2sub2_drawingCounter[currentId]=lastDrawing;
-                                
-                                for(int j=0;j<int.Min(2,phase2sub2_towers.Count);++j) {
-
-                                    switch(phase2sub2_iconType[currentIndex]) {
-
-                                        case Phase2Sub2_IconTypes.FAN: {
+                    case Phase2Sub2_IconTypes.FAN: {
                                     
-                                            currentProperties=accessory.Data.GetDefaultDrawProperties();
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
                                     
-                                            currentProperties.Name=$"P2_遗弃末世_范围_{currentId}_{lastDrawing}_{j}";
-                                            currentProperties.Scale=new(40);
-                                            currentProperties.Radian=float.Pi/2;
-                                            currentProperties.Owner=currentId;
-                                            currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
-                                            currentProperties.TargetOrderIndex=1;
-                                            currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(phase2sub2_towers[j]-1));
-                                            currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
-                                            currentProperties.FadeMode=FadeMode.OmenCentre;
-                                            currentProperties.Color=accessory.Data.DefaultDangerColor;
-                                            currentProperties.DestoryAt=MAXIMUM_DURATION;
+                        currentProperties.Scale=new(40);
+                        currentProperties.Radian=float.Pi/2;
+                        currentProperties.Owner=accessory.Data.PartyList[i];
+                        currentProperties.TargetResolvePattern=PositionResolvePatternEnum.PlayerNearestOrder;
+                        currentProperties.TargetOrderIndex=1;
+                        currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(index-1));
+                        currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
+                        currentProperties.FadeMode=FadeMode.OmenCentre;
+                        currentProperties.Color=accessory.Data.DefaultDangerColor;
+                        currentProperties.Delay=delay;
+                        currentProperties.DestoryAt=duration;
 
-                                            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+                        accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Fan),DrawTypeEnum.Fan,currentProperties);
 
-                                            break;
+                        break;
                                         
-                                        }
+                    }
                                 
-                                        case Phase2Sub2_IconTypes.SPREAD: {
-                                    
-                                            currentProperties=accessory.Data.GetDefaultDrawProperties();
-                                    
-                                            currentProperties.Name=$"P2_遗弃末世_范围_{currentId}_{lastDrawing}_{j}";
-                                            currentProperties.Scale=new(5);
-                                            currentProperties.Owner=currentId;
-                                            currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(phase2sub2_towers[j]-1));
-                                            currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
-                                            currentProperties.FadeMode=FadeMode.OmenCentre;
-                                            currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
-                                            currentProperties.DestoryAt=MAXIMUM_DURATION;
+                    case Phase2Sub2_IconTypes.SPREAD: {
 
-                                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                        if(phase2sub2_spellwaveOnly) {
 
-                                            break;
+                            break;
 
-                                        }
-                                
-                                        case Phase2Sub2_IconTypes.STACK: {
-                                    
-                                            currentProperties=accessory.Data.GetDefaultDrawProperties();
-                                    
-                                            currentProperties.Name=$"P2_遗弃末世_范围_{currentId}_{lastDrawing}_{j}";
-                                            currentProperties.Scale=new(5);
-                                            currentProperties.Owner=currentId;
-                                            currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(phase2sub2_towers[j]-1));
-                                            currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
-                                            currentProperties.FadeMode=FadeMode.OmenCentre;
-                                            currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
-                                            currentProperties.DestoryAt=MAXIMUM_DURATION;
-
-                                            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
-
-                                            break;
-
-                                        }
-
-                                        case Phase2Sub2_IconTypes.UNKNOWN: {
-
-                                            break;
-                                
-                                        }
-                            
-                                        default: {
-
-                                            break;
-
-                                        }
-                            
-                                    }
-                        
-                                }
-                        
-                            }
-                    
                         }
+                                    
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=accessory.Data.PartyList[i];
+                        currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(index-1));
+                        currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
+                        currentProperties.FadeMode=FadeMode.OmenCentre;
+                        currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
+                        currentProperties.Delay=delay;
+                        currentProperties.DestoryAt=duration;
+
+                        accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
+
+                        break;
 
                     }
+                                
+                    case Phase2Sub2_IconTypes.STACK: {
                         
+                        if(phase2sub2_spellwaveOnly) {
+
+                            break;
+
+                        }
+                                    
+                        currentProperties=accessory.Data.GetDefaultDrawProperties();
+                                    
+                        currentProperties.Scale=new(5);
+                        currentProperties.Owner=accessory.Data.PartyList[i];
+                        currentProperties.FadeCentrePosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI/4*(index-1));
+                        currentProperties.FadeDistance=PHASE2_SUB2_TOWER_RADIUS;
+                        currentProperties.FadeMode=FadeMode.OmenCentre;
+                        currentProperties.Color=colourOfDirectionIndicators.V4.WithW(1);
+                        currentProperties.Delay=delay;
+                        currentProperties.DestoryAt=duration;
+
+                        accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
+
+                        break;
+
+                    }
+
+                    case Phase2Sub2_IconTypes.UNKNOWN: {
+
+                        break;
+                                
+                    }
+                            
+                    default: {
+
+                        break;
+
+                    }
+                            
                 }
                     
             }
@@ -2417,55 +2381,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (范围清除)",
-            eventType:EventTypeEnum.EnvControl,
-            eventCondition:["Flag:2"],
-            userControl:false)]
-
-        public void P2_遗弃末世_咏唱危机_范围清除(Event @event,ScriptAccessory accessory) {
-            
-            if(majorPhase!=2&&!skipPhaseChecks) {
-
-                return;
-
-            }
-            
-            if(phase!=2&&!skipPhaseChecks) {
-
-                return;
-
-            }
-            
-            if(!convertStringToSignedInteger(@event["Index"], out var index)) {
-                
-                return;
-                
-            }
-
-            if(index<1||index>8) {
-
-                return;
-
-            }
-
-            lock(PHASE2_SUB2_TOWER_COUNTER_LOCK) {
-                
-                Interlocked.Increment(ref phase2sub2_towerCounter);
-
-                if(phase2sub2_towerCounter==16) {
-                
-                    System.Threading.Tasks.Task.Delay(10000).ContinueWith(_=> {
-                    
-                        accessory.Method.RemoveDraw(@"^P2_遗弃末世_范围_.*$");
-                    
-                    });
-                
-                }
-                
-            }
-
-        }
-        
         [ScriptMethod(name:"P2 遗弃末世 过去终结与未来终结 (引导范围)",
             eventType:EventTypeEnum.StartCasting,
             eventCondition:["ActionId:regex:^(47826|47827)$"])]
@@ -2503,7 +2418,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
                 currentProperties.DestoryAt=6750;
 
-                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Circle,currentProperties);
+                accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
                 
             }
 
@@ -2555,7 +2470,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
 
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Fan),DrawTypeEnum.Fan,currentProperties);
 
         }
         
@@ -2603,7 +2518,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
 
-            accessory.Method.SendDraw(DrawModeEnum.Default,DrawTypeEnum.Fan,currentProperties);
+            accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Fan),DrawTypeEnum.Fan,currentProperties);
 
         }
         
