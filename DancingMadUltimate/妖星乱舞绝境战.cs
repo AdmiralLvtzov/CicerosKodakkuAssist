@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.9",
+        version:"0.0.4.10",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -197,9 +197,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         // ----- Major Phase 2 -----
         
         private Phase2Sub2_IconTypes[] phase2sub2_iconType=Enumerable.Range(0,8).Select(i=>Phase2Sub2_IconTypes.UNKNOWN).ToArray();
-        private List<int> phase2sub2_towers=new List<int>();
-        private ConcurrentDictionary<ulong,int> phase2sub2_drawingCounter=new ConcurrentDictionary<ulong,int>();
-        private volatile int phase2sub2_towerCounter=0; // Its read-write lock is PHASE2_SUB2_TOWER_COUNTER_LOCK.
         
         private volatile int phase2sub3_trineCounter=0; // Its read-write lock is PHASE2_SUB3_TRINE_COUNTER_LOCK.
         
@@ -257,7 +254,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         private static readonly Vector3 PHASE2_SUB2_RAW_TOWER_POSITION=new Vector3(100,0,92);
         private const int PHASE2_SUB2_TOWER_RADIUS=4;
-        private readonly object PHASE2_SUB2_TOWER_COUNTER_LOCK=new object();
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
         
@@ -355,9 +351,6 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             // ----- Major Phase 2 -----
 
             for(int i=0;i<phase2sub2_iconType.Length;++i)phase2sub2_iconType[i]=Phase2Sub2_IconTypes.UNKNOWN;
-            phase2sub2_towers.Clear();
-            phase2sub2_drawingCounter.Clear();
-            phase2sub2_towerCounter=0;
             
             phase2sub3_trineCounter=0;
 
