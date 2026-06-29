@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.10",
+        version:"0.0.4.11",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -197,6 +197,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         // ----- Major Phase 2 -----
         
         private Phase2Sub2_IconTypes[] phase2sub2_iconType=Enumerable.Range(0,8).Select(i=>Phase2Sub2_IconTypes.UNKNOWN).ToArray();
+        private volatile int phase2sub2_iconUpdateCounter=0;
+        private System.Threading.AutoResetEvent[] phase2sub2_roundSemaphore=Enumerable.Range(0,7).Select(i=>new System.Threading.AutoResetEvent(false)).ToArray();
+        private volatile int phase2sub2_pathOfLightCounter=0; // Its read-write lock is PHASE2_SUB2_PATH_OF_LIGHT_COUNTER_LOCK.
+        private HashSet<int> phase2sub2_groupA=new HashSet<int>();
+        private volatile int initialLeftStack=-1,initialRightStack=-1;
+        private HashSet<int> phase2sub2_groupB=new HashSet<int>();
         
         private volatile int phase2sub3_trineCounter=0; // Its read-write lock is PHASE2_SUB3_TRINE_COUNTER_LOCK.
         
@@ -254,6 +260,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         private static readonly Vector3 PHASE2_SUB2_RAW_TOWER_POSITION=new Vector3(100,0,92);
         private const int PHASE2_SUB2_TOWER_RADIUS=4;
+        private readonly object PHASE2_SUB2_PATH_OF_LIGHT_COUNTER_LOCK=new object();
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
         
@@ -351,6 +358,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             // ----- Major Phase 2 -----
 
             for(int i=0;i<phase2sub2_iconType.Length;++i)phase2sub2_iconType[i]=Phase2Sub2_IconTypes.UNKNOWN;
+            phase2sub2_iconUpdateCounter=0;
+            for(int i=0;i<phase2sub2_roundSemaphore.Length;++i)phase2sub2_roundSemaphore[i].Reset();
+            phase2sub2_pathOfLightCounter=0;
+            phase2sub2_groupA.Clear();
+            initialLeftStack=-1;initialRightStack=-1;
+            phase2sub2_groupB.Clear();
             
             phase2sub3_trineCounter=0;
 
@@ -2051,6 +2064,88 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
 
         }
+
+        private bool groupPartyMembers(ScriptAccessory accessory) {
+            
+            int[][] group=[[0,2],
+                           [1,3],
+                           [4,6],
+                           [5,7]];
+
+            for(int i=0;i<4;++i) {
+
+                int member1=group[i][0];
+                int member2=group[i][1];
+
+                if(phase2sub2_iconType[member1]==Phase2Sub2_IconTypes.STACK
+                   ||
+                   phase2sub2_iconType[member2]==Phase2Sub2_IconTypes.STACK) {
+
+                    phase2sub2_groupA.Add(member1);
+                    phase2sub2_groupA.Add(member2);
+                    
+                    if(phase2sub2_iconType[member1]==Phase2Sub2_IconTypes.FAN) {
+
+                        initialLeftStack=member2;
+
+                    }
+                    
+                    if(phase2sub2_iconType[member2]==Phase2Sub2_IconTypes.FAN) {
+
+                        initialLeftStack=member1;
+
+                    }
+                    
+                    if(phase2sub2_iconType[member1]==Phase2Sub2_IconTypes.SPREAD) {
+
+                        initialRightStack=member2;
+
+                    }
+                    
+                    if(phase2sub2_iconType[member2]==Phase2Sub2_IconTypes.SPREAD) {
+
+                        initialRightStack=member1;
+
+                    }
+
+                }
+
+                else {
+                    
+                    phase2sub2_groupB.Add(member1);
+                    phase2sub2_groupB.Add(member2);
+                    
+                }
+                
+            }
+
+            if(enableDebugLogging) {
+                        
+                accessory.Log.Debug($"""
+                                     phase2sub2_groupA:{string.Join(",",phase2sub2_groupA)}
+                                     initialLeftStack={initialLeftStack},initialRightStack={initialRightStack}
+                                     phase2sub2_groupB:{string.Join(",",phase2sub2_groupB)}
+                                     """);
+                        
+            }
+
+            if(phase2sub2_groupA.Count==4
+               &&
+               phase2sub2_groupB.Count==4
+               &&
+               !phase2sub2_groupA.Overlaps(phase2sub2_groupB)) {
+
+                return true;
+
+            }
+
+            else {
+
+                return false;
+
+            }
+
+        }
         
         [ScriptMethod(name:"P2 遗弃末世 咏唱危机 (数据收集)",
             eventType:EventTypeEnum.TargetIcon,
@@ -2066,6 +2161,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2sub2_iconUpdateCounter>=8+4*6) {
 
                 return;
 
@@ -2086,24 +2187,190 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
 
             lock(phase2sub2_iconType) {
+
+                bool validUpdate=false;
                 
                 if(string.Equals(@event["Id"],"02CD")) {
 
                     phase2sub2_iconType[targetIndex]=Phase2Sub2_IconTypes.FAN;
+
+                    validUpdate=true;
 
                 }
                 
                 if(string.Equals(@event["Id"],"02CC")) {
 
                     phase2sub2_iconType[targetIndex]=Phase2Sub2_IconTypes.SPREAD;
+                    
+                    validUpdate=true;
 
                 }
                 
                 if(string.Equals(@event["Id"],"02CB")) {
 
                     phase2sub2_iconType[targetIndex]=Phase2Sub2_IconTypes.STACK;
+                    
+                    validUpdate=true;
 
                 }
+
+                if(validUpdate) {
+
+                    Interlocked.Increment(ref phase2sub2_iconUpdateCounter);
+
+                    if(phase2sub2_iconUpdateCounter>=8) {
+
+                        if(phase2sub2_iconUpdateCounter==8) {
+
+                            if(!groupPartyMembers(accessory)) {
+
+                                return;
+
+                            }
+
+                            phase2sub2_roundSemaphore[0].Set();
+
+                            if(enableDebugLogging) {
+                                
+                                accessory.Log.Debug("The initialization semaphore has been signalled.");
+                                
+                            }
+
+                        }
+
+                        else {
+
+                            int updateCountAfterInitialization=phase2sub2_iconUpdateCounter-8;
+
+                            if(updateCountAfterInitialization%4==0) {
+                                
+                                phase2sub2_roundSemaphore[updateCountAfterInitialization/4].Set();
+                                
+                                if(enableDebugLogging) {
+
+                                    accessory.Log.Debug($"""
+                                                        updateCountAfterInitialization={updateCountAfterInitialization}
+                                                        Round {updateCountAfterInitialization/4} semaphore has been signalled.
+                                                        """);
+
+                                }
+                                
+                            }
+
+                        }
+                        
+                    }
+
+                }
+                
+            }
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 (指路,第1轮) !!!尚未完工,不生效!!!",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:47804"],
+            suppress:COMMON_INTERVAL)]
+
+        public void P2_遗弃末世_指路_第1轮(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            bool signalled=phase2sub2_roundSemaphore[0].WaitOne(1500+COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            // To be done.
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 (指路,第2轮到第8轮) !!!尚未完工,不生效!!!",
+            eventType:EventTypeEnum.ActionEffect,
+            eventCondition:["ActionId:47806"])]
+
+        public void P2_遗弃末世_指路_第2轮到第8轮(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(!string.Equals(@event["TargetIndex"],"1")) {
+
+                return;
+
+            }
+
+            if(phase2sub2_pathOfLightCounter>=2*8) {
+
+                return;
+
+            }
+
+            bool lastRoundEnded=false;
+            int lastRound=0;
+
+            lock(PHASE2_SUB2_PATH_OF_LIGHT_COUNTER_LOCK) {
+
+                Interlocked.Increment(ref phase2sub2_pathOfLightCounter);
+
+                if(phase2sub2_pathOfLightCounter%2==0) {
+
+                    lastRoundEnded=true;
+                    lastRound=phase2sub2_pathOfLightCounter/2;
+                                
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             phase2sub2_pathOfLightCounter={phase2sub2_pathOfLightCounter}
+                                             lastRoundEnded={lastRoundEnded}
+                                             lastRound={lastRound}
+                                             """);
+
+                    }
+                    
+                }
+
+            }
+
+            if(lastRoundEnded
+               &&
+               (1<=lastRound&&lastRound<=7)) {
+
+                if(1<=lastRound&&lastRound<=6) {
+                    
+                    bool signalled=phase2sub2_roundSemaphore[lastRound].WaitOne(625+COMMON_INTERVAL);
+
+                    if(!signalled) {
+
+                        return;
+
+                    }
+                    
+                }
+                
+                // To be done.
                 
             }
 
