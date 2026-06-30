@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.11",
+        version:"0.0.4.12",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -203,6 +203,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private HashSet<int> phase2sub2_groupA=new HashSet<int>();
         private volatile int initialLeftStack=-1,initialRightStack=-1;
         private HashSet<int> phase2sub2_groupB=new HashSet<int>();
+        private int[] phase2sub2_discretizedTowerGap=Enumerable.Range(0,9).Select(i=>-1).ToArray();
+        private volatile int phase2sub2_towerCounter=0;
+        private volatile int phase2sub2_discretizedPositionOfLastTower=-1;
+        private System.Threading.AutoResetEvent phase2sub2_discretizedTowerGap1Semaphore=new System.Threading.AutoResetEvent(false);
+        private System.Threading.AutoResetEvent phase2sub2_discretizedTowerGap2Semaphore=new System.Threading.AutoResetEvent(false);
         
         private volatile int phase2sub3_trineCounter=0; // Its read-write lock is PHASE2_SUB3_TRINE_COUNTER_LOCK.
         
@@ -364,6 +369,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase2sub2_groupA.Clear();
             initialLeftStack=-1;initialRightStack=-1;
             phase2sub2_groupB.Clear();
+            for(int i=0;i<phase2sub2_discretizedTowerGap.Length;++i)phase2sub2_discretizedTowerGap[i]=-1;
+            phase2sub2_towerCounter=0;
+            phase2sub2_discretizedPositionOfLastTower=-1;
+            phase2sub2_discretizedTowerGap1Semaphore.Reset();
+            phase2sub2_discretizedTowerGap2Semaphore.Reset();
             
             phase2sub3_trineCounter=0;
 
@@ -2065,7 +2075,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
 
-        private bool groupPartyMembers(ScriptAccessory accessory) {
+        private bool groupPartyMembersAtBeginning(ScriptAccessory accessory) {
             
             int[][] group=[[0,2],
                            [1,3],
@@ -2222,7 +2232,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                         if(phase2sub2_iconUpdateCounter==8) {
 
-                            if(!groupPartyMembers(accessory)) {
+                            if(!groupPartyMembersAtBeginning(accessory)) {
 
                                 return;
 
@@ -2265,6 +2275,163 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
             }
 
+        }
+
+        private int getDiscretizedTowerGap(int discretizedTower1,int discretizedTower2) {
+
+            int result=-1;
+            
+            if(discretizedTower1<0||discretizedTower1>7) {
+
+                return result;
+
+            }
+            
+            if(discretizedTower2<0||discretizedTower2>7) {
+
+                return result;
+
+            }
+
+            if(Math.Abs(discretizedTower1-discretizedTower2)==2) {
+
+                result=((discretizedTower1+discretizedTower2)/2+16)%8;
+
+            }
+            
+            if(Math.Abs(discretizedTower1-discretizedTower2)==6) {
+
+                result=((discretizedTower1+discretizedTower2+8)/2+16)%8;
+
+            }
+
+            return result;
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 塔 (数据收集)",
+            eventType:EventTypeEnum.EnvControl,
+            eventCondition:["Flag:2"],
+            userControl:false)]
+
+        public void P2_遗弃末世_塔_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            if(phase2sub2_towerCounter>=16) {
+
+                return;
+
+            }
+            
+            if(!convertStringToSignedInteger(@event["Index"], out var index)) {
+                
+                return;
+                
+            }
+
+            if(index<1||index>8) {
+
+                return;
+
+            }
+
+            lock(phase2sub2_discretizedTowerGap) {
+
+                Interlocked.Increment(ref phase2sub2_towerCounter);
+
+                if(phase2sub2_towerCounter%2==1) {
+
+                    phase2sub2_discretizedPositionOfLastTower=(index-1+8)%8;
+
+                }
+                
+                if(phase2sub2_towerCounter%2==0) {
+
+                    int discretizedPositionOfCurrentTower=(index-1+8)%8;
+                    int currentRound=phase2sub2_towerCounter/2;
+
+                    phase2sub2_discretizedTowerGap[currentRound]=getDiscretizedTowerGap(phase2sub2_discretizedPositionOfLastTower,discretizedPositionOfCurrentTower);
+
+                    if(phase2sub2_discretizedTowerGap[currentRound]==-1) {
+
+                        return;
+
+                    }
+
+                    if(currentRound==1) {
+
+                        phase2sub2_discretizedTowerGap1Semaphore.Set();
+                        
+                        if(enableDebugLogging) {
+
+                            accessory.Log.Debug($"""
+                                                 phase2sub2_towerCounter={phase2sub2_towerCounter}
+                                                 currentRound={currentRound}
+                                                 phase2sub2_discretizedPositionOfLastTower={phase2sub2_discretizedPositionOfLastTower}
+                                                 discretizedPositionOfCurrentTower={discretizedPositionOfCurrentTower}
+                                                 phase2sub2_discretizedTowerGap[{currentRound}]={phase2sub2_discretizedTowerGap[currentRound]}
+                                                 The gap 1 semaphore has been signalled.
+                                                 """);
+
+                        }
+
+                    }
+
+                    if(currentRound==2) {
+
+                        int trend=phase2sub2_discretizedTowerGap[2]-phase2sub2_discretizedTowerGap[1];
+
+                        if(trend==-7) {
+
+                            trend=1;
+
+                        }
+                        
+                        if(trend==7) {
+
+                            trend=-1;
+
+                        }
+
+                        for(int i=3;i<phase2sub2_discretizedTowerGap.Length;++i) {
+
+                            phase2sub2_discretizedTowerGap[i]=(phase2sub2_discretizedTowerGap[i-1]+trend+16)%8;
+
+                        }
+
+                        phase2sub2_discretizedTowerGap1Semaphore.Set();
+                        
+                        if(enableDebugLogging) {
+
+                            accessory.Log.Debug($"""
+                                                 phase2sub2_towerCounter={phase2sub2_towerCounter}
+                                                 currentRound={currentRound}
+                                                 phase2sub2_discretizedPositionOfLastTower={phase2sub2_discretizedPositionOfLastTower}
+                                                 discretizedPositionOfCurrentTower={discretizedPositionOfCurrentTower}
+                                                 trend={trend}
+                                                 phase2sub2_discretizedTowerGap:{string.Join(",",phase2sub2_discretizedTowerGap)}
+                                                 The gap 2 semaphore has been signalled.
+                                                 """);
+
+                        }
+
+                    }
+
+                }
+
+            }
+            
         }
         
         [ScriptMethod(name:"P2 遗弃末世 (指路,第1轮) !!!尚未完工,不生效!!!",

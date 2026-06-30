@@ -56,10 +56,10 @@
   {
     "Name":"妖星乱舞绝境战",
     "Guid":"f9948da9-ce35-44d1-b410-02375c941458",
-    "Version":"0.0.4.11",
+    "Version":"0.0.4.12",
     "Author":"Cicero 灵视",
     "TerritoryIds":[1363],
     "DownloadUrl":"https://raw.githubusercontent.com/AdmiralLvtzov/CicerosKodakkuAssist/refs/heads/main/DancingMadUltimate/%E5%A6%96%E6%98%9F%E4%B9%B1%E8%88%9E%E7%BB%9D%E5%A2%83%E6%88%98.cs",
-    "UpdateInfo":"上次更新: 2026年6月29日\n更新内容:\nP4全程所有的绘制。\n在用户设置中提供两种不同的P1技能特效屏蔽的方法,以缓解绘制丢失的问题。\n大幅优化P2 遗弃末世的绘制,并在用户设置中提供多个自定义选项。\n正在施工P2 遗弃末世的指路,尚未完工。"
+    "UpdateInfo":"上次更新: 2026年6月30日\n更新内容:\nP4全程所有的绘制。\n在用户设置中提供两种不同的P1技能特效屏蔽的方法,以缓解绘制丢失的问题。\n大幅优化P2 遗弃末世的绘制,并在用户设置中提供多个自定义选项。\n正在施工P2 遗弃末世的指路,尚未完工。"
   }
 ]
