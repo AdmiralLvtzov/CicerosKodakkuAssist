@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.14",
+        version:"0.0.4.15",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -5534,7 +5534,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
             currentProperties.Name=$"P3_地震_黑洞_碰撞箱范围_{sourceId}";
-            currentProperties.Scale=new(1);
+            currentProperties.Scale=new(2);
             currentProperties.Owner=sourceId;
             currentProperties.Color=colourOfExtremelyDangerousAttacks.V4.WithW(1);
             currentProperties.DestoryAt=MAXIMUM_DURATION;
