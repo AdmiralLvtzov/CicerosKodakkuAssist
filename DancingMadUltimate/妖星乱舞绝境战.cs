@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.13",
+        version:"0.0.4.14",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -112,6 +112,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         // ----- Major Phase 2 -----
         
+        [UserSetting("P2 遗弃末世 解法")]
+        public Phase2Sub2_Strats phase2sub2_strat { get; set; } = Phase2Sub2_Strats.原版;
         [UserSetting("P2 遗弃末世 绘制的视觉类型")]
         public Phase2Sub2_DrawingTypes phase2sub2_drawingType { get; set; } = Phase2Sub2_DrawingTypes.默认;
         [UserSetting("P2 遗弃末世 咏唱危机 塔判定前的绘制持续时间(秒,最多7)")]
@@ -210,6 +212,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private System.Threading.AutoResetEvent phase2sub2_discretizedTowerGap1Semaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2sub2_discretizedTowerGap2Semaphore=new System.Threading.AutoResetEvent(false);
         private volatile bool isFuturesEnd=false;
+        private volatile int phase2sub2_allThingsEndingCounter=0; // Its read-write lock is PHASE2_SUB2_ALL_THINGS_ENDING_COUNTER_LOCK.
+        private System.Threading.AutoResetEvent phase2sub2_allThingsEndingSemaphore=new System.Threading.AutoResetEvent(false);
         
         private volatile int phase2sub3_trineCounter=0; // Its read-write lock is PHASE2_SUB3_TRINE_COUNTER_LOCK.
         
@@ -268,6 +272,45 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private static readonly Vector3 PHASE2_SUB2_RAW_TOWER_POSITION=new Vector3(100,0,92);
         private const int PHASE2_SUB2_TOWER_RADIUS=4;
         private readonly object PHASE2_SUB2_PATH_OF_LIGHT_COUNTER_LOCK=new object();
+        private readonly object PHASE2_SUB2_ALL_THINGS_ENDING_COUNTER_LOCK=new object();
+        private static ImmutableList<bool> towersForGroupA=[false,
+                                                            true,
+                                                            true,
+                                                            true,
+                                                            false,
+                                                            false,
+                                                            false,
+                                                            false,
+                                                            true];
+        // Thank Locria Sonata for the precise coordinates!
+        // I manually converted the coordinates into the north-tower case in order to make them work in Kodakku.
+        // Vanilla odd round: https://www.geogebra.org/calculator/qmfhensz
+        private static readonly Vector3 PHASE2_SUB2_ODD_LEFT_STACK=new Vector3(106.3f,0,95.3f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_FAN=new Vector3(105.66f,0,90.84f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_TANK=new Vector3(108.8f,0,97.5f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_HEALER=new Vector3(105.66f,0,88.34f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_RIGHT_STACK=new Vector3(91.81f,0,96.34f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_SPREAD=new Vector3(97.34f,0,94.34f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_MELEE_DPS=new Vector3(91.3f,0,97.66f);
+        private static readonly Vector3 PHASE2_SUB2_ODD_RANGED_DPS=new Vector3(90.41f,0,96.55f);
+        // Uptime odd round: https://www.geogebra.org/calculator/jfymzeb9
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_LEFT_STACK=new Vector3(104.95f,0,95.05f);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_FAN=new Vector3(108,0,92);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_TANK=new Vector3(102.45f,0,97.55f);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_HEALER=new Vector3(109,0,91);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_RIGHT_STACK=new Vector3(94.34f,0,97.84f);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_SPREAD=new Vector3(91.87f,0,91.87f);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_MELEE_DPS=new Vector3(97.35f,0,97.75f);
+        private static readonly Vector3 PHASE2_SUB2_UPTIME_ODD_RANGED_DPS=new Vector3(97.75f,0,97.35f);
+        // Even round: https://www.geogebra.org/calculator/bp2wxkdh
+        private static readonly Vector3 PHASE2_SUB2_EVEN_LEFT_FAN=new Vector3(109.12f,0,93.85f);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_RIGHT_FAN=new Vector3(108.13f,0,91.87f);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_LEFT_SPREAD=new Vector3(95.37f,0,91.79f);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_RIGHT_SPREAD=new Vector3(91,0,96);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_TANK=new Vector3(102,0,104.6f);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_HEALER=new Vector3(103.2f,0,97.6f);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_MELEE_DPS=new Vector3(95,0,105);
+        private static readonly Vector3 PHASE2_SUB2_EVEN_RANGED_DPS=new Vector3(96.8f,0,97.6f);
         
         private readonly object PHASE2_SUB3_TRINE_COUNTER_LOCK=new object();
         
@@ -298,6 +341,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             SPREAD,
             STACK,
             UNKNOWN
+
+        }
+        
+        public enum Phase2Sub2_Strats {
+            
+            原版,
+            奇数轮近战优化_偶数轮不变
 
         }
         
@@ -377,6 +427,8 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase2sub2_discretizedTowerGap1Semaphore.Reset();
             phase2sub2_discretizedTowerGap2Semaphore.Reset();
             isFuturesEnd=false;
+            phase2sub2_allThingsEndingCounter=0;
+            phase2sub2_allThingsEndingSemaphore.Reset();
             
             phase2sub3_trineCounter=0;
 
@@ -2610,7 +2662,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 (指路,第1轮) !!!尚未完工,不生效!!!",
+        [ScriptMethod(name:"P2 遗弃末世 (指路,第1轮)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:47804"],
             suppress:COMMON_INTERVAL)]
@@ -2624,6 +2676,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
 
                 return;
 
@@ -2645,7 +2705,90 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            // To be done.
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(phase2sub2_groupA.Contains(myIndex)) {
+
+                if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.FAN) {
+                    
+                    myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_FAN:PHASE2_SUB2_UPTIME_ODD_FAN);
+                    
+                }
+                
+                if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.SPREAD) {
+                    
+                    myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_SPREAD:PHASE2_SUB2_UPTIME_ODD_SPREAD);
+                    
+                }
+                
+                if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.STACK) {
+
+                    if(myIndex==initialLeftStack) {
+                        
+                        myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_LEFT_STACK:PHASE2_SUB2_UPTIME_ODD_LEFT_STACK);
+                        
+                    }
+                    
+                    if(myIndex==initialRightStack) {
+                        
+                        myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_RIGHT_STACK:PHASE2_SUB2_UPTIME_ODD_RIGHT_STACK);
+                        
+                    }
+                    
+                }
+                
+            }
+
+            if(phase2sub2_groupB.Contains(myIndex)) {
+
+                if(isTank(myIndex)) {
+
+                    myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_TANK:PHASE2_SUB2_UPTIME_ODD_TANK);
+
+                }
+                
+                if(isHealer(myIndex)) {
+
+                    myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_HEALER:PHASE2_SUB2_UPTIME_ODD_HEALER);
+
+                }
+                
+                if(isMeleeDps(myIndex)) {
+
+                    myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_MELEE_DPS:PHASE2_SUB2_UPTIME_ODD_MELEE_DPS);
+
+                }
+                
+                if(isRangedDps(myIndex)) {
+
+                    myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_RANGED_DPS:PHASE2_SUB2_UPTIME_ODD_RANGED_DPS);
+
+                }
+                
+            }
+
+            if(Vector3.Distance(myPosition,ARENA_CENTER)<COMMON_DEVIATION) {
+
+                return;
+
+            }
+
+            else {
+
+                myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[1]);
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=10750;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
 
         }
         
@@ -2707,7 +2850,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             if(lastRoundEnded
                &&
-               (1<=lastRound&&lastRound<=7)) {
+               (1<=lastRound&&lastRound<=8)) {
 
                 if(1<=lastRound&&lastRound<=6) {
                     
@@ -2721,7 +2864,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                     if(lastRound==1) {
                         
-                        signalled=phase2sub2_discretizedTowerGap2Semaphore.WaitOne(750+COMMON_INTERVAL);
+                        signalled=phase2sub2_discretizedTowerGap2Semaphore.WaitOne(COMMON_INTERVAL);
 
                         if(!signalled) {
 
@@ -2733,8 +2876,253 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                     
                 }
                 
+                phase2sub2_allThingsEndingSemaphore.Reset();
+                
+                accessory.Method.RemoveDraw($"P2_遗弃末世_引导指路1_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_引导指路2_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_指路_第{lastRound}轮");
+
+                if(lastRound==3) {
+
+                    P2_遗弃末世_指路_第4轮(accessory);
+
+                    return;
+
+                }
+
+                if(lastRound==8) {
+
+                    P2_遗弃末世_指路_末尾(accessory);
+
+                    return;
+
+                }
+
+                // P2_遗弃末世_指路绘制(lastRound+1,accessory);
                 // To be done.
                 
+            }
+
+        }
+
+        private void P2_遗弃末世_指路_第4轮(ScriptAccessory accessory) {
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(phase2sub2_groupB.Contains(myIndex)) {
+                
+                if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.FAN) {
+
+                    if(myIndex==initialUpperFan) {
+                        
+                        myPosition=PHASE2_SUB2_EVEN_LEFT_FAN;
+                        
+                    }
+
+                    else {
+                        
+                        myPosition=PHASE2_SUB2_EVEN_RIGHT_FAN;
+                        
+                    }
+                    
+                }
+                
+                if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.SPREAD) {
+
+                    if(myIndex==initialUpperSpread) {
+                        
+                        myPosition=PHASE2_SUB2_EVEN_RIGHT_SPREAD;
+                        
+                    }
+
+                    else {
+                        
+                        myPosition=PHASE2_SUB2_EVEN_LEFT_SPREAD;
+                        
+                    }
+                    
+                }
+                
+            }
+
+            if(phase2sub2_groupA.Contains(myIndex)) {
+
+                if(isTank(myIndex)) {
+
+                    myPosition=PHASE2_SUB2_EVEN_TANK;
+
+                }
+                
+                if(isHealer(myIndex)) {
+
+                    myPosition=PHASE2_SUB2_EVEN_HEALER;
+
+                }
+                
+                if(isMeleeDps(myIndex)) {
+
+                    myPosition=PHASE2_SUB2_EVEN_MELEE_DPS;
+
+                }
+                
+                if(isRangedDps(myIndex)) {
+
+                    myPosition=PHASE2_SUB2_EVEN_RANGED_DPS;
+
+                }
+                
+            }
+
+            if(Vector3.Distance(myPosition,ARENA_CENTER)<COMMON_DEVIATION) {
+
+                return;
+
+            }
+
+            else {
+                
+                myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[4]);
+                
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();    
+
+            currentProperties.Name="P2_遗弃末世_指路_第4轮";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+            
+        }
+        
+        private void P2_遗弃末世_指路_末尾(ScriptAccessory accessory) {
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="P2_遗弃末世_引导指路_末尾";
+            currentProperties.Scale=new(20);
+            currentProperties.Radian=((float)(convertDegreesToRadians(5)));
+            currentProperties.Position=ARENA_CENTER;
+            currentProperties.TargetPosition=PHASE2_SUB2_RAW_TOWER_POSITION;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+            
+            phase2sub2_allThingsEndingSemaphore.WaitOne(6375+COMMON_INTERVAL);
+
+            accessory.Method.RemoveDraw("P2_遗弃末世_引导指路_末尾");
+            
+        }
+        
+        private void P2_遗弃末世_指路绘制(int currentRound,ScriptAccessory accessory) {
+
+            if(currentRound<2||currentRound==4||currentRound>8) {
+
+                return;
+
+            }
+            
+            int myIndex=accessory.Data.PartyList.IndexOf(accessory.Data.Me);
+            
+            if(!isLegalPartyIndex(myIndex)) {
+
+                return;
+
+            }
+            
+            Vector3 myPosition=ARENA_CENTER;
+
+            if(currentRound%2==0) {
+
+                
+                
+            }
+
+            if(currentRound%2==1) {
+                
+                
+                
+            }
+            
+            if(Vector3.Distance(myPosition,ARENA_CENTER)<COMMON_DEVIATION) {
+
+                return;
+
+            }
+            
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            if(currentRound%2==1) {
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_引导指路1_第{currentRound}轮";
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_引导指路2_第{currentRound}轮";
+                
+                // To be done.
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name=$"P2_遗弃末世_指路_第{currentRound}轮";
+            
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 消灭之脚 数据收集",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47836|47837)$"],
+            userControl:false)]
+
+        public void P2_遗弃末世_消灭之脚_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+
+            lock(PHASE2_SUB2_ALL_THINGS_ENDING_COUNTER_LOCK) {
+
+                Interlocked.Increment(ref phase2sub2_allThingsEndingCounter);
+
+                if(phase2sub2_allThingsEndingCounter%4==0) {
+
+                    phase2sub2_allThingsEndingSemaphore.Set();
+                    
+                    if(enableDebugLogging) {
+
+                        accessory.Log.Debug($"""
+                                             phase2sub2_allThingsEndingCounter={phase2sub2_allThingsEndingCounter}
+                                             All Things Ending semaphore has been signalled.
+                                             """);
+
+                    }
+
+                }
+
             }
 
         }
