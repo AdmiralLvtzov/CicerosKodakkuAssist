@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.12",
+        version:"0.0.4.13",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -200,14 +200,16 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private volatile int phase2sub2_iconUpdateCounter=0;
         private System.Threading.AutoResetEvent[] phase2sub2_roundSemaphore=Enumerable.Range(0,7).Select(i=>new System.Threading.AutoResetEvent(false)).ToArray();
         private volatile int phase2sub2_pathOfLightCounter=0; // Its read-write lock is PHASE2_SUB2_PATH_OF_LIGHT_COUNTER_LOCK.
-        private HashSet<int> phase2sub2_groupA=new HashSet<int>();
+        private List<int> phase2sub2_groupA=new List<int>();
         private volatile int initialLeftStack=-1,initialRightStack=-1;
-        private HashSet<int> phase2sub2_groupB=new HashSet<int>();
+        private List<int> phase2sub2_groupB=new List<int>();
+        private volatile int initialUpperFan=-1,initialUpperSpread=-1;
         private int[] phase2sub2_discretizedTowerGap=Enumerable.Range(0,9).Select(i=>-1).ToArray();
         private volatile int phase2sub2_towerCounter=0;
         private volatile int phase2sub2_discretizedPositionOfLastTower=-1;
         private System.Threading.AutoResetEvent phase2sub2_discretizedTowerGap1Semaphore=new System.Threading.AutoResetEvent(false);
         private System.Threading.AutoResetEvent phase2sub2_discretizedTowerGap2Semaphore=new System.Threading.AutoResetEvent(false);
+        private volatile bool isFuturesEnd=false;
         
         private volatile int phase2sub3_trineCounter=0; // Its read-write lock is PHASE2_SUB3_TRINE_COUNTER_LOCK.
         
@@ -374,6 +376,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             phase2sub2_discretizedPositionOfLastTower=-1;
             phase2sub2_discretizedTowerGap1Semaphore.Reset();
             phase2sub2_discretizedTowerGap2Semaphore.Reset();
+            isFuturesEnd=false;
             
             phase2sub3_trineCounter=0;
 
@@ -2124,6 +2127,38 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                     
                     phase2sub2_groupB.Add(member1);
                     phase2sub2_groupB.Add(member2);
+
+                    if(isMelee(member1)) {
+                        
+                        if(phase2sub2_iconType[member1]==Phase2Sub2_IconTypes.FAN) {
+
+                            initialUpperFan=member1;
+
+                        }
+                        
+                        if(phase2sub2_iconType[member1]==Phase2Sub2_IconTypes.SPREAD) {
+
+                            initialUpperSpread=member1;
+
+                        }
+                        
+                    }
+                    
+                    if(isMelee(member2)) {
+                        
+                        if(phase2sub2_iconType[member2]==Phase2Sub2_IconTypes.FAN) {
+
+                            initialUpperFan=member2;
+
+                        }
+                        
+                        if(phase2sub2_iconType[member2]==Phase2Sub2_IconTypes.SPREAD) {
+
+                            initialUpperSpread=member2;
+
+                        }
+                        
+                    }
                     
                 }
                 
@@ -2135,6 +2170,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                                      phase2sub2_groupA:{string.Join(",",phase2sub2_groupA)}
                                      initialLeftStack={initialLeftStack},initialRightStack={initialRightStack}
                                      phase2sub2_groupB:{string.Join(",",phase2sub2_groupB)}
+                                     initialUpperFan={initialUpperFan},initialUpperSpread={initialUpperSpread}
                                      """);
                         
             }
@@ -2143,7 +2179,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                &&
                phase2sub2_groupB.Count==4
                &&
-               !phase2sub2_groupA.Overlaps(phase2sub2_groupB)) {
+               !(phase2sub2_groupA.ToHashSet().Overlaps(phase2sub2_groupB.ToHashSet()))) {
 
                 return true;
 
@@ -2154,6 +2190,128 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 return false;
 
             }
+
+        }
+
+        private bool scanAndSort(bool isGroupA,int discretizedGap,ScriptAccessory accessory) {
+            
+            if(discretizedGap<0||discretizedGap>7) {
+
+                return false;
+
+            }
+
+            if(isGroupA) {
+                
+                phase2sub2_groupA.Sort((x,y) => {
+
+                    var xObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[x]);
+                    
+                    if(xObject==null||!xObject.IsValid()) {
+                        
+                        accessory.Log.Error($"An invalid object occurred while sorting.\nThe party index is {x}.");
+
+                        return -1;
+
+                    }
+                    
+                    var yObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[y]);
+                    
+                    if(yObject==null||!yObject.IsValid()) {
+                        
+                        accessory.Log.Error($"An invalid object occurred while sorting.\nThe party index is {y}.");
+
+                        return 1;
+
+                    }
+
+                    Vector3 xRelativePosition=rotatePosition(xObject.Position,ARENA_CENTER,-Math.PI/4*discretizedGap);
+                    Vector3 yRelativePosition=rotatePosition(yObject.Position,ARENA_CENTER,-Math.PI/4*discretizedGap);
+
+                    if(xRelativePosition.X>yRelativePosition.X) {
+
+                        return -1;
+
+                    }
+
+                    if(xRelativePosition.X<yRelativePosition.X) {
+
+                        return 1;
+
+                    }
+
+                    return 0;
+
+                });
+
+                if(enableDebugLogging) {
+
+                    accessory.Log.Debug($"""
+                                         Group A has been sorted.
+                                         discretizedGap={discretizedGap}
+                                         phase2sub2_groupA:{string.Join(",",phase2sub2_groupA)}
+                                         """);
+
+                }
+                
+            }
+
+            else {
+                
+                phase2sub2_groupB.Sort((x,y) => {
+
+                    var xObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[x]);
+                    
+                    if(xObject==null||!xObject.IsValid()) {
+                        
+                        accessory.Log.Error($"An invalid object occurred while sorting.\nThe party index is {x}.");
+
+                        return -1;
+
+                    }
+                    
+                    var yObject=accessory.Data.Objects.SearchById(accessory.Data.PartyList[y]);
+                    
+                    if(yObject==null||!yObject.IsValid()) {
+                        
+                        accessory.Log.Error($"An invalid object occurred while sorting.\nThe party index is {y}.");
+
+                        return 1;
+
+                    }
+
+                    Vector3 xRelativePosition=rotatePosition(xObject.Position,ARENA_CENTER,-Math.PI/4*discretizedGap);
+                    Vector3 yRelativePosition=rotatePosition(yObject.Position,ARENA_CENTER,-Math.PI/4*discretizedGap);
+
+                    if(xRelativePosition.X>yRelativePosition.X) {
+
+                        return -1;
+
+                    }
+
+                    if(xRelativePosition.X<yRelativePosition.X) {
+
+                        return 1;
+
+                    }
+
+                    return 0;
+
+                });
+                
+                if(enableDebugLogging) {
+
+                    accessory.Log.Debug($"""
+                                         Group B has been sorted.
+                                         discretizedGap={discretizedGap}
+                                         phase2sub2_groupB:{string.Join(",",phase2sub2_groupB)}
+                                         """);
+
+                }
+                
+            }
+
+            return true;
 
         }
         
@@ -2239,10 +2397,13 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                             }
 
                             phase2sub2_roundSemaphore[0].Set();
-
+                            
                             if(enableDebugLogging) {
                                 
-                                accessory.Log.Debug("The initialization semaphore has been signalled.");
+                                accessory.Log.Debug($"""
+                                                     phase2sub2_iconType:{string.Join(",",phase2sub2_iconType)}
+                                                     The initialization (Round 0) semaphore has been signalled.
+                                                     """);
                                 
                             }
 
@@ -2253,14 +2414,29 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                             int updateCountAfterInitialization=phase2sub2_iconUpdateCounter-8;
 
                             if(updateCountAfterInitialization%4==0) {
+
+                                int lastRound=updateCountAfterInitialization/4;
+
+                                if(new List<int>{1,2,3}.Contains(lastRound)) {
+
+                                    scanAndSort(true,phase2sub2_discretizedTowerGap[lastRound],accessory);
+
+                                }
                                 
-                                phase2sub2_roundSemaphore[updateCountAfterInitialization/4].Set();
+                                if(new List<int>{4,5,6}.Contains(lastRound)) {
+
+                                    scanAndSort(false,phase2sub2_discretizedTowerGap[lastRound],accessory);
+
+                                }
+                                
+                                phase2sub2_roundSemaphore[lastRound].Set();
                                 
                                 if(enableDebugLogging) {
 
                                     accessory.Log.Debug($"""
                                                         updateCountAfterInitialization={updateCountAfterInitialization}
-                                                        Round {updateCountAfterInitialization/4} semaphore has been signalled.
+                                                        currentRound={lastRound}
+                                                        Round {lastRound} semaphore has been signalled.
                                                         """);
 
                                 }
@@ -2410,7 +2586,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                         }
 
-                        phase2sub2_discretizedTowerGap1Semaphore.Set();
+                        phase2sub2_discretizedTowerGap2Semaphore.Set();
                         
                         if(enableDebugLogging) {
 
@@ -2454,6 +2630,14 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             }
             
             bool signalled=phase2sub2_roundSemaphore[0].WaitOne(1500+COMMON_INTERVAL);
+
+            if(!signalled) {
+
+                return;
+
+            }
+            
+            signalled=phase2sub2_discretizedTowerGap1Semaphore.WaitOne(1500+COMMON_INTERVAL);
 
             if(!signalled) {
 
@@ -2533,6 +2717,18 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                         return;
 
+                    }
+
+                    if(lastRound==1) {
+                        
+                        signalled=phase2sub2_discretizedTowerGap2Semaphore.WaitOne(750+COMMON_INTERVAL);
+
+                        if(!signalled) {
+
+                            return;
+
+                        }
+                        
                     }
                     
                 }
@@ -2847,6 +3043,47 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
                 
+            }
+
+        }
+        
+        [ScriptMethod(name:"P2 遗弃末世 过去终结与未来终结 (数据收集)",
+            eventType:EventTypeEnum.StartCasting,
+            eventCondition:["ActionId:regex:^(47826|47827)$"],
+            userControl:false)]
+
+        public void P2_遗弃末世_过去终结与未来终结_数据收集(Event @event,ScriptAccessory accessory) {
+            
+            if(majorPhase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(phase!=2&&!skipPhaseChecks) {
+
+                return;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47826")) {
+
+                isFuturesEnd=true;
+
+            }
+            
+            if(string.Equals(@event["ActionId"],"47827")) {
+
+                isFuturesEnd=false;
+
+            }
+            
+            if(enableDebugLogging) {
+
+                accessory.Log.Debug($"""
+                                     isFuturesEnd={isFuturesEnd}
+                                     """);
+
             }
 
         }
