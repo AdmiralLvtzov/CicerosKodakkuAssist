@@ -25,7 +25,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
     [ScriptType(name:"妖星乱舞绝境战",
         territorys:[1363],
         guid:"f9948da9-ce35-44d1-b410-02375c941458",
-        version:"0.0.4.15",
+        version:"0.0.5.0",
         note:scriptNotes,
         author:"Cicero 灵视")]
 
@@ -35,30 +35,38 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         public const string scriptNotes=
             """
             妖星乱舞绝境战的脚本。脚本应该算是...完工了?
-            和灵视以往的作品不同,这次可能不会为妖星乱舞绝境战制作一个包含全程绘制与指路的全能型脚本。此脚本仅提供P1到P4的绘制与少数几处指路。
+            和灵视以往的作品不同,这次可能不会为妖星乱舞绝境战制作一个包含全程绘制与指路的全能型脚本。此脚本仅提供P1到P4的绘制,P2遗弃末世全程和P3深层痛楚(一运)究极冲击波的指路。
             完整的妖星乱舞绝境战可达鸭体验将由数个不同作者的作品组成,包括但不限于如下作者(按副本阶段排序):
                 Coda - P1的指路。
-                RyougiMio - P2与P4的指路。
                 Usami - P3的指路。
+                RyougiMio - P4的指路,以及支持更多攻略并提供小队指挥和自动移动功能的P2指路。
                 Errer - P5的绘制与指路。
             此脚本将是灵视最后一个作品,灵视即将收手退休。也许灵视会在未来回归,但短期内将不再制作新的脚本。感谢陪伴!
-            
-            此脚本仅在P3深层痛楚(一运)的究极冲击波和P4生者黑暗光与死者黑暗光(鸳鸯锅)提供指路。
-            如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
-            
-            支持进行小队排序测试,可以在聊天框中输入/e kdmutest来检查小队排序是否正确。
-            输入/e kdmuclear清除小队排序测试产生的目标标记。
             
             P1技能特效屏蔽需要在用户设置中手动启用。目前提供两种不同的方法,以缓解当前可达鸭版本的绘制丢失问题:
                 传统方法 - 即改变透明施法者的可见性。该方法不会丢失绘制,但极其不建议与其他任何提供相似功能的科技同时运行。
                 引擎方法 - 即根据handle移除指定特效。该方法目前有丢失绘制的报告,正在着手修复与优化。该方法可以与其他提供相似功能的科技同时运行。
+            
+            P2遗弃末世的指路仅支持"融合优化 2222预分组 闲人固定"这一种攻略,对于奇数轮的站位支持原版站位与近战优化站位。
+            "融合优化 2222预分组 闲人固定"原版: https://docs.qq.com/doc/DTFBPRkJ0bVFoeGVV
+            "融合优化 2222预分组 闲人固定"近战优化:  https://nga.178.com/read.php?tid=46952827
+            除此之外,闲人组的位置分配仅支持"坦克治疗在左,DPS在右,面向Boss近战在上,远程在下",末尾引导消灭之脚的位置仅支持正北。
+            需要指出的是,对于第1轮A组的位置分配,咏唱危机·驱动(分摊)跟随机制开始时的同组成员。
+            对于第4轮B组的位置分配,根据机制开始时的分组,咏唱危机·散碎(分散)与咏唱危机·波动(扇形)一定各有一名近战与远程,因此按照面向Boss近战在上,远程在下分配。
+            所有P2遗弃末世指路的坐标和ACT触发器"宝宝椅"保持完全统一。
+            最后,需要注意的是,由于遗弃末世这一机制的复杂性,任何队员在此机制的任何时间节点处理机制错误都将导致指路不生效或者异常。
+            如果指路不适配你采用的攻略,可以在方法设置中将相关的指路关闭。所有指路方法均标注有"(指路)"后缀。
+            
+            支持进行小队排序测试,可以在聊天框中输入/e kdmutest来检查小队排序是否正确。
+            输入/e kdmuclear清除小队排序测试产生的目标标记。
 
             如果在使用过程中遇到了异常,请先检查可达鸭本体与脚本是否都更新到了最新版本,小队职能是否已正确设置,异常是否可以稳定复现。
             如果上述三点都没有问题,请带着A Realm Recorded插件的录像文件在可达鸭Discord内联系@_publius_cornelius_scipio_反馈异常。
             
             特别致谢(按副本阶段排序):
                 Karlin - 提供了两种技能特效屏蔽的实现,还紧急加班做好了绘制淡出与屏蔽技能特效的代码轮子,not all heroes wear capes.
-                RyougiMio - 提供了P2遗弃末世的绘制数据。
+                RyougiMio - 提供了大量P2遗弃末世的绘制数据。
+                阿洛 - 提供了P2遗弃末世全部的指路坐标,以及大量见解。
                 南云铁虎 - 提供了大量P2与P3的绘制数据。
                 莫灵喵 - 提供了大量P4的绘制数据。
                 以及每一位录像提供者,出于隐私保护的目的没有列出常用名。
@@ -114,13 +122,17 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         
         [UserSetting("P2 遗弃末世 解法")]
         public Phase2Sub2_Strats phase2sub2_strat { get; set; } = Phase2Sub2_Strats.原版;
+        [UserSetting("P2 遗弃末世 指路 在偶数轮为咏唱危机·波动(扇形)的位置绘制辅助线")]
+        public bool phase2sub2_spellwaveAuxiliaryLines { get; set; } = true;
         [UserSetting("P2 遗弃末世 绘制的视觉类型")]
         public Phase2Sub2_DrawingTypes phase2sub2_drawingType { get; set; } = Phase2Sub2_DrawingTypes.默认;
         [UserSetting("P2 遗弃末世 咏唱危机 塔判定前的绘制持续时间(秒,最多7)")]
         public double phase2sub2_drawingDuration { get; set; } = 5;
         [UserSetting("P2 遗弃末世 咏唱危机 仅绘制咏唱危机·波动(扇形)")]
         public bool phase2sub2_spellwaveOnly { get; set; } = false;
-        [UserSetting("P2 遗弃末世 塔辅助线的颜色")]
+        [UserSetting("P2 遗弃末世 为塔的位置绘制辅助线")]
+        public bool phase2sub2_towerAuxiliaryLines { get; set; } = false;
+        [UserSetting("P2 遗弃末世 辅助线的颜色")]
         public ScriptColor phase2sub2_colourOfAuxiliaryLines { get; set; } = new() { V4 = new Vector4(0,1,1, 1) }; // Blue by default.
         
         // ----- End Of Major Phase 2 -----
@@ -273,7 +285,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
         private const int PHASE2_SUB2_TOWER_RADIUS=4;
         private readonly object PHASE2_SUB2_PATH_OF_LIGHT_COUNTER_LOCK=new object();
         private readonly object PHASE2_SUB2_ALL_THINGS_ENDING_COUNTER_LOCK=new object();
-        private static ImmutableList<bool> towersForGroupA=[false,
+        private static ImmutableList<bool> phase2sub2_isGroupARound=[false,
                                                             true,
                                                             true,
                                                             true,
@@ -2781,6 +2793,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
+            currentProperties.Name="P2_遗弃末世_指路_第1轮";
             currentProperties.Scale=new(2);
             currentProperties.Owner=accessory.Data.Me;
             currentProperties.TargetPosition=myPosition;
@@ -2792,7 +2805,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
         }
         
-        [ScriptMethod(name:"P2 遗弃末世 (指路,第2轮到第8轮) !!!尚未完工,不生效!!!",
+        [ScriptMethod(name:"P2 遗弃末世 (指路,第2轮到第8轮)",
             eventType:EventTypeEnum.ActionEffect,
             eventCondition:["ActionId:47806"])]
 
@@ -2878,8 +2891,11 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
                 
                 phase2sub2_allThingsEndingSemaphore.Reset();
                 
-                accessory.Method.RemoveDraw($"P2_遗弃末世_引导指路1_第{lastRound}轮");
-                accessory.Method.RemoveDraw($"P2_遗弃末世_引导指路2_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_消灭之脚指路1_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_消灭之脚指路2_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_消灭之脚指路3_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_指路辅助线1_第{lastRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_指路辅助线2_第{lastRound}轮");
                 accessory.Method.RemoveDraw($"P2_遗弃末世_指路_第{lastRound}轮");
 
                 if(lastRound==3) {
@@ -2898,8 +2914,7 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
                 }
 
-                // P2_遗弃末世_指路绘制(lastRound+1,accessory);
-                // To be done.
+                P2_遗弃末世_指路(lastRound+1,accessory);
                 
             }
 
@@ -3004,6 +3019,36 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             currentProperties.DestoryAt=MAXIMUM_DURATION;
             
             accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+
+            if(phase2sub2_spellwaveAuxiliaryLines) {
+                
+                Vector3 fanPosition1=PHASE2_SUB2_EVEN_LEFT_FAN;
+                Vector3 fanPosition2=PHASE2_SUB2_EVEN_RIGHT_FAN;
+                
+                fanPosition1=rotatePosition(fanPosition1,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[4]);
+                fanPosition2=rotatePosition(fanPosition2,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[4]);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_指路辅助线1_第4轮";
+                currentProperties.Scale=new(0.5f);
+                currentProperties.Position=fanPosition1;
+                currentProperties.Color=phase2sub2_colourOfAuxiliaryLines.V4.WithW(1);
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_指路辅助线2_第4轮";
+                currentProperties.Scale=new(0.5f);
+                currentProperties.Position=fanPosition2;
+                currentProperties.Color=phase2sub2_colourOfAuxiliaryLines.V4.WithW(1);
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
+                
+            }
             
         }
         
@@ -3011,7 +3056,19 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             var currentProperties=accessory.Data.GetDefaultDrawProperties();
 
-            currentProperties.Name="P2_遗弃末世_引导指路_末尾";
+            currentProperties.Name="P2_遗弃末世_消灭之脚指路1_末尾";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=PHASE2_SUB2_RAW_TOWER_POSITION;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="P2_遗弃末世_消灭之脚指路2_末尾";
             currentProperties.Scale=new(20);
             currentProperties.Radian=((float)(convertDegreesToRadians(5)));
             currentProperties.Position=ARENA_CENTER;
@@ -3023,11 +3080,159 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             phase2sub2_allThingsEndingSemaphore.WaitOne(6375+COMMON_INTERVAL);
 
-            accessory.Method.RemoveDraw("P2_遗弃末世_引导指路_末尾");
+            accessory.Method.RemoveDraw("P2_遗弃末世_消灭之脚指路1_末尾");
+            accessory.Method.RemoveDraw("P2_遗弃末世_消灭之脚指路2_末尾");
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+            currentProperties.Name="P2_遗弃末世_消灭之脚指路3_末尾";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=5000;
+
+            if(isFuturesEnd) {
+                
+                currentProperties.TargetPosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI);
+                
+            }
+
+            else {
+                
+                currentProperties.TargetPosition=PHASE2_SUB2_RAW_TOWER_POSITION;
+                
+            }
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
         }
         
-        private void P2_遗弃末世_指路绘制(int currentRound,ScriptAccessory accessory) {
+        private bool? isOnLeftInGroup(int targetIndex,ScriptAccessory accessory) {
+
+            if(!isLegalPartyIndex(targetIndex)) {
+
+                return null;
+
+            }
+
+            if(!phase2sub2_groupA.Contains(targetIndex)&&!phase2sub2_groupB.Contains(targetIndex)) {
+
+                return null;
+
+            }
+
+            if(phase2sub2_groupA.Contains(targetIndex)&&phase2sub2_groupB.Contains(targetIndex)) {
+
+                return null;
+
+            }
+
+            Phase2Sub2_IconTypes targetIcon=phase2sub2_iconType[targetIndex];
+
+            if(targetIcon==Phase2Sub2_IconTypes.UNKNOWN) {
+
+                return null;
+
+            }
+
+            if(phase2sub2_groupA.Contains(targetIndex)) {
+
+                for(int i=0;i<phase2sub2_groupA.Count;++i) {
+
+                    if(phase2sub2_iconType[phase2sub2_groupA[i]]==targetIcon) {
+
+                        if(phase2sub2_groupA[i]==targetIndex) {
+                            
+                            if(enableDebugLogging) {
+
+                                accessory.Log.Debug($"""
+                                                     Party member {targetIndex} is in Group A.
+                                                     targetIcon={targetIcon}
+                                                     The first party member with the same icon is {phase2sub2_groupA[i]}.
+                                                     Party member {targetIndex} should take the left spot.
+                                                     """);
+
+                            }
+
+                            return true;
+
+                        }
+
+                        else {
+                            
+                            if(enableDebugLogging) {
+
+                                accessory.Log.Debug($"""
+                                                     Party member {targetIndex} is in Group A.
+                                                     targetIcon={targetIcon}
+                                                     The first party member with the same icon is {phase2sub2_groupA[i]}.
+                                                     Party member {targetIndex} should take the right spot.
+                                                     """);
+
+                            }
+
+                            return false;
+
+                        }
+                        
+                    }
+                    
+                }
+                
+            }
+            
+            if(phase2sub2_groupB.Contains(targetIndex)) {
+                
+                for(int i=0;i<phase2sub2_groupB.Count;++i) {
+                    
+                    if(phase2sub2_iconType[phase2sub2_groupB[i]]==targetIcon) {
+                        
+                        if(phase2sub2_groupB[i]==targetIndex) {
+                            
+                            if(enableDebugLogging) {
+
+                                accessory.Log.Debug($"""
+                                                     Party member {targetIndex} is in Group B.
+                                                     targetIcon={targetIcon}
+                                                     The first party member with the same icon is {phase2sub2_groupB[i]}.
+                                                     Party member {targetIndex} should take the left spot.
+                                                     """);
+
+                            }
+
+                            return true;
+
+                        }
+
+                        else {
+                            
+                            if(enableDebugLogging) {
+
+                                accessory.Log.Debug($"""
+                                                     Party member {targetIndex} is in Group B.
+                                                     targetIcon={targetIcon}
+                                                     The first party member with the same icon is {phase2sub2_groupB[i]}.
+                                                     Party member {targetIndex} should take the right spot.
+                                                     """);
+
+                            }
+
+                            return false;
+
+                        }
+                        
+                    }
+                    
+                }
+                
+            }
+
+            return null;
+
+        }
+        
+        private void P2_遗弃末世_指路(int currentRound,ScriptAccessory accessory) {
 
             if(currentRound<2||currentRound==4||currentRound>8) {
 
@@ -3045,17 +3250,380 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             
             Vector3 myPosition=ARENA_CENTER;
 
+            if(currentRound%2==1) {
+
+                if(phase2sub2_isGroupARound[currentRound]) {
+                    
+                    if(phase2sub2_groupA.Contains(myIndex)) {
+
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.FAN) {
+                    
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_FAN:PHASE2_SUB2_UPTIME_ODD_FAN);
+                    
+                        }
+                
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.SPREAD) {
+                    
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_SPREAD:PHASE2_SUB2_UPTIME_ODD_SPREAD);
+                    
+                        }
+                
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.STACK) {
+
+                            bool? rawResult=isOnLeftInGroup(myIndex,accessory);
+                            bool isOnLeft=false;
+
+                            if(rawResult==null) {
+
+                                return;
+
+                            }
+
+                            else {
+                                
+                                isOnLeft=((bool)(rawResult));
+                                
+                            }
+
+                            if(isOnLeft) {
+                        
+                                myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_LEFT_STACK:PHASE2_SUB2_UPTIME_ODD_LEFT_STACK);
+                        
+                            }
+                    
+                            else {
+                        
+                                myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_RIGHT_STACK:PHASE2_SUB2_UPTIME_ODD_RIGHT_STACK);
+                        
+                            }
+                    
+                        }
+                
+                    }
+                    
+                    if(phase2sub2_groupB.Contains(myIndex)) {
+
+                        if(isTank(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_TANK:PHASE2_SUB2_UPTIME_ODD_TANK);
+
+                        }
+                
+                        if(isHealer(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_HEALER:PHASE2_SUB2_UPTIME_ODD_HEALER);
+
+                        }
+                
+                        if(isMeleeDps(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_MELEE_DPS:PHASE2_SUB2_UPTIME_ODD_MELEE_DPS);
+
+                        }
+                
+                        if(isRangedDps(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_RANGED_DPS:PHASE2_SUB2_UPTIME_ODD_RANGED_DPS);
+
+                        }
+                
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(phase2sub2_groupB.Contains(myIndex)) {
+
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.FAN) {
+                    
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_FAN:PHASE2_SUB2_UPTIME_ODD_FAN);
+                    
+                        }
+                
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.SPREAD) {
+                    
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_SPREAD:PHASE2_SUB2_UPTIME_ODD_SPREAD);
+                    
+                        }
+                
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.STACK) {
+
+                            bool? rawResult=isOnLeftInGroup(myIndex,accessory);
+                            bool isOnLeft=false;
+
+                            if(rawResult==null) {
+
+                                return;
+
+                            }
+
+                            else {
+                                
+                                isOnLeft=((bool)(rawResult));
+                                
+                            }
+
+                            if(isOnLeft) {
+                        
+                                myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_LEFT_STACK:PHASE2_SUB2_UPTIME_ODD_LEFT_STACK);
+                        
+                            }
+                    
+                            else {
+                        
+                                myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_RIGHT_STACK:PHASE2_SUB2_UPTIME_ODD_RIGHT_STACK);
+                        
+                            }
+                    
+                        }
+                
+                    }
+                    
+                    if(phase2sub2_groupA.Contains(myIndex)) {
+
+                        if(isTank(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_TANK:PHASE2_SUB2_UPTIME_ODD_TANK);
+
+                        }
+                
+                        if(isHealer(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_HEALER:PHASE2_SUB2_UPTIME_ODD_HEALER);
+
+                        }
+                
+                        if(isMeleeDps(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_MELEE_DPS:PHASE2_SUB2_UPTIME_ODD_MELEE_DPS);
+
+                        }
+                
+                        if(isRangedDps(myIndex)) {
+
+                            myPosition=(phase2sub2_strat==Phase2Sub2_Strats.原版?PHASE2_SUB2_ODD_RANGED_DPS:PHASE2_SUB2_UPTIME_ODD_RANGED_DPS);
+
+                        }
+                
+                    }
+                    
+                }
+                
+            }
+
             if(currentRound%2==0) {
 
+                if(phase2sub2_isGroupARound[currentRound]) {
+                    
+                    if(phase2sub2_groupA.Contains(myIndex)) {
                 
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.FAN) {
+
+                            bool? rawResult=isOnLeftInGroup(myIndex,accessory);
+                            bool isOnLeft=false;
+
+                            if(rawResult==null) {
+
+                                return;
+
+                            }
+
+                            else {
+                                
+                                isOnLeft=((bool)(rawResult));
+                                
+                            }
+
+                            if(isOnLeft) {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_LEFT_FAN;
+                        
+                            }
+                    
+                            else {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_RIGHT_FAN;
+                        
+                            }
+                    
+                        }
                 
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.SPREAD) {
+                            
+                            bool? rawResult=isOnLeftInGroup(myIndex,accessory);
+                            bool isOnLeft=false;
+
+                            if(rawResult==null) {
+
+                                return;
+
+                            }
+
+                            else {
+                                
+                                isOnLeft=((bool)(rawResult));
+                                
+                            }
+
+                            if(isOnLeft) {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_LEFT_SPREAD;
+                        
+                            }
+                    
+                            else {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_RIGHT_SPREAD;
+                        
+                            }
+                    
+                        }
+                
+                    }
+
+                    if(phase2sub2_groupB.Contains(myIndex)) {
+
+                        if(isTank(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_TANK;
+
+                        }
+                
+                        if(isHealer(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_HEALER;
+
+                        }
+                
+                        if(isMeleeDps(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_MELEE_DPS;
+
+                        }
+                
+                        if(isRangedDps(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_RANGED_DPS;
+
+                        }
+                
+                    }
+                    
+                }
+
+                else {
+                    
+                    if(phase2sub2_groupB.Contains(myIndex)) {
+                
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.FAN) {
+
+                            bool? rawResult=isOnLeftInGroup(myIndex,accessory);
+                            bool isOnLeft=false;
+
+                            if(rawResult==null) {
+
+                                return;
+
+                            }
+
+                            else {
+                                
+                                isOnLeft=((bool)(rawResult));
+                                
+                            }
+
+                            if(isOnLeft) {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_LEFT_FAN;
+                        
+                            }
+                    
+                            else {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_RIGHT_FAN;
+                        
+                            }
+                    
+                        }
+                
+                        if(phase2sub2_iconType[myIndex]==Phase2Sub2_IconTypes.SPREAD) {
+                            
+                            bool? rawResult=isOnLeftInGroup(myIndex,accessory);
+                            bool isOnLeft=false;
+
+                            if(rawResult==null) {
+
+                                return;
+
+                            }
+
+                            else {
+                                
+                                isOnLeft=((bool)(rawResult));
+                                
+                            }
+
+                            if(isOnLeft) {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_LEFT_SPREAD;
+                        
+                            }
+                    
+                            else {
+                        
+                                myPosition=PHASE2_SUB2_EVEN_RIGHT_SPREAD;
+                        
+                            }
+                    
+                        }
+                
+                    }
+
+                    if(phase2sub2_groupA.Contains(myIndex)) {
+
+                        if(isTank(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_TANK;
+
+                        }
+                
+                        if(isHealer(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_HEALER;
+
+                        }
+                
+                        if(isMeleeDps(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_MELEE_DPS;
+
+                        }
+                
+                        if(isRangedDps(myIndex)) {
+
+                            myPosition=PHASE2_SUB2_EVEN_RANGED_DPS;
+
+                        }
+                
+                    }
+                    
+                }
+                
+            }
+            
+            if(enableDebugLogging) {
+
+                accessory.Log.Debug($"""
+                                     currentRound={currentRound}
+                                     phase2sub2_isGroupARound[{currentRound}]={phase2sub2_isGroupARound[currentRound]}
+                                     myIndex={myIndex}
+                                     phase2sub2_iconType[{myIndex}]={phase2sub2_iconType[myIndex]}.
+                                     myPosition={myPosition}
+                                     """);
+
             }
 
-            if(currentRound%2==1) {
-                
-                
-                
-            }
             
             if(Vector3.Distance(myPosition,ARENA_CENTER)<COMMON_DEVIATION) {
 
@@ -3063,25 +3631,111 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
 
             }
             
-            var currentProperties=accessory.Data.GetDefaultDrawProperties();
-            
-            if(currentRound%2==1) {
-                
-                currentProperties=accessory.Data.GetDefaultDrawProperties();
+            else {
 
-                currentProperties.Name=$"P2_遗弃末世_引导指路1_第{currentRound}轮";
-                
-                currentProperties=accessory.Data.GetDefaultDrawProperties();
-
-                currentProperties.Name=$"P2_遗弃末世_引导指路2_第{currentRound}轮";
-                
-                // To be done.
+                myPosition=rotatePosition(myPosition,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[currentRound]);
 
             }
             
-            currentProperties=accessory.Data.GetDefaultDrawProperties();
+            var currentProperties=accessory.Data.GetDefaultDrawProperties();
+            
+            if(currentRound%2==1) {
+
+                Vector3 baitPosition=PHASE2_SUB2_RAW_TOWER_POSITION;
+                
+                if(isFuturesEnd) {
+                
+                    baitPosition=rotatePosition(PHASE2_SUB2_RAW_TOWER_POSITION,ARENA_CENTER,Math.PI);
+                
+                }
+                
+                baitPosition=rotatePosition(baitPosition,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[currentRound]);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_消灭之脚指路1_第{currentRound}轮";
+                currentProperties.Scale=new(2);
+                currentProperties.Owner=accessory.Data.Me;
+                currentProperties.TargetPosition=baitPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_消灭之脚指路2_第{currentRound}轮";
+                currentProperties.Scale=new(20);
+                currentProperties.Radian=((float)(convertDegreesToRadians(5)));
+                currentProperties.Position=ARENA_CENTER;
+                currentProperties.TargetPosition=baitPosition;
+                currentProperties.Color=accessory.Data.DefaultSafeColor;
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Fan,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_消灭之脚指路3_第{currentRound}轮";
+                currentProperties.Scale=new(2);
+                currentProperties.Position=baitPosition;
+                currentProperties.TargetPosition=myPosition;
+                currentProperties.ScaleMode|=ScaleMode.YByDistance;
+                currentProperties.Color=accessory.Data.DefaultDangerColor;
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
+                
+                phase2sub2_allThingsEndingSemaphore.WaitOne(6375+COMMON_INTERVAL);
+                
+                accessory.Method.RemoveDraw($"P2_遗弃末世_消灭之脚指路1_第{currentRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_消灭之脚指路2_第{currentRound}轮");
+                accessory.Method.RemoveDraw($"P2_遗弃末世_消灭之脚指路3_第{currentRound}轮");
+
+            }
+            
+            if(currentRound%2==0&&phase2sub2_spellwaveAuxiliaryLines) {
+
+                Vector3 fanPosition1=PHASE2_SUB2_EVEN_LEFT_FAN;
+                Vector3 fanPosition2=PHASE2_SUB2_EVEN_RIGHT_FAN;
+                
+                fanPosition1=rotatePosition(fanPosition1,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[currentRound]);
+                fanPosition2=rotatePosition(fanPosition2,ARENA_CENTER,Math.PI/4*phase2sub2_discretizedTowerGap[currentRound]);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_指路辅助线1_第{currentRound}轮";
+                currentProperties.Scale=new(0.5f);
+                currentProperties.Position=fanPosition1;
+                currentProperties.Color=phase2sub2_colourOfAuxiliaryLines.V4.WithW(1);
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
+                
+                currentProperties=accessory.Data.GetDefaultDrawProperties();
+
+                currentProperties.Name=$"P2_遗弃末世_指路辅助线2_第{currentRound}轮";
+                currentProperties.Scale=new(0.5f);
+                currentProperties.Position=fanPosition2;
+                currentProperties.Color=phase2sub2_colourOfAuxiliaryLines.V4.WithW(1);
+                currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+                accessory.Method.SendDraw(getDrawModeEnum(DrawTypeEnum.Circle),DrawTypeEnum.Circle,currentProperties);
+
+            }
+            
+            currentProperties=accessory.Data.GetDefaultDrawProperties();    
 
             currentProperties.Name=$"P2_遗弃末世_指路_第{currentRound}轮";
+            currentProperties.Scale=new(2);
+            currentProperties.Owner=accessory.Data.Me;
+            currentProperties.TargetPosition=myPosition;
+            currentProperties.ScaleMode|=ScaleMode.YByDistance;
+            currentProperties.Color=accessory.Data.DefaultSafeColor;
+            currentProperties.DestoryAt=MAXIMUM_DURATION;
+            
+            accessory.Method.SendDraw(DrawModeEnum.Imgui,DrawTypeEnum.Displacement,currentProperties);
             
         }
         
@@ -3337,6 +3991,12 @@ namespace CicerosKodakkuAssist.DancingMadUltimate.ChinaDataCenter
             eventCondition:["Flag:2"])]
 
         public void P2_遗弃末世_塔辅助线(Event @event,ScriptAccessory accessory) {
+
+            if(!phase2sub2_towerAuxiliaryLines) {
+
+                return;
+
+            }
             
             if(majorPhase!=2&&!skipPhaseChecks) {
 
